@@ -4,7 +4,7 @@ import { Button, Chip, Icon, Text, useTheme } from 'react-native-paper';
 
 import { ChoiceControl, CollapsibleSection, FormField, FormTextInput, SelectField } from '@/components/shared/form-fields';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from '@/components/shared/panel-sheet';
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 import {
   isValidEmail,
   MAX_SCHEDULE_EMAILS,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   emailBox: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, padding: 8, borderWidth: 1, borderRadius: PANEL_INNER_RADIUS },
   chip: { borderRadius: CHIP_RADIUS },
   chipText: { fontSize: 12 },
-  emailInput: { flexGrow: 1, minWidth: 128, height: 32, paddingHorizontal: 4, fontFamily: Fonts.regular, fontSize: 14 },
+  emailInput: { fontVariant: OPEN_DIGITS, flexGrow: 1, minWidth: 128, height: 32, paddingHorizontal: 4, fontFamily: Fonts.regular, fontSize: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   half: { flexBasis: '45%', flexGrow: 1 },
 });

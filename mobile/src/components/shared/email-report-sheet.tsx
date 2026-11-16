@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { Button, Chip, Icon, IconButton, Text, useTheme } from 'react-native-paper';
 
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from './panel-sheet';
 
@@ -90,7 +90,7 @@ export function EmailReportSheet({ visible, onDismiss }: { visible: boolean; onD
 const styles = StyleSheet.create({
   heading: { fontFamily: Fonts.semiBold },
   input: { height: 40, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderWidth: 1, borderRadius: PANEL_INNER_RADIUS },
-  textInput: { flex: 1, height: '100%', fontFamily: Fonts.regular, fontSize: 14 },
+  textInput: { fontVariant: OPEN_DIGITS, flex: 1, height: '100%', fontFamily: Fonts.regular, fontSize: 14 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderRadius: PANEL_INNER_RADIUS },
   added: { height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 12, borderWidth: 1, borderRadius: PANEL_INNER_RADIUS },

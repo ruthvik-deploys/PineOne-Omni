@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text as RNText } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 
 import { ListingCard } from '@/components/listing-hero/listing-card';
@@ -7,10 +7,11 @@ import { useListDates } from '@/components/listing-hero/time-scope';
 import { DayGroupedList, dayTotals, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
 import { DetailScreen } from '@/components/shared/detail-screen';
-import { LIST_ROW_INNER_RADIUS, ListCard, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { ListCard, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { StatusPill } from '@/components/shared/status';
-import { LISTING_HERO_LAYOUT } from '@/constants/experiments';
+import { DotSeparated } from '@/components/payments/payment-row';
+import { DotStatusBadge, STATUS_DOT_TONE, StatusPill } from '@/components/shared/status';
+import { APP_PAGE_LAYOUT, LISTING_HERO_LAYOUT } from '@/constants/experiments';
 import { Fonts } from '@/constants/theme';
 import { applyTicketDraft, SUPPORT_TICKETS, type SupportTicket, TICKET_STATUSES, type TicketStatus, ticketStatusTone } from '@/data/support';
 import { parseDisplayDate } from '@/data/transactions';
@@ -59,36 +60,54 @@ export function SupportTickets() {
   });
   const loaded = rows.slice(0, lazy.count);
 
-  const renderTicket = (ticket: SupportTicket) => (
+  const renderTicket = (ticket: SupportTicket) =>
+    APP_PAGE_LAYOUT ? (
+      // Figma 7249:191734: no icon; the issue in 16dp semibold over "ID • topic", the status as a dot badge.
+      <ListRow
+        key={ticket.id}
+        onPress={() => {
+          setSelectedId(ticket.id);
+          setDetailOpen(true);
+        }}
+        accessibilityLabel={`${ticket.id}, ${ticket.issue}, ${ticket.status}`}>
+        <ListRowLine
+          left={
+            <>
+              <Text numberOfLines={1} style={[styles.appTitle, { color: theme.colors.onSurface }]}>
+                {ticket.issue}
+              </Text>
+              <DotSeparated parts={[ticket.id, ticket.category]} />
+            </>
+          }
+          right={<DotStatusBadge label={ticket.status} tone={STATUS_DOT_TONE[ticketStatusTone(ticket.status)]} />}
+          centered
+        />
+      </ListRow>
+    ) : (
     <ListRow
       key={ticket.id}
+      icon="lifebuoy"
       onPress={() => {
         setSelectedId(ticket.id);
         setDetailOpen(true);
       }}
       accessibilityLabel={`${ticket.id}, ${ticket.issue}, ${ticket.status}`}>
       <ListRowLine
-        left={<Text variant="bodyMedium" style={styles.medium}>{ticket.id}</Text>}
-        right={<StatusPill label={ticket.status} tone={ticketStatusTone(ticket.status)} radius={LIST_ROW_INNER_RADIUS} />}
-      />
-      <ListRowLine
         left={
           <>
-            <Text variant="bodyMedium">{ticket.issue}</Text>
-            <Text variant="bodySmall" style={muted}>
-              {ticket.category}
+            <Text variant="bodyMedium" numberOfLines={1} style={styles.medium}>
+              {ticket.issue}
+            </Text>
+            <Text variant="bodySmall" numberOfLines={1} style={muted}>
+              {ticket.id} · {ticket.category}
             </Text>
           </>
         }
+        right={<StatusPill label={ticket.status} tone={ticketStatusTone(ticket.status)} />}
+        centered
       />
-      <Text variant="bodySmall" style={muted}>
-        <RNText style={styles.medium}>{ticket.priority}</RNText> · {ticket.product}
-      </Text>
-      <Text variant="bodySmall" style={muted}>
-        Created {ticket.createdAt} · Updated {ticket.updatedAt}
-      </Text>
     </ListRow>
-  );
+    );
 
   if (LISTING_HERO_LAYOUT) {
     // The listing format (constants/experiments.ts): one card for search, filters and dates; tickets by the day they were raised.
@@ -97,7 +116,6 @@ export function SupportTickets() {
       return !query || `${ticket.id} ${ticket.issue} ${ticket.category} ${ticket.product}`.toLowerCase().includes(query);
     });
     const shownLoaded = sortNewestFirst(shown, (ticket) => raisedOn(ticket)?.getTime() ?? -Infinity).slice(0, lazy.count);
-    const open = raised.inRange.filter((ticket) => ticket.status === 'Open').length;
     const noun = { one: 'ticket', other: 'tickets' };
     return (
       <DetailScreen title="Support tickets" fallbackHref="/support">
@@ -107,13 +125,8 @@ export function SupportTickets() {
             setSearch(value);
             lazy.reset();
           }}
-          searchPlaceholder="Search support tickets"
+          searchPlaceholder={APP_PAGE_LAYOUT ? 'Search trxns' : 'Search support tickets'}
           time={raised.scope}
-          suggestions={
-            open > 0 && status !== 'Open'
-              ? [{ key: 'open', label: `${open} open`, icon: 'warning-circle', color: theme.colors.error, onPress: () => applyStatus('Open') }]
-              : []
-          }
           filters={[selectFilter({ label: 'Status', options: STATUS_OPTIONS, value: status, onApply: applyStatus })]}
           totals={{ all: raised.inRange.length, shown: shown.length }}
           noun={noun}>
@@ -203,6 +216,7 @@ export function SupportTickets() {
 }
 
 const styles = StyleSheet.create({
+  appTitle: { fontFamily: Fonts.semiBold, fontSize: 16, lineHeight: 24 },
   medium: { fontFamily: Fonts.medium },
   subtitle: { marginTop: -12 },
 });

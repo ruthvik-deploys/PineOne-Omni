@@ -1,75 +1,81 @@
-import { Image } from 'expo-image';
-import { useState } from 'react';
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
-import { Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 
 import { DimmedDecimalAmount } from '@/components/shared/amount';
-import { BankLogo } from '@/components/shared/bank-logo';
-import { concentric, Shape } from '@/constants/shape';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Fonts } from '@/constants/theme';
-import { formatInr, SETTLEMENT_SOURCES, SETTLEMENT_TODAY, type SettlementSource } from '@/data/overview';
+import { formatInr, SETTLEMENT_TODAY, SETTLEMENT_YESTERDAY } from '@/data/overview';
 
-import { OVERVIEW_CARD_PADDING, OverviewCard, OverviewCardDivider, OverviewCardFooter, OverviewCardHeader } from './overview-card';
+import {
+  OVERVIEW_CARD_PADDING,
+  OVERVIEW_SUMMARY_PADDING_BOTTOM,
+  OverviewCard,
+  OverviewCardDivider,
+  OverviewCardFooter,
+  OverviewCardHeader,
+  type OverviewDay,
+  OverviewDaySwitch,
+  OverviewTotal,
+} from './overview-card';
 
-const PINE_LABS_MARK = require('../../../assets/images/overview/pine-labs.svg');
+const SETTLEMENT_ART = require('../../../assets/images/overview/today-settlement.png');
 
 type TodaySettlementCardProps = {
   /** Store × channel share in scope (web: combinedScale); 1 = all stores, all channels. */
   scale?: number;
+  /** Counts the partner bank's settlements in with Pine Labs'. */
+  hasPartnerBank?: boolean;
   onPressHistory?: () => void;
+  /** The Home's Today / Yesterday switch (APP_PAGE_LAYOUT). */
+  day?: OverviewDay;
+  onDayChange?: (day: OverviewDay) => void;
   style?: StyleProp<ViewStyle>;
 };
 
 /**
- * "Today's settlement" (Figma 6470:737): a Pine Labs / Partner Bank switch,
- * the amount settled today from that source and when,
- * what's still to settle and when the next run is, and a link to the history.
+ * "Today's settlement" (Figma 6470:737): the amount settled today and when,
+ * across Pine Labs and any partner bank, what's still to settle and when the
+ * next run is, and a link to the history.
  */
-export function TodaySettlementCard({ scale = 1, onPressHistory, style }: TodaySettlementCardProps) {
+export function TodaySettlementCard({ scale = 1, hasPartnerBank = false, onPressHistory, day = 'today', onDayChange, style }: TodaySettlementCardProps) {
   const theme = useTheme();
-  const [source, setSource] = useState<SettlementSource>('pinelabs');
-  const base = SETTLEMENT_TODAY[source];
   const muted = { color: theme.colors.onSurfaceVariant };
+  const { pinelabs, 'partner-bank': partner } = SETTLEMENT_TODAY;
+  const yesterday = day === 'yesterday';
+  const settled = yesterday
+    ? SETTLEMENT_YESTERDAY.pinelabs.netAmount + (hasPartnerBank ? SETTLEMENT_YESTERDAY['partner-bank'].netAmount : 0)
+    : pinelabs.netAmount + (hasPartnerBank ? partner.netAmount : 0);
+  // Yesterday's money is all in: nothing of it is left to settle.
+  const pending = yesterday ? 0 : pinelabs.pendingAmount + (hasPartnerBank ? partner.pendingAmount : 0);
+  const lastSettled = yesterday ? SETTLEMENT_YESTERDAY.pinelabs.lastSettledLabel : pinelabs.lastSettledLabel;
 
   return (
     <OverviewCard style={style}>
-      <OverviewCardHeader title="Today's settlement" />
-
-      <View style={styles.summary}>
-        <View accessibilityRole="tablist" style={[styles.tabs, { backgroundColor: theme.colors.surfaceVariant }]}>
-          {SETTLEMENT_SOURCES.map((option) => {
-            const active = option.value === source;
-            return (
-              <TouchableRipple
-                key={option.value}
-                onPress={() => setSource(option.value)}
-                borderless
-                accessibilityRole="tab"
-                aria-selected={active}
-                style={[styles.tab, active && { backgroundColor: theme.colors.surface }]}>
-                <View style={styles.tabContent}>
-                  {option.value === 'pinelabs' ? <Image source={PINE_LABS_MARK} style={styles.pineMark} /> : <BankLogo bank="HDFC" size={14} />}
-                  <Text style={[styles.tabLabel, { color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }]}>{option.label}</Text>
-                </View>
-              </TouchableRipple>
-            );
-          })}
-        </View>
-        <View style={styles.amount}>
-          <DimmedDecimalAmount value={formatInr(base.netAmount * scale)} />
-          <Text style={[styles.body, muted]}>{base.lastSettledLabel}</Text>
-        </View>
-      </View>
+      {APP_PAGE_LAYOUT ? (
+        // Figma 7800:99052: SETTLEMENT with Today / Yesterday, the total beside the coins.
+        <>
+          <OverviewCardHeader title="Settlement" trailing={onDayChange ? <OverviewDaySwitch value={day} onChange={onDayChange} label="Settlement for" /> : undefined} />
+          <OverviewTotal amount={settled * scale} line={lastSettled} image={SETTLEMENT_ART} />
+        </>
+      ) : (
+        <>
+          <OverviewCardHeader title="Today's settlement" />
+          <View style={styles.summary}>
+            <DimmedDecimalAmount value={formatInr(settled * scale)} size="medium" />
+            <Text style={[styles.body, muted]}>{lastSettled}</Text>
+          </View>
+        </>
+      )}
 
       <OverviewCardDivider />
       <View style={styles.detailRow}>
         <Text style={[styles.body, muted]}>Yet to settle</Text>
-        <Text style={styles.strong}>{formatInr(base.pendingAmount * scale)}</Text>
+        <Text style={styles.strong}>{formatInr(pending * scale)}</Text>
       </View>
       <OverviewCardDivider />
       <View style={styles.detailRow}>
         <Text style={[styles.body, muted]}>Next settlement</Text>
-        <Text style={styles.strong}>{base.nextSettlementLabel}</Text>
+        <Text style={styles.strong}>{pinelabs.nextSettlementLabel}</Text>
       </View>
 
       <OverviewCardFooter label="View settlement history" onPress={onPressHistory} />
@@ -77,20 +83,9 @@ export function TodaySettlementCard({ scale = 1, onPressHistory, style }: TodayS
   );
 }
 
-const TABS_PADDING = 4;
-const TABS_RADIUS = Shape.small;
-const TAB_RADIUS = concentric(TABS_RADIUS, TABS_PADDING, 24);
-
 const styles = StyleSheet.create({
-  // Grows to fill the card when it's stretched to a taller neighbour.
-  summary: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 32, paddingHorizontal: OVERVIEW_CARD_PADDING, paddingVertical: 24 },
-  tabs: { flexDirection: 'row', height: 32, padding: TABS_PADDING, borderRadius: TABS_RADIUS },
-  tab: { height: 24, borderRadius: TAB_RADIUS, justifyContent: 'center' },
-  tabContent: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12 },
-  pineMark: { width: 16, height: 16 },
-  tabLabel: { fontFamily: Fonts.medium, fontSize: 12, lineHeight: 16 },
-  amount: { alignItems: 'center', gap: 8 },
-  body: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
-  strong: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
+  summary: { gap: 4, padding: OVERVIEW_CARD_PADDING, paddingBottom: OVERVIEW_SUMMARY_PADDING_BOTTOM },
+  body: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  strong: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums', 'stylistic-one'] },
   detailRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: OVERVIEW_CARD_PADDING },
 });

@@ -54,3 +54,17 @@ export function buildAxisTicks(maxValue: number, tickCount = 4) {
   for (let tick = 0; tick <= maxValue + niceStep; tick += niceStep) ticks.push(Math.round(tick));
   return Array.from(new Set(ticks));
 }
+
+/** Whole calendar days from `from` to `to` (negative when `to` is earlier). */
+export function daysBetween(from: Date, to: Date) {
+  const day = (date: Date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.round((day(to) - day(from)) / 86_400_000);
+}
+
+/** "Due today", "Due in 1 day", "Overdue by 2 days" — how soon a deadline is, from `today`. */
+export function dueIn(deadline: Date, today: Date) {
+  const days = daysBetween(today, deadline);
+  if (days === 0) return 'Due today';
+  if (days > 0) return `Due in ${days} ${days === 1 ? 'day' : 'days'}`;
+  return `Overdue by ${-days} ${days === -1 ? 'day' : 'days'}`;
+}

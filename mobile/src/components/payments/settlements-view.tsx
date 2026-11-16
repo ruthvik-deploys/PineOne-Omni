@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Divider, Icon, Text, useTheme } from 'react-native-paper';
+import { Button, Icon, Text, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { DimmedDecimalAmount } from '@/components/shared/amount';
 import { BankLogo } from '@/components/shared/bank-logo';
 import { CompactSegmentedButtons } from '@/components/shared/controls';
@@ -10,7 +11,7 @@ import { CardCarousel } from '@/components/shared/card-carousel';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
 import { DetailRow } from '@/components/shared/detail-rows';
-import { LIST_ROW_INNER_RADIUS, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
 import { type MoreFilterCategory, type MoreFilterSelection } from '@/components/shared/more-filters';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from '@/components/shared/panel-sheet';
@@ -256,7 +257,7 @@ export function SettlementsView() {
                     </View>
                   </>
                 }
-                right={<DotStatusBadge label={row.status} tone={settlementStatusTone(row.status)} radius={LIST_ROW_INNER_RADIUS} />}
+                right={<DotStatusBadge label={row.status} tone={settlementStatusTone(row.status)} />}
                 centered
               />
             </ListRow>
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   inlineRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   // Logo and text stay on one line; the text truncates rather than wrapping under the logo.
   bankRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums'] },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
   link: { margin: 0, borderRadius: INNER_RADIUS, minWidth: 0 },
   linkLabel: { marginVertical: 2, marginHorizontal: 4, textDecorationLine: 'underline' },
   // Web: bg-[#eef2ff] strip across the card's bottom edge.

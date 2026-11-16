@@ -1,10 +1,11 @@
 import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { Snackbar } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Icon, Snackbar, Text, useTheme } from 'react-native-paper';
 
+import { DOT_COLORS } from '@/components/shared/status';
 import { Shape } from '@/constants/shape';
 
-type ShowToast = (message: string) => void;
+type ShowToast = (message: string, options?: { /** A green check ahead of the message. */ success?: boolean }) => void;
 
 const ToastContext = createContext<ShowToast | null>(null);
 
@@ -14,8 +15,9 @@ const ToastContext = createContext<ShowToast | null>(null);
  * bar on tab pages.
  */
 export function ToastProvider({ bottomOffset = 0, children }: { bottomOffset?: number; children: ReactNode }) {
-  const [toast, setToast] = useState<{ message: string; key: number } | null>(null);
-  const show = useCallback<ShowToast>((message) => setToast({ message, key: Date.now() }), []);
+  const theme = useTheme();
+  const [toast, setToast] = useState<{ message: string; success: boolean; key: number } | null>(null);
+  const show = useCallback<ShowToast>((message, options) => setToast({ message, success: !!options?.success, key: Date.now() }), []);
 
   return (
     <ToastContext.Provider value={show}>
@@ -25,9 +27,17 @@ export function ToastProvider({ bottomOffset = 0, children }: { bottomOffset?: n
         visible={toast !== null}
         onDismiss={() => setToast(null)}
         duration={4000}
-        wrapperStyle={{ bottom: bottomOffset }}
+        // Above the shell's page layer and the profile (app-tabs.tsx), which sit at zIndex 1 and 2.
+        wrapperStyle={{ bottom: bottomOffset, zIndex: 3 }}
         style={styles.snackbar}>
-        {toast?.message ?? ''}
+        {toast?.success ? (
+          <View style={styles.success}>
+            <Icon source="check-circle-fill" size={20} color={DOT_COLORS.success} />
+            <Text style={{ color: theme.colors.inverseOnSurface }}>{toast.message}</Text>
+          </View>
+        ) : (
+          (toast?.message ?? '')
+        )}
       </Snackbar>
     </ToastContext.Provider>
   );
@@ -43,4 +53,5 @@ function noop() {}
 const styles = StyleSheet.create({
   // Standalone floating container.
   snackbar: { borderRadius: Shape.small },
+  success: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

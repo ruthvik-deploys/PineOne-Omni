@@ -104,7 +104,7 @@ export function DisputeDetail({ record }: { record: DisputeRecord }) {
       <Text style={styles.amount}>{record.amount}</Text>
       {/* Wrapped so the pill (which aligns itself to the start) centres in the hero. */}
       <View>
-        <StatusPill label={pill.label} tone={pill.tone} radius={Shape.max} />
+        <StatusPill label={pill.label} tone={pill.tone} />
       </View>
       <Text variant="bodyMedium" style={[styles.meta, muted]}>
         Payment mode: {record.paymentLabel}

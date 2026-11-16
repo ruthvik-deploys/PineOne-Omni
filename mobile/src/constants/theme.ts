@@ -6,6 +6,13 @@
  * expo-font in src/app/_layout.tsx (and the Storybook root), and wired into the
  * Material 3 typescale in paper-theme.ts.
  */
+/**
+ * Inter Display's open digits (OpenType ss01: open 4, 6, 9). Every number in
+ * the app uses them; NUMERIC adds tabular figures for amounts that line up.
+ */
+export const OPEN_DIGITS: ('stylistic-one')[] = ['stylistic-one'];
+export const NUMERIC: ('tabular-nums' | 'stylistic-one')[] = ['tabular-nums', 'stylistic-one'];
+
 export const Fonts = {
   regular: 'InterDisplay-Regular',
   medium: 'InterDisplay-Medium',

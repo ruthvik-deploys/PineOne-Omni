@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Checkbox, Divider, Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Button, Checkbox, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { SearchField } from '@/components/search-field';
 import type { DateRange } from '@/components/shared/date-range-filter';
 import { CollapsibleSection, DateRangeField, FormField, FormTextInput, SelectField } from '@/components/shared/form-fields';

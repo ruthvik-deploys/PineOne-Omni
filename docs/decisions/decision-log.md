@@ -841,6 +841,31 @@ Last updated: 2026-08-04
   - `mobile/src/components/page-header.tsx`, `mobile/src/components/payments/transactions-view.tsx`
   - `mobile/src/constants/paper-theme.ts`
 
+90. Area: Web progressive merchant onboarding
+- Date: 2026-11-10
+- Decision: Phone signup lands on Overview with only three product entries. Each product provides education before setup. Payments and Settlement are introduced at activation; Refunds, Disputes and Reports require an explicit Add more tools action. New merchants see scoped empty activity, not the established merchant's samples or administration panels.
+- Rationale: Introduce the platform as merchants start using it, while explaining where each product and its money activity belong.
+- Touchpoints: `lib/getting-started.ts`, `components/getting-started/`, `components/transactions/transactions-platform-shell.tsx`, `app/signup/`.
+- Detail: `docs/flows/onboarding-and-auth.md`.
+
+91. Area: Product onboarding shell
+- Date: 2026-11-10
+- Decision: Product setup runs on dedicated routes with its own progress rail. The main platform sidebar returns on exit or activation.
+- Rationale: Avoid two competing sidebars and give the setup task its own space.
+- Touchpoints: `app/onboarding/products/[product]/page.tsx`, `components/getting-started/product-onboarding-page.tsx`, `setup-frame.tsx`, `catalog.ts`.
+
+92. Area: First-time product selection
+- Date: 2026-11-10
+- Decision: All first-time product pages share one layout. Required In-store device/plan/quantity selection happens on the product page before dedicated delivery/business/bank setup.
+- Rationale: Let merchants choose what they are setting up upfront and avoid repeating the catalogue inside onboarding.
+- Touchpoints: `components/getting-started/product-intro.tsx`, `product-setup.tsx`, `catalog.ts`, `setup-frame.tsx`, `getting-started-home.tsx`.
+
+93. Area: Onboarding prototype isolation
+- Date: 2026-11-10
+- Decision: Put the complete prototype under `/onboarding-demo` in the same app. Keep main routes and main browser state independent by scoping navigation and localStorage.
+- Rationale: Let the basic signup and progressive product journey be tested without changing the main platform.
+- Touchpoints: `app/onboarding-demo/[[...path]]/page.tsx`, `components/getting-started/navigation.tsx`, `lib/onboarding-environment.js`, scoped auth/profile/progress stores.
+
 ## Open Documentation TODOs
 
 1. Add ADRs for each nav version transition milestone.

@@ -7,7 +7,7 @@ import { useListDates } from '@/components/listing-hero/time-scope';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { LIST_ROW_INNER_RADIUS, ListCard, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { ListCard, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
 import { type MoreFilterSelection } from '@/components/shared/more-filters';
 import { StatusPill } from '@/components/shared/status';
 import { LISTING_HERO_LAYOUT } from '@/constants/experiments';
@@ -61,35 +61,39 @@ export function ReportListing({ tab }: { tab: 'history' | 'schedule' }) {
   );
 
   const renderHistory = (row: ReportHistoryRow) => (
-    <ListRow key={row.reportName} accessibilityLabel={`${row.reportName}, ${row.refundStatus}`}>
-      <ListRowLine
-        left={<Text variant="bodyMedium" style={styles.medium}>{row.reportName}</Text>}
-        right={<StatusPill label={row.refundStatus} tone={reportStatusTone(row.refundStatus)} radius={LIST_ROW_INNER_RADIUS} />}
-      />
+    <ListRow key={row.reportName} icon="file-text" accessibilityLabel={`${row.reportName}, ${row.refundStatus}`}>
       <ListRowLine
         left={
-          <Text variant="bodySmall" style={muted}>
-            Created on {row.createdOn} · {row.dateRange}
-          </Text>
+          <>
+            <Text variant="bodyMedium" numberOfLines={1} style={styles.medium}>
+              {row.reportName}
+            </Text>
+            <Text variant="bodySmall" numberOfLines={1} style={muted}>
+              {row.dateRange}
+            </Text>
+          </>
         }
-        right={<Text variant="labelMedium">{row.action}</Text>}
+        right={<StatusPill label={row.refundStatus} tone={reportStatusTone(row.refundStatus)} />}
+        centered
       />
     </ListRow>
   );
 
   const renderSchedule = (row: ReportScheduleRow) => (
-    <ListRow key={row.name} accessibilityLabel={`${row.name}, ${row.status}`}>
-      <ListRowLine
-        left={<Text variant="bodyMedium" style={styles.medium}>{row.name}</Text>}
-        right={<StatusPill label={row.status} tone={reportStatusTone(row.status)} radius={LIST_ROW_INNER_RADIUS} />}
-      />
+    <ListRow key={row.name} icon="calendar-dots" accessibilityLabel={`${row.name}, ${row.status}`}>
       <ListRowLine
         left={
-          <Text variant="bodySmall" style={muted}>
-            {row.frequency} · {row.format} · Created by {row.createdBy}
-          </Text>
+          <>
+            <Text variant="bodyMedium" numberOfLines={1} style={styles.medium}>
+              {row.name}
+            </Text>
+            <Text variant="bodySmall" numberOfLines={1} style={muted}>
+              {row.frequency} · {row.format}
+            </Text>
+          </>
         }
-        right={<Text variant="labelMedium">{row.action}</Text>}
+        right={<StatusPill label={row.status} tone={reportStatusTone(row.status)} />}
+        centered
       />
     </ListRow>
   );
@@ -116,7 +120,6 @@ export function ReportListing({ tab }: { tab: 'history' | 'schedule' }) {
     });
     const loaded = sortNewestFirst(shown, (row) => displayTimestamp(row.createdOn, '12:00 PM')).slice(0, lazy.count);
     const noun = { one: 'report', other: 'reports' };
-    const failed = created.inRange.filter((row) => row.refundStatus === 'Failed').length;
     return (
       <ListingCard
         search={search}
@@ -126,11 +129,6 @@ export function ReportListing({ tab }: { tab: 'history' | 'schedule' }) {
         }}
         searchPlaceholder="Search reports"
         time={created.scope}
-        suggestions={
-          failed > 0 && status !== 'failed'
-            ? [{ key: 'failed', label: `${failed} failed`, icon: 'warning-circle', color: theme.colors.error, onPress: () => setStatus('failed') }]
-            : []
-        }
         filters={[
           selectFilter({ label: 'Status', options: REPORT_STATUS_OPTIONS, value: status, onApply: setStatus }),
           { type: 'more', categories: REPORT_MORE_FILTERS, applied: moreFilters, onApply: setMoreFilters },

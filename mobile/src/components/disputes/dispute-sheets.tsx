@@ -6,7 +6,7 @@ import { FormField, FormTextInput } from '@/components/shared/form-fields';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from '@/components/shared/panel-sheet';
 import { concentric, Shape } from '@/constants/shape';
 import { useAppColors } from '@/constants/app-colors';
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 import {
   EVIDENCE_FIELDS,
   EVIDENCE_PANEL_COPY,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   body: { lineHeight: 22 },
   button: { borderRadius: PANEL_INNER_RADIUS },
   amountField: { height: 40, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderWidth: 1, borderRadius: PANEL_INNER_RADIUS },
-  amountInput: { flex: 1, height: '100%', fontFamily: Fonts.regular, fontSize: 14 },
+  amountInput: { fontVariant: OPEN_DIGITS, flex: 1, height: '100%', fontFamily: Fonts.regular, fontSize: 14 },
   issue: {
     flexDirection: 'row',
     alignItems: 'flex-start',

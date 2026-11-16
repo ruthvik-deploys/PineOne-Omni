@@ -4,6 +4,14 @@ import type { PaperProvider } from 'react-native-paper';
 // Per-icon deep imports keep the bundle to the icons registered here, not all ~1,500.
 import { ArrowCounterClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowCounterClockwise';
 import { ArrowLeftIcon } from 'phosphor-react-native/src/icons/ArrowLeft';
+import { CrownIcon } from 'phosphor-react-native/src/icons/Crown';
+import { EyeIcon } from 'phosphor-react-native/src/icons/Eye';
+import { EyeSlashIcon } from 'phosphor-react-native/src/icons/EyeSlash';
+import { UserGearIcon } from 'phosphor-react-native/src/icons/UserGear';
+import { DiamondIcon } from 'phosphor-react-native/src/icons/Diamond';
+import { SwatchesIcon } from 'phosphor-react-native/src/icons/Swatches';
+import { SealCheckIcon } from 'phosphor-react-native/src/icons/SealCheck';
+import { MicrophoneIcon } from 'phosphor-react-native/src/icons/Microphone';
 import { ArrowsClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowsClockwise';
 import { MonitorIcon } from 'phosphor-react-native/src/icons/Monitor';
 import { GraduationCapIcon } from 'phosphor-react-native/src/icons/GraduationCap';
@@ -66,6 +74,7 @@ import { ClockIcon } from 'phosphor-react-native/src/icons/Clock';
 import { ClockCounterClockwiseIcon } from 'phosphor-react-native/src/icons/ClockCounterClockwise';
 import { CopyIcon } from 'phosphor-react-native/src/icons/Copy';
 import { CreditCardIcon } from 'phosphor-react-native/src/icons/CreditCard';
+import { DotsThreeIcon } from 'phosphor-react-native/src/icons/DotsThree';
 import { DotsThreeCircleIcon } from 'phosphor-react-native/src/icons/DotsThreeCircle';
 import { DotsThreeVerticalIcon } from 'phosphor-react-native/src/icons/DotsThreeVertical';
 import { DownloadSimpleIcon } from 'phosphor-react-native/src/icons/DownloadSimple';
@@ -81,6 +90,8 @@ import { HouseIcon } from 'phosphor-react-native/src/icons/House';
 import { InfoIcon } from 'phosphor-react-native/src/icons/Info';
 import { KeyboardIcon } from 'phosphor-react-native/src/icons/Keyboard';
 import { LinkSimpleIcon } from 'phosphor-react-native/src/icons/LinkSimple';
+import { LinkSimpleHorizontalIcon } from 'phosphor-react-native/src/icons/LinkSimpleHorizontal';
+import { MinusCircleIcon } from 'phosphor-react-native/src/icons/MinusCircle';
 import { ListIcon } from 'phosphor-react-native/src/icons/List';
 import { ListBulletsIcon } from 'phosphor-react-native/src/icons/ListBullets';
 import { LockSimpleIcon } from 'phosphor-react-native/src/icons/LockSimple';
@@ -128,8 +139,13 @@ import { ArrowDownIcon } from 'phosphor-react-native/src/icons/ArrowDown';
 import { SpinnerIcon } from 'phosphor-react-native/src/icons/Spinner';
 import { ChecksIcon } from 'phosphor-react-native/src/icons/Checks';
 import { LightningIcon } from 'phosphor-react-native/src/icons/Lightning';
+import { PercentIcon } from 'phosphor-react-native/src/icons/Percent';
+import { CurrencyCircleDollarIcon } from 'phosphor-react-native/src/icons/CurrencyCircleDollar';
+import { MapPinIcon } from 'phosphor-react-native/src/icons/MapPin';
+import { TimerIcon } from 'phosphor-react-native/src/icons/Timer';
 import { FastForwardIcon } from 'phosphor-react-native/src/icons/FastForward';
 import { HourglassIcon } from 'phosphor-react-native/src/icons/Hourglass';
+import { HourglassLowIcon } from 'phosphor-react-native/src/icons/HourglassLow';
 import { HeadphonesIcon } from 'phosphor-react-native/src/icons/Headphones';
 import { CircleDashedIcon } from 'phosphor-react-native/src/icons/CircleDashed';
 import { CircleIcon } from 'phosphor-react-native/src/icons/Circle';
@@ -209,6 +225,7 @@ const ICONS = {
   'clock-counter-clockwise': ClockCounterClockwiseIcon,
   copy: CopyIcon,
   'credit-card': CreditCardIcon,
+  'dots-three': DotsThreeIcon,
   'dots-three-circle': DotsThreeCircleIcon,
   'dots-three-vertical': DotsThreeVerticalIcon,
   'download-simple': DownloadSimpleIcon,
@@ -224,6 +241,8 @@ const ICONS = {
   info: InfoIcon,
   keyboard: KeyboardIcon,
   'link-simple': LinkSimpleIcon,
+  'link-simple-horizontal': LinkSimpleHorizontalIcon,
+  'minus-circle': MinusCircleIcon,
   list: ListIcon,
   'list-bullets': ListBulletsIcon,
   'lock-simple': LockSimpleIcon,
@@ -233,6 +252,14 @@ const ICONS = {
   'paper-plane-right': PaperPlaneRightIcon,
   'pencil-simple': PencilSimpleIcon,
   play: PlayIcon,
+  microphone: MicrophoneIcon,
+  crown: CrownIcon,
+  eye: EyeIcon,
+  'eye-slash': EyeSlashIcon,
+  'user-gear': UserGearIcon,
+  diamond: DiamondIcon,
+  swatches: SwatchesIcon,
+  'seal-check': SealCheckIcon,
   plus: PlusIcon,
   printer: PrinterIcon,
   'qr-code': QrCodeIcon,
@@ -273,8 +300,13 @@ const ICONS = {
   spinner: SpinnerIcon,
   checks: ChecksIcon,
   lightning: LightningIcon,
+  percent: PercentIcon,
+  'currency-circle-dollar': CurrencyCircleDollarIcon,
+  'map-pin': MapPinIcon,
+  timer: TimerIcon,
   'fast-forward': FastForwardIcon,
   hourglass: HourglassIcon,
+  'hourglass-low': HourglassLowIcon,
   headphones: HeadphonesIcon,
   'circle-dashed': CircleDashedIcon,
   circle: CircleIcon,

@@ -2,7 +2,7 @@ import { argbFromHex, hexFromArgb, themeFromSourceColor } from '@material/materi
 import color from 'color';
 import { configureFonts, MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
 
-import { Fonts } from './theme';
+import { Fonts, OPEN_DIGITS } from './theme';
 
 /**
  * Material 3 theme, generated from PineOne's real brand primary (the same hex used
@@ -134,7 +134,8 @@ const FIGMA_TEXT_METRICS: Partial<Record<keyof typeof TYPESCALE_FONT_FAMILY, obj
 const fontConfig = Object.fromEntries(
   Object.entries(TYPESCALE_FONT_FAMILY).map(([key, fontFamily]) => [
     key,
-    { fontFamily, fontWeight: 'normal' as const, ...FIGMA_TEXT_METRICS[key as keyof typeof TYPESCALE_FONT_FAMILY] },
+    // Open digits (ss01) on every role, so numbers in any Paper text use them.
+    { fontFamily, fontWeight: 'normal' as const, fontVariant: OPEN_DIGITS, ...FIGMA_TEXT_METRICS[key as keyof typeof TYPESCALE_FONT_FAMILY] },
   ])
 );
 
@@ -145,7 +146,7 @@ export const paperTheme: MD3Theme = {
   colors: { ...MD3LightTheme.colors, ...colors, ...additionalColors(colors) },
   // `default` is what a Text without a variant gets — including text nested inside another Text,
   // which Paper doesn't let inherit its parent's family. Left unset it's Roboto (San Francisco on iOS).
-  fonts: { ...typescale, default: { ...typescale.default, fontFamily: Fonts.regular, fontWeight: 'normal' } },
+  fonts: { ...typescale, default: { ...typescale.default, fontFamily: Fonts.regular, fontWeight: 'normal', fontVariant: OPEN_DIGITS } as MD3Theme['fonts']['default'] },
 };
 
 export const paperDarkTheme: MD3Theme = {

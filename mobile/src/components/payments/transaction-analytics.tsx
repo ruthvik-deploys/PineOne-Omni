@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PAGE_PADDING } from '@/components/tab-screen';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Card, Switch, Text, useTheme } from 'react-native-paper';
 
@@ -114,7 +115,7 @@ export function TransactionAnalytics() {
 
 const styles = StyleSheet.create({
   medium: { fontFamily: Fonts.medium },
-  scroller: { marginHorizontal: -16 },
+  scroller: { marginHorizontal: -PAGE_PADDING },
   filters: { gap: 8, paddingHorizontal: 16 },
   card: { borderRadius: Shape.max },
   cardBody: { padding: 12, gap: 8 },

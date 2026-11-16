@@ -1,24 +1,31 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
 import { TabChrome, useTabNavBar, useTabScroll } from '@/components/app-tabs';
 import { ExploreProducts } from '@/components/overview/explore-products';
+import { OnDemandSheet } from '@/components/payments/on-demand-sheet';
 import { OnDemandBanner } from '@/components/overview/on-demand-banner';
+import type { OverviewDay } from '@/components/overview/overview-card';
 import { QuickActions } from '@/components/overview/quick-actions';
-import { type ChannelSummary, TodayPaymentsCard } from '@/components/overview/today-payments-card';
+import { type ChannelSummary, type PaymentSourceSummary, TodayPaymentsCard } from '@/components/overview/today-payments-card';
 import { TodaySettlementCard } from '@/components/overview/today-settlement-card';
 import { usePullToRefresh } from '@/components/pull-to-refresh';
-import { CHANNEL_MULTIPLIER, TODAY_PAYMENTS } from '@/data/overview';
+import { PAGE_GAP, PAGE_PADDING } from '@/components/tab-screen';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
+import { CHANNEL_MULTIPLIER, PINE_LABS_PAYMENT_SHARE, SETTLEMENT_SOURCES, TODAY_PAYMENTS, YESTERDAY_PAYMENTS } from '@/data/overview';
 import { useBusiness } from '@/hooks/use-business';
 
 /**
  * Overview (Figma 6470:676, "PineOne - Omni-channel"), top to bottom:
- * 1. Today's payments, then today's settlement, stacked. On all channels the
- *    payments card splits today into In-store and Online; on one channel it
- *    lists that channel's latest three payments.
+ * 1. Payments, then settlement, stacked. On the app pages (Figma 7154:141243)
+ *    each has its own Today / Yesterday switch, its total beside an
+ *    illustration, and the payments card lists In-store and Online (or the
+ *    last 3 transactions on one channel). Otherwise the payments card lists
+ *    Pine Labs and the partner bank, then a closed Channel breakdown accordion.
  * 2. A nudge towards On-Demand settlement.
  * 3. Quick actions, then Explore products.
- * Sections are 32dp apart. Every number follows the stores and channel chosen
+ * Sections are 32dp apart (8dp, without Quick actions, on the app pages: APP_PAGE_LAYOUT). Every number follows the stores and channel chosen
  * in the header switcher; the page has no scope filters of its own.
  */
 export default function OverviewScreen() {
@@ -31,21 +38,36 @@ export default function OverviewScreen() {
 
 /** Inside TabChrome, so scrolling slides the navigation bar away. */
 function OverviewContent() {
-  const { storeScale, channelScale, channel } = useBusiness();
+  const { storeScale, channelScale, channel, organisation } = useBusiness();
   const scale = storeScale * channelScale;
   const navBar = useTabNavBar();
+  const [onDemandOpen, setOnDemandOpen] = useState(false);
+  // Each Home card switches between today and yesterday on its own (Figma 7154:141243).
+  const [paymentsDay, setPaymentsDay] = useState<OverviewDay>('today');
+  const [settlementDay, setSettlementDay] = useState<OverviewDay>('today');
   const tabScroll = useTabScroll();
   const { attach: attachPull, refreshControl, indicator: pullIndicator } = usePullToRefresh(tabScroll.contentTop);
-  const count = Math.max(0, Math.round(TODAY_PAYMENTS.count * scale));
-  const totalAmount = Math.round(TODAY_PAYMENTS.totalAmount * scale);
-  // All channels: today split by channel. Online takes the remainder, so the two rows add up to the total.
+  const dayPayments = paymentsDay === 'yesterday' ? YESTERDAY_PAYMENTS : TODAY_PAYMENTS;
+  const count = Math.max(0, Math.round(dayPayments.count * scale));
+  const totalAmount = Math.round(dayPayments.totalAmount * scale);
+  // The partner bank and online take the remainder, so each pair of rows adds up to the total.
+  const pineLabsCount = Math.round(count * PINE_LABS_PAYMENT_SHARE);
+  const pineLabsAmount = Math.round(totalAmount * PINE_LABS_PAYMENT_SHARE);
+  // Only the sources this organisation has: no partner bank means no split to show.
+  const activeSources = SETTLEMENT_SOURCES.filter(({ value }) => value === 'pinelabs' || organisation.hasPartnerBank);
+  const sources: PaymentSourceSummary[] = activeSources.map(({ value, label }) => ({
+    value,
+    label,
+    count: value === 'pinelabs' ? pineLabsCount : count - pineLabsCount,
+    amount: value === 'pinelabs' ? pineLabsAmount : totalAmount - pineLabsAmount,
+  }));
   const inStoreCount = Math.round(count * CHANNEL_MULTIPLIER['in-store']);
   const inStoreAmount = Math.round(totalAmount * CHANNEL_MULTIPLIER['in-store']);
   const channels: ChannelSummary[] | undefined =
     channel === 'all'
       ? [
-          { kind: 'in-store', label: 'In-store payments', count: inStoreCount, amount: inStoreAmount },
-          { kind: 'online', label: 'Online payments', count: count - inStoreCount, amount: totalAmount - inStoreAmount },
+          { kind: 'in-store', label: APP_PAGE_LAYOUT ? 'In-store' : 'In-store payments', count: inStoreCount, amount: inStoreAmount },
+          { kind: 'online', label: APP_PAGE_LAYOUT ? 'Online' : 'Online payments', count: count - inStoreCount, amount: totalAmount - inStoreAmount },
         ]
       : undefined;
 
@@ -55,35 +77,48 @@ function OverviewContent() {
         ref={attachPull}
         refreshControl={refreshControl}
         {...tabScroll.scrollProps}
-        contentContainerStyle={[styles.content, { paddingTop: tabScroll.contentTop + 24, paddingBottom: 32 + navBar.height }]}>
+        contentContainerStyle={[styles.content, { paddingTop: tabScroll.contentTop + PAGE_GAP, paddingBottom: 32 + navBar.height }]}>
         {/* Today's two cards, one under the other. */}
         <View style={styles.cards}>
           <TodayPaymentsCard
             totalAmount={totalAmount}
             count={count}
+            sources={sources}
             channels={channels}
-            recent={TODAY_PAYMENTS.recent.slice(0, 3)}
+            recent={(channel === 'online' ? TODAY_PAYMENTS.recentOnline : TODAY_PAYMENTS.recent).slice(0, 3)}
             recentKind={channel === 'online' ? 'online' : 'in-store'}
             onPressChannel={() => router.navigate('/payments')}
             onPressPayment={(transactionId) => router.push(`/payments/transactions/${transactionId}`)}
             onPressHistory={() => router.navigate('/payments')}
+            day={paymentsDay}
+            onDayChange={setPaymentsDay}
           />
-          <TodaySettlementCard scale={scale} onPressHistory={() => router.navigate('/settlements')} />
+          <TodaySettlementCard
+            scale={scale}
+            hasPartnerBank={organisation.hasPartnerBank}
+            onPressHistory={() => router.navigate('/settlements')}
+            day={settlementDay}
+            onDayChange={setSettlementDay}
+          />
         </View>
 
-        <OnDemandBanner onPress={() => router.navigate('/settlements')} />
+        {/* Settle now opens On-Demand settlement in place (Figma 7161:96423). */}
+        <OnDemandBanner onPress={() => (APP_PAGE_LAYOUT ? setOnDemandOpen(true) : router.navigate('/settlements'))} />
 
-        <QuickActions />
+        {/* The app pages' Home (Figma 7154:141243) goes straight from the banner to Explore products. */}
+        {APP_PAGE_LAYOUT ? null : <QuickActions />}
 
         <ExploreProducts onPressViewAll={navBar.openModules} onPressBanner={navBar.openModules} />
       </Animated.ScrollView>
       {pullIndicator}
+      <OnDemandSheet visible={onDemandOpen} onDismiss={() => setOnDemandOpen(false)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, gap: 32 },
+  // The app pages stack every card 8dp apart and 8dp from the screen's edges.
+  content: { paddingHorizontal: PAGE_PADDING, gap: APP_PAGE_LAYOUT ? PAGE_GAP : 32 },
   area: { flex: 1 },
-  cards: { gap: 16 },
+  cards: { gap: APP_PAGE_LAYOUT ? PAGE_GAP : 16 },
 });

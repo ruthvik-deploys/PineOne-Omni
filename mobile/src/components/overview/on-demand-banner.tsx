@@ -2,7 +2,9 @@ import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { Icon, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
+import { ActionBanner } from '@/components/shared/action-banner';
 import { useAppColors } from '@/constants/app-colors';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 
@@ -14,6 +16,12 @@ const LIGHTNING = require('../../../assets/images/overview/lightning.svg');
  * where On-Demand settlement lives.
  */
 export function OnDemandBanner({ onPress }: { onPress?: () => void }) {
+  // The app pages (APP_PAGE_LAYOUT, Figma 7154:141243): one row, the same banner as Settlements.
+  if (APP_PAGE_LAYOUT) return <ActionBanner onPress={onPress} />;
+  return <StackedBanner onPress={onPress} />;
+}
+
+function StackedBanner({ onPress }: { onPress?: () => void }) {
   const theme = useTheme();
   // Tailwind indigo-50 in the design.
   const tint = useAppColors().tint.indigo;

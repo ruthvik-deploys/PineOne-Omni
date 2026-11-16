@@ -828,3 +828,36 @@ Use this for execution traceability (what changed, why, and where), while `decis
   - `components/products/third-party-offers-content.tsx`
 - Verification:
   - `npm run build` passes after alignment fix.
+
+
+## 2026-11-10
+- Scope: Complete the web progressive onboarding prototype.
+- Changes: phone signup entry, persistent setup drafts/defaults, idempotent first-link resume, device picker restoration, activation introduction, staged navigation, scoped activity empty states, device-specific installation and persistent order/setup details.
+- Verification: 8 behavioral tests pass; all three product browser walkthroughs and established merchant regression pass; no new TypeScript diagnostics against baseline; scoped whitespace checks pass. Focused review fixes rechecked.
+- Limitations: demo authentication/payment/order/activation only; Figma connector denied reference access. Web remains available on localhost:3000; mobile is stopped.
+
+## 2026-11-10 — Dedicated product setup pages
+- Moved setup/payment/tracking/installation to `/onboarding/products/[product]` with one progress rail and no main sidebar. Education and live products retain platform navigation.
+- Resume banners, product cards and in-progress sidebar links use the dedicated destination. Exit restores Overview; activation restores the normal product and its introduction.
+- Verification: all three product entries checked in-browser; payment-link completion return and saved draft refresh/resume pass; 10 tests pass; no new TypeScript diagnostics. Reference access remains unavailable in Figma connector/browser; reviewed local inspiration notes.
+
+## 2026-11-10 — Consistent first-time product pages and upfront device selection
+- Unified the three first-time pages using the existing product header, explanation, main content and setup summary layout. In-store now offers real device/plan/quantity choice on the product page, before dedicated onboarding.
+- In-store setup starts at Delivery address, step 1 of 4. Existing saved step indices are preserved. Catalogue edits, refresh, back and home resume retain the selection and use the correct destination.
+- Verification: 12 tests pass; browser checked all first-time pages, required selection, buy/quantity persistence, delivery entry and back navigation. No new TypeScript diagnostics; focused review found no material issues.
+
+## 2026-11-10 — Isolated same-app onboarding URL
+- Entry `/onboarding-demo` starts with phone, OTP and password; home, products, standalone setup and activity links stay under that namespace on port 3000. No separate port or server instance.
+- Authentication, business profile and progress use separate localStorage keys. Demo reset/logout leave main-app state unchanged. Main routes show the full existing platform and normal signup remains email-based. Legacy prototype entry URLs redirect into the namespace.
+- Verification: 17 tests pass, including actual main/demo session and progress write isolation; browser completed basic signup, checked scoped product and setup routes, demo logout/reset, and confirmed main dashboard remains full. Same existing1395 TypeScript error locations; no new errors.
+
+## 2026-11-11 — Progressive onboarding v3: intent carried in, verify once, teach gradually
+- Logic: `docs/flows/progressive-onboarding-logic.md` (references: Shopify + Mercury, Figma "Pine Omni Onboarding").
+- Intent: no intent question by default. Source is carried from the signup URL (`/onboarding-demo?from=website|sales|migrated&product=…`). Starting a product is the intent signal. "Help me choose" is an optional dialog on the explore Overview.
+- Onboarding: each product starts hands-on (test payment link, checkout preview, terminal choice). Business verification is shared modules (`lib/verification.ts`), each product requiring a subset. Modules can be done in any order, deferred ("I'll add this later") or handed off ("Ask someone else"). Signing covers all chosen products. Adding a product asks only for missing modules plus an addendum. In-store setup is now delivery → review → pay; shipping waits for verification.
+- Missing documents: "Have these ready" checklist personalised by business type (from PAN). Documents step per type with "where to find it". Overview lists what's missing by name.
+- Overview: explore → start → waiting (Mercury timeline + while you wait) → live (metrics, chips, collapsible setup, one cross-sell). Exactly one primary button.
+- Teaching: queued one-time coachmarks on menu items (suppressed while a dialog is open). Migrated-merchant 4-step tour.
+- UI: shadcn components (skill installed at `.claude/skills/shadcn`) with the Pine theme.
+- Verification: 37 tests pass (`node --experimental-strip-types --test tests/*.test.mjs`), including new `tests/verification.test.mjs`. TypeScript errors unchanged at the 1395 baseline (none in touched files). Browser: website → payment links → defer/delegate → sign → approve → live → cross-sell Checkout (only missing modules asked). Sales → In-store order → shipping held. Migrated tour. Explore view. No console errors.
+- Limitations: document rules per business type are illustrative (to confirm with compliance). Delegation, reminders, "send me this list" and approval are simulated.

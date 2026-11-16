@@ -3,14 +3,15 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
-import { PaperProvider } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, PaperProvider, Text, useTheme } from 'react-native-paper';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { paperIconSettings } from '@/components/icons';
 import { paperDarkTheme, paperTheme } from '@/constants/paper-theme';
 import { FONT_ASSETS } from '@/constants/theme';
-import { BusinessProvider } from '@/hooks/use-business';
+import { BusinessProvider, useBusiness } from '@/hooks/use-business';
 import { ThemeModeProvider, useThemeMode } from '@/hooks/use-theme-mode';
 
 SplashScreen.preventAutoHideAsync();
@@ -27,10 +28,29 @@ export default function TabLayout() {
       <Themed>
         <BusinessProvider>
           <AnimatedSplashOverlay />
-          <AppTabs />
+          <App />
         </BusinessProvider>
       </Themed>
     </ThemeModeProvider>
+  );
+}
+
+/** The app, rebuilt from scratch on an organisation switch, with a reload screen over it meanwhile. */
+function App() {
+  const { appKey, switchingTo } = useBusiness();
+  const theme = useTheme();
+  return (
+    <>
+      <AppTabs key={appKey} />
+      {switchingTo ? (
+        <View accessibilityLiveRegion="polite" style={[styles.reload, { backgroundColor: theme.colors.background }]}>
+          <ActivityIndicator color={theme.colors.primary} />
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            Switching to {switchingTo}
+          </Text>
+        </View>
+      ) : null}
+    </>
   );
 }
 
@@ -65,3 +85,8 @@ function Themed({ children }: { children: ReactNode }) {
     </PaperProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  // Above everything in the shell (app-tabs.tsx), whose page layer and overlays run up to zIndex 3.
+  reload: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 4, alignItems: 'center', justifyContent: 'center', gap: 16 },
+});

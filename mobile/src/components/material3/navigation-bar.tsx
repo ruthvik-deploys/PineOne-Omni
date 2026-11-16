@@ -4,7 +4,10 @@ import { Badge, Icon, Text, TouchableRipple, useTheme } from 'react-native-paper
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { LocalSvg } from 'react-native-svg/css';
+
 import { useSvgId } from '@/components/shared/hatch';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { useAppColors } from '@/constants/app-colors';
 import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
@@ -14,6 +17,8 @@ export type NavigationBarDestination = {
   label: string;
   icon: string;
   focusedIcon: string;
+  /** The design's own glyphs (Figma "Reicon", 7110:116411), outline and filled, drawn instead of `icon` / `focusedIcon`. */
+  svg?: { icon: number; focused: number };
   badge?: number | boolean;
 };
 
@@ -65,6 +70,7 @@ export function NavigationBar({ destinations, activeKey, onChange, overflow, onR
   const fadeId = useSvgId('nav-fade');
   const bottomInset = respectSafeArea ? insets.bottom : 0;
   const expanded = overflow?.expanded ?? false;
+  const indicatorColor = useIndicatorColor();
 
   const [progress] = useState(() => new Animated.Value(expanded ? 1 : 0));
   const [panelHeight, setPanelHeight] = useState(0);
@@ -112,7 +118,13 @@ export function NavigationBar({ destinations, activeKey, onChange, overflow, onR
           <Rect width={1} height={1} fill={`url(#${fadeId})`} />
         </Svg>
       </Animated.View>
-      <View style={[styles.bar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.surfaceVariant, paddingBottom: bottomInset }]}>
+      <View
+        style={[
+          APP_PAGE_LAYOUT ? styles.appBar : styles.bar,
+          { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.surfaceVariant, paddingBottom: bottomInset },
+          // Expanded, the panel's top corners round off (Figma 7160:45316).
+          APP_PAGE_LAYOUT && expanded && styles.appBarExpanded,
+        ]}>
         {overflow ? (
           <Animated.View
             aria-hidden={!expanded}
@@ -128,10 +140,17 @@ export function NavigationBar({ destinations, activeKey, onChange, overflow, onR
                   transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
                 },
               ]}>
-              <Text accessibilityRole="header" style={[styles.panelTitle, { color: theme.colors.onSurfaceVariant }]}>
-                {overflow.title.toUpperCase()}
-              </Text>
-              <View style={[styles.divider, styles.titleDivider, { backgroundColor: theme.colors.surfaceVariant }]} />
+              {APP_PAGE_LAYOUT ? (
+                // Figma 7160:45365: the modules sit straight above the bar, 12dp from the panel's top, no title or rules.
+                <View style={styles.appPanelTop} />
+              ) : (
+                <>
+                  <Text accessibilityRole="header" style={[styles.panelTitle, { color: theme.colors.onSurfaceVariant }]}>
+                    {overflow.title.toUpperCase()}
+                  </Text>
+                  <View style={[styles.divider, styles.titleDivider, { backgroundColor: theme.colors.surfaceVariant }]} />
+                </>
+              )}
               <View style={styles.gridRows}>
                 {rows.map((row) => (
                   <View key={row[0].key} style={styles.gridRow}>
@@ -147,7 +166,7 @@ export function NavigationBar({ destinations, activeKey, onChange, overflow, onR
                   </View>
                 ))}
               </View>
-              <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
+              {APP_PAGE_LAYOUT ? <View style={styles.appPanelBottom} /> : <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />}
             </Animated.View>
           </Animated.View>
         ) : null}
@@ -175,11 +194,18 @@ export function NavigationBar({ destinations, activeKey, onChange, overflow, onR
               borderless
               style={styles.item}>
               <View style={styles.itemContent}>
-                <View style={styles.indicator}>
-                  <Animated.View style={{ transform: [{ rotate: progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
-                    <Icon source="caret-up" size={24} color={theme.colors.onSurface} />
-                  </Animated.View>
-                </View>
+                {APP_PAGE_LAYOUT ? (
+                  // Figma 7160:45316: an arrow up; expanded, a filled arrow down on the lime pill.
+                  <View style={[styles.indicator, expanded && { width: 56, backgroundColor: indicatorColor }]}>
+                    <LocalSvg asset={expanded ? MORE_EXPANDED : MORE} width={24} height={24} color={theme.colors.onSurface} />
+                  </View>
+                ) : (
+                  <View style={styles.indicator}>
+                    <Animated.View style={{ transform: [{ rotate: progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+                      <Icon source="caret-up" size={24} color={theme.colors.onSurface} />
+                    </Animated.View>
+                  </View>
+                )}
                 <Text numberOfLines={1} style={[styles.label, { color: theme.colors.onSecondaryContainer, fontFamily: Fonts.regular }]}>
                   {overflow.title}
                 </Text>
@@ -223,14 +249,19 @@ function NavItem({
       <Animated.View
         style={[styles.itemContent, { opacity: entrance, transform: [{ scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}>
         <View style={[styles.indicator, active && { width: 56, backgroundColor: indicatorColor }]}>
-          <Icon source={active ? destination.focusedIcon : destination.icon} size={24} color={theme.colors.onSurface} />
+          {destination.svg ? (
+            <LocalSvg asset={active ? destination.svg.focused : destination.svg.icon} width={24} height={24} color={theme.colors.onSurface} />
+          ) : (
+            <Icon source={active ? destination.focusedIcon : destination.icon} size={24} color={theme.colors.onSurface} />
+          )}
           {destination.badge ? (
             <Badge size={destination.badge === true ? 6 : 16} style={styles.badge}>
               {destination.badge === true ? undefined : destination.badge}
             </Badge>
           ) : null}
         </View>
-        <Text numberOfLines={1} style={[styles.label, { color: theme.colors.onSecondaryContainer, fontFamily: active ? Fonts.medium : Fonts.regular }]}>
+        {/* The app pages (Figma 7110:116411) keep every label regular; the pill alone marks the active one. */}
+        <Text numberOfLines={1} style={[styles.label, { color: theme.colors.onSecondaryContainer, fontFamily: active && !APP_PAGE_LAYOUT ? Fonts.medium : Fonts.regular }]}>
           {destination.label}
         </Text>
       </Animated.View>
@@ -239,8 +270,10 @@ function NavItem({
 }
 
 const ITEM_RADIUS = Shape.max;
-// Figma rounds the indicator fully (16dp); the app caps every radius at Shape.max.
-const INDICATOR_RADIUS = Shape.max;
+// Figma rounds the indicator fully (16dp); the app pages follow it, the older layout capped it at Shape.max.
+const INDICATOR_RADIUS = APP_PAGE_LAYOUT ? 16 : Shape.max;
+const MORE = require('../../../assets/images/nav/arrow-up2-outline.svg');
+const MORE_EXPANDED = require('../../../assets/images/nav/arrow-down2-filled.svg');
 
 const styles = StyleSheet.create({
   // A slight shadow above the bar, so it lifts off the page behind it.
@@ -252,13 +285,24 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
   },
+  // Figma 7110:116411: white, no hairline, shadow 0 −1 16 2 at 10% black.
+  appBar: {
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -1 },
+    elevation: 12,
+  },
+  appBarExpanded: { borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  appPanelTop: { height: 12 },
+  appPanelBottom: { height: 8 },
   panel: { overflow: 'hidden' },
   panelContent: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   panelTitle: { fontFamily: Fonts.semiBold, fontSize: 12, lineHeight: 16, letterSpacing: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 12 },
   // Same side padding as the bar's row, so the grid's columns sit over its items.
   gridRow: { flexDirection: 'row', paddingHorizontal: 8 },
   // Breathing room between the rows of modules.
-  gridRows: { gap: 12 },
+  gridRows: { gap: APP_PAGE_LAYOUT ? 0 : 12 },
   gridItem: { width: `${100 / OVERFLOW_COLUMNS}%`, borderRadius: ITEM_RADIUS },
   // Separators run edge to edge across the bar.
   // Room above the modules and between them and the bar's own items.

@@ -2,8 +2,9 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { type ReactNode, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { Button, Card, Checkbox, Divider, Icon, RadioButton, Switch, Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Button, Card, Checkbox, Icon, RadioButton, Switch, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { OrganisationSwitcher } from '@/components/account/organisation-switcher';
 import { SearchField } from '@/components/search-field';
 import { CompactSegmentedButtons, OutlinedActionButton } from '@/components/shared/controls';
@@ -12,7 +13,7 @@ import { DetailScreen } from '@/components/shared/detail-screen';
 import { NotFound } from '@/components/shared/not-found';
 import { PANEL_INNER_RADIUS, PanelSheet } from '@/components/shared/panel-sheet';
 import { concentric, Shape } from '@/constants/shape';
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 import { CURRENT_USER, ORGANISATIONS } from '@/data/businesses';
 import { STORE_IDENTITIES } from '@/data/terminal-devices';
 import { INITIAL_ROSTER, type RosterEntry } from '@/data/user-roster';
@@ -150,7 +151,6 @@ function FieldGroup({ children }: { children: ReactNode }) {
 }
 
 function PersonalDetails() {
-  const toast = useToast();
   const business = useBusiness();
   const [switching, setSwitching] = useState(false);
   const organisation = business.organisation;
@@ -171,10 +171,7 @@ function PersonalDetails() {
         onDismiss={() => setSwitching(false)}
         organisations={ORGANISATIONS}
         currentId={organisation.id}
-        onApply={(organisationId) => {
-          business.applyScope({ organisationId, shopIds: [], channel: business.channel });
-          toast(`Switched to ${ORGANISATIONS.find((org) => org.id === organisationId)?.name ?? 'organisation'}`);
-        }}
+        onApply={business.switchOrganisation}
       />
 
       <SectionIntro title="Basic details" description="All your personal details related to your login" />
@@ -585,7 +582,7 @@ export function AccountSettings() {
               const section = SECTIONS[key];
               return (
                 <View key={key}>
-                  {index > 0 ? <View style={[styles.rowDivider, { backgroundColor: theme.colors.surfaceVariant }]} /> : null}
+                  {index > 0 ? <View style={[styles.rowDivider, { backgroundColor: theme.colors.background }]} /> : null}
                   <TouchableRipple
                     onPress={() => router.push({ pathname: '/account-settings/[section]', params: { section: key } })}
                     accessibilityRole="button"
@@ -649,7 +646,7 @@ const styles = StyleSheet.create({
   subRows: { gap: 8 },
   subRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: INNER_RADIUS, paddingHorizontal: 12, paddingVertical: 8 },
   amountInput: { height: 32, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: INNER_RADIUS, paddingHorizontal: 8 },
-  amountText: { flex: 1, height: '100%', fontFamily: Fonts.regular, fontSize: 14 },
+  amountText: { fontVariant: OPEN_DIGITS, flex: 1, height: '100%', fontFamily: Fonts.regular, fontSize: 14 },
   sheetFooter: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   panelButton: { borderRadius: PANEL_INNER_RADIUS },
   sheetBody: { flex: 1, padding: 16, gap: 12 },

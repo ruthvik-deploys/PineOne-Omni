@@ -1,0 +1,52 @@
+{
+  "name": "Case study fonts",
+  "id": "pineone-case-study-fonts",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": [
+    "figma"
+  ],
+  "documentAccess": "dynamic-page",
+  "menu": [
+    {
+      "name": "Titles \u2192 Timeless Serif Italic",
+      "command": "titles"
+    },
+    {
+      "name": "Body \u2192 General Sans (Pine One, index, experiments)",
+      "command": "body"
+    },
+    {
+      "name": "Icons \u2192 Reicon",
+      "command": "icons"
+    },
+    {
+      "name": "Edits \u2192 apply copy changes",
+      "command": "edits"
+    },
+    {
+      "name": "eSign \u2192 Pine One format",
+      "command": "esign"
+    },
+    {
+      "name": "Bottom nav \u2192 component",
+      "command": "navcomp"
+    },
+    {
+      "name": "Bottom nav bar \u2192 component",
+      "command": "navbar"
+    },
+    {
+      "name": "Nav info",
+      "command": "navinfo"
+    },
+    {
+      "name": "Bottom nav \u2192 More modules",
+      "command": "navmore"
+    },
+    {
+      "name": "Bottom nav \u2192 reorder More row",
+      "command": "navorder"
+    }
+  ]
+}

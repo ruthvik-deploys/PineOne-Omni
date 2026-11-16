@@ -68,7 +68,15 @@ export const TODAY_PAYMENTS = {
     { transactionId: '1525039336', amount: 10000, time: '9:30 PM', paymentMode: 'card', status: { label: 'Success', tone: 'success' } },
     { transactionId: '1525039339', amount: 25000, time: '3:00 PM', paymentMode: 'card', status: { label: 'Failed', tone: 'failed' } },
   ] satisfies RecentPayment[],
+  recentOnline: [
+    { transactionId: '1525039337', amount: 35000, time: '2:45 PM', paymentMode: 'netbanking', status: { label: 'Cancelled', tone: 'failed' } },
+    { transactionId: '1525039334', amount: 45000, time: '11:15 AM', paymentMode: 'upi', status: { label: 'Success', tone: 'success' } },
+    { transactionId: '1525039340', amount: 50000, time: '8:00 AM', paymentMode: 'upi', status: { label: 'Success', tone: 'success' } },
+  ] satisfies RecentPayment[],
 };
+
+/** Yesterday's totals for the Home cards' Today / Yesterday switch (Figma 7154:141243); split as today's are. */
+export const YESTERDAY_PAYMENTS = { totalAmount: 1688400, count: 41 };
 
 export type SettlementSource = 'pinelabs' | 'partner-bank';
 
@@ -76,6 +84,9 @@ export const SETTLEMENT_SOURCES: { value: SettlementSource; label: string }[] = 
   { value: 'pinelabs', label: 'Pine Labs' },
   { value: 'partner-bank', label: 'Partner Bank' },
 ];
+
+/** Pine Labs' share of today's payments; the partner bank takes the rest. */
+export const PINE_LABS_PAYMENT_SHARE = 0.8;
 
 /** Web: SETTLEMENT_TODAY_STATS (amounts in rupees). */
 export const SETTLEMENT_TODAY: Record<
@@ -95,7 +106,7 @@ export const SETTLEMENT_TODAY: Record<
     netAmount: 184567.72,
     transactionsConsidered: 324,
     lastSettlement: 'Today · 03:00 PM',
-    lastSettledLabel: 'Last settled at 3 PM today',
+    lastSettledLabel: 'Last settled today at 3:00 PM',
     pendingAmount: 52340.18,
     nextSettlement: 'Tomorrow · 03:00 PM',
     nextSettlementLabel: 'Today by 6 PM',
@@ -104,11 +115,17 @@ export const SETTLEMENT_TODAY: Record<
     netAmount: 42180,
     transactionsConsidered: 96,
     lastSettlement: 'Today · 11:30 AM',
-    lastSettledLabel: 'Last settled at 11:30 AM today',
+    lastSettledLabel: 'Last settled today at 11:30 AM',
     pendingAmount: 11860,
     nextSettlement: 'Tomorrow · 11:30 AM',
     nextSettlementLabel: 'Today by 7:30 PM',
   },
+};
+
+/** What settled yesterday, for the Home card's Yesterday tab: all of it is in, so nothing's left to settle. */
+export const SETTLEMENT_YESTERDAY: Record<SettlementSource, { netAmount: number; lastSettledLabel: string }> = {
+  pinelabs: { netAmount: 1612480.5, lastSettledLabel: 'Last settled yesterday at 6:00 PM' },
+  'partner-bank': { netAmount: 296340, lastSettledLabel: 'Last settled yesterday at 7:30 PM' },
 };
 
 /* ------------------------------------------------------------------ */

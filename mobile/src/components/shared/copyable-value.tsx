@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Icon, Text, useTheme } from 'react-native-paper';
 
+import { PILL_HEIGHT } from '@/components/shared/status';
 import { Fonts } from '@/constants/theme';
 
 type CopyableValueProps = {
@@ -52,5 +53,5 @@ export function CopyableValue({ value, label, variant = 'text', radius = 12 }: C
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
   text: { fontFamily: Fonts.regular },
-  pill: { height: 24, paddingHorizontal: 8, borderWidth: StyleSheet.hairlineWidth },
+  pill: { height: PILL_HEIGHT, paddingHorizontal: 8, borderWidth: StyleSheet.hairlineWidth },
 });

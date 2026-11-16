@@ -3,7 +3,7 @@ import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { Icon, TouchableRipple, useTheme } from 'react-native-paper';
 
 import { MIN_RADIUS } from '@/constants/shape';
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 
 type SearchFieldProps = {
   value: string;
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   icon: { flexShrink: 0 },
   // minWidth 0 lets the input shrink below the browser's default width; long placeholders end in an ellipsis.
-  input: {
+  input: { fontVariant: OPEN_DIGITS,
     flex: 1,
     minWidth: 0,
     height: '100%',

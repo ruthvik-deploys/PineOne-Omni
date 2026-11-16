@@ -1,14 +1,17 @@
 import * as DocumentPicker from 'expo-document-picker';
+import { PAGE_PADDING } from '@/components/tab-screen';
 import { Image } from 'expo-image';
 import { type ReactNode, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Divider, Icon, Switch, Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Button, Card, Icon, Switch, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { Tabs } from '@/components/material3/tabs';
 import { SearchField } from '@/components/search-field';
 import { FormTextInput } from '@/components/shared/form-fields';
 import { PANEL_INNER_RADIUS, PanelSheet, SheetRow, SheetSection } from '@/components/shared/panel-sheet';
 import { DetailScreen, DETAIL_FOOTER_BUTTON_RADIUS } from '@/components/shared/detail-screen';
+import { PILL_HEIGHT } from '@/components/shared/status';
 import { concentric, Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 import { DEFAULT_CHECKOUT_COLOR, PAYMODE_CARDS, type PaymodeCard } from '@/data/checkout';
@@ -573,7 +576,7 @@ const styles = StyleSheet.create({
   whiteMuted: { color: 'rgba(255, 255, 255, 0.7)', marginTop: 4 },
   tracking: { letterSpacing: 0.5 },
   tiny: { fontSize: 10, lineHeight: 13 },
-  tabs: { marginHorizontal: -16, marginVertical: -8 },
+  tabs: { marginHorizontal: -PAGE_PADDING, marginVertical: -8 },
   card: { borderRadius: Shape.max, overflow: 'hidden' },
   sectionTitle: { paddingHorizontal: CARD_PADDING, paddingVertical: 14 },
   settingsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: CARD_PADDING, paddingVertical: 14 },
@@ -615,7 +618,7 @@ const styles = StyleSheet.create({
   paymodeBody: { padding: CARD_PADDING, gap: 12 },
   upi: { fontSize: 10, fontFamily: Fonts.bold, letterSpacing: -0.5 },
   activeBadge: { backgroundColor: SUCCESS, borderRadius: INNER_RADIUS, paddingHorizontal: 10, height: 24, justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: INNER_RADIUS, paddingHorizontal: 8, paddingVertical: 4 },
+  pill: { height: PILL_HEIGHT, flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: INNER_RADIUS, paddingHorizontal: 8 },
   footerNote: { paddingHorizontal: CARD_PADDING, paddingVertical: 12 },
   networkBadge: {
     width: 24,

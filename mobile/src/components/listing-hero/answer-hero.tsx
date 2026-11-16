@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, type LayoutChangeEvent, LayoutAnimation, StyleSheet, View } from 'react-native';
 import { Icon, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
@@ -6,12 +6,23 @@ import { useTabLayout } from '@/components/app-tabs';
 import { useAppColors } from '@/constants/app-colors';
 import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
-import { formatCount } from '@/data/common';
+import { formatCount, formatInr } from '@/data/common';
 
-import { TIME_CONTROL_HEIGHT, TimeControl, type TimeScope } from './time-scope';
+import { HeroNumber, HeroSwitch, HeroTopRow, LiveTag, SampleHero } from '@/components/listing-sample/sample-layout';
+import { ActionBanner } from '@/components/shared/action-banner';
+import { PanelSheet } from '@/components/shared/panel-sheet';
+import { SheetBlock, SheetRow } from '@/components/shared/sheet-parts';
+import { DimmedDecimalAmount } from '@/components/shared/amount';
+import { APP_PAGE_LAYOUT, LISTING_SAMPLE_LAYOUT } from '@/constants/experiments';
 
-/** How far the records card rides up over the hero's foot. */
-export const HERO_OVERLAP = 28;
+import { DateButton, TIME_CONTROL_HEIGHT, TimeControl, type TimeScope } from './time-scope';
+
+/**
+ * How far the records card rides up over the hero's foot. The app pages
+ * (APP_PAGE_LAYOUT) stack separate cards instead: the negative overlap leaves
+ * the page's 8dp gap under them.
+ */
+export const HERO_OVERLAP = APP_PAGE_LAYOUT ? -8 : 28;
 
 /**
  * The one row under the number, leading with its figure: e.g. "Deductions
@@ -26,7 +37,7 @@ export type AnswerDetail = {
   value?: string;
   tone?: 'negative' | 'accent';
   /** Lines that make up the figure, unfolded in place under the row. */
-  breakdown?: { label: string; value: string; tone?: 'negative' | 'total' }[];
+  breakdown?: { label: string; value: string; tone?: 'negative' | 'total'; info?: boolean }[];
   /** For an action row: what it does, at the row's end (e.g. "On-Demand"). */
   actionLabel?: string;
   onPress?: () => void;
@@ -36,6 +47,8 @@ export type AnswerView = {
   key: string;
   /** The switch's label (two views), or the title over the number (one view). */
   label: string;
+  /** The summary card's icon, ahead of its title (APP_PAGE_LAYOUT), e.g. chart-bar for a volume. */
+  icon?: string;
   amount: number;
   /** Shown instead of the amount when the answer isn't money (e.g. 12 of 14 devices). */
   count?: { value: number; of?: number };
@@ -73,7 +86,183 @@ const animateLayout = () => LayoutAnimation.configureNext(LayoutAnimation.create
  * Sized to its content, on the page itself; the records card rides up over
  * its foot and slides over it as the page scrolls.
  */
-export function AnswerHero({ views, activeKey, onActiveChange }: AnswerHeroProps) {
+export function AnswerHero(props: AnswerHeroProps) {
+  if (APP_PAGE_LAYOUT) return <CardAnswerHero {...props} />;
+  return LISTING_SAMPLE_LAYOUT ? <SampleAnswerHero {...props} /> : <ClassicAnswerHero {...props} />;
+}
+
+/**
+ * The answer as the app pages set it (APP_PAGE_LAYOUT, Figma 7152:136293 /
+ * 7161:93454): the dates first, as one full-width pill, then every view as
+ * its own summary card, one under the other (Settled, then Remaining amount),
+ * each with its icon and title, the number and its line. A figure row (e.g.
+ * deductions) closes its card with a View link that unfolds the breakdown; an
+ * action row (On-Demand settlement) becomes the banner under the cards.
+ */
+function CardAnswerHero({ views }: AnswerHeroProps) {
+  const dates = views.map((view) => view.time).find((time) => time.kind === 'range');
+  // A row with a figure or a breakdown closes its card; any other (an action) is a banner under the cards.
+  const banners = views.flatMap((view) => view.details?.filter((detail) => !detail.value && detail.onPress) ?? []);
+  return (
+    <View style={styles.cardStack}>
+      {dates?.kind === 'range' ? <DateButton scope={dates} wide /> : null}
+      {views.map((view) => (
+        <SummaryCard
+          key={view.key}
+          icon={view.icon ?? 'chart-bar'}
+          title={view.label}
+          amount={view.count ? undefined : view.amount}
+          count={view.count}
+          line={view.line}
+          note={view.note}
+          footer={view.details?.find((detail) => !!detail.value || !!detail.breakdown?.length)}
+        />
+      ))}
+      {banners.map((detail) => (
+        <ActionBanner key={detail.key} label={detail.label} actionLabel={detail.actionLabel} onPress={detail.onPress} />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * A summary card (Figma 7153:139361): a 56dp header with the icon and title,
+ * a hairline, then the amount (20/28 semibold, faint paise) over one muted
+ * line, and an optional footer row — its figure first ("₹30,000 deductions"),
+ * then an underlined View that unfolds what makes it up.
+ */
+export function SummaryCard({
+  icon,
+  title,
+  amount,
+  count,
+  line,
+  note,
+  footer,
+  actions,
+}: {
+  icon: string;
+  title: string;
+  amount?: number;
+  count?: { value: number; of?: number };
+  line: string;
+  note?: string;
+  footer?: AnswerDetail;
+  /** Buttons in a footer under a rule, e.g. Invoices and Pay on Pending dues. */
+  actions?: ReactNode;
+}) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const muted = { color: theme.colors.onSurfaceVariant };
+  return (
+    <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+      <View style={[styles.summaryHeader, { borderBottomColor: theme.colors.background }]}>
+        {/* Figma 7800:99882: a 20dp muted icon and the title in muted uppercase, 14/20 medium. */}
+        <Icon source={icon} size={20} color={theme.colors.onSurfaceVariant} />
+        <Text accessibilityRole="header" style={[styles.summaryTitle, { color: theme.colors.onSurfaceVariant }]}>
+          {title.toUpperCase()}
+        </Text>
+      </View>
+      <View style={styles.summaryBody}>
+        {count ? (
+          <Text style={[styles.summaryCount, { color: theme.colors.onSurface }]}>
+            {formatCount(count.value)}
+            {count.of !== undefined ? <Text style={[styles.summaryLine, muted]}> of {formatCount(count.of)}</Text> : null}
+          </Text>
+        ) : (
+          <DimmedDecimalAmount value={formatInr(amount ?? 0)} size="medium" />
+        )}
+        <Text style={[styles.summaryLine, muted]}>{line}</Text>
+        {note ? (
+          <View style={styles.noteRow}>
+            <Icon source="info" size={14} color={theme.colors.onSurfaceVariant} />
+            <Text style={[styles.note, muted]}>{note}</Text>
+          </View>
+        ) : null}
+      </View>
+      {actions ? <View style={[styles.summaryFooter, styles.summaryActions, { borderTopColor: theme.colors.background }]}>{actions}</View> : null}
+      {footer ? (
+        <View style={[styles.summaryFooter, { borderTopColor: theme.colors.background }]}>
+          <View style={styles.summaryFooterRow}>
+            <Text style={[styles.summaryLine, styles.flex, muted]}>
+              {footer.value ? (
+                <Text style={{ color: footer.tone === 'negative' ? theme.colors.error : theme.colors.onSurface }}>{footer.value.replace(/^−/, '')} </Text>
+              ) : null}
+              {footer.value ? footer.label.charAt(0).toLowerCase() + footer.label.slice(1) : footer.label}
+            </Text>
+            {footer.breakdown?.length || footer.onPress ? (
+              <Text
+                onPress={() => {
+                  if (!footer.breakdown?.length) return footer.onPress?.();
+                  // Figma 7161:94736: the breakdown opens as a sheet over the page.
+                  setOpen(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`View ${footer.label.toLowerCase()}`}
+                style={[styles.viewLink, { color: theme.colors.primary }]}>
+                View
+              </Text>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+      {footer?.breakdown?.length ? (
+        // Figma 7161:95796: each part, then what reached the bank under a rule; sized to its rows (header and total 132, each part 36).
+        <PanelSheet visible={open} onDismiss={() => setOpen(false)} title={footer.label} height={132 + footer.breakdown.filter((row) => row.tone !== 'total').length * 36}>
+          <SheetBlock gap={16}>
+            {footer.breakdown
+              .filter((row) => row.tone !== 'total')
+              .map((row) => (
+                <SheetRow
+                  key={row.label}
+                  label={row.label}
+                  info={row.info || row.label === 'Others'}
+                  value={row.tone === 'negative' ? row.value.replace(/^−/, '- ') : row.value}
+                  tone={row.tone === 'negative' ? 'negative' : undefined}
+                />
+              ))}
+          </SheetBlock>
+          {footer.breakdown
+            .filter((row) => row.tone === 'total')
+            .map((row) => (
+              <SheetBlock key={row.label} last>
+                <SheetRow label={row.label} value={row.value} strong />
+              </SheetBlock>
+            ))}
+        </PanelSheet>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * The same answer in the listing sample's style (LISTING_SAMPLE_LAYOUT): on
+ * the coloured hero, two thirds of the screen, left aligned — what and when,
+ * the number, its line, then the detail rows.
+ */
+function SampleAnswerHero({ views, activeKey, onActiveChange }: AnswerHeroProps) {
+  const theme = useTheme();
+  const view = views.find((item) => item.key === activeKey) ?? views[0];
+  return (
+    <SampleHero>
+      <HeroTopRow label={views.length > 1 ? undefined : view.label} period={view.time.kind === 'range' ? <DateButton scope={view.time} compact /> : <LiveTag />}>
+        {views.length > 1 ? (
+          <HeroSwitch options={views.map((item) => ({ key: item.key, label: item.label }))} value={view.key} onChange={(key) => onActiveChange?.(key)} />
+        ) : null}
+      </HeroTopRow>
+      <HeroNumber amount={view.amount} count={view.count} line={view.line} note={view.note} />
+      {view.details?.length ? (
+        <View style={[styles.details, { backgroundColor: theme.colors.surface }]}>
+          {view.details.map((detail, index) => (
+            <DetailRow key={`${view.key}-${detail.key}`} detail={detail} first={index === 0} />
+          ))}
+        </View>
+      ) : null}
+    </SampleHero>
+  );
+}
+
+function ClassicAnswerHero({ views, activeKey, onActiveChange }: AnswerHeroProps) {
   const theme = useTheme();
   const view = views.find((item) => item.key === activeKey) ?? views[0];
   const { scrollY } = useTabLayout();
@@ -174,7 +363,7 @@ function DetailRow({ detail, first }: { detail: AnswerDetail; first: boolean }) 
 
   return (
     <View>
-      {first ? null : <View style={[styles.hairline, { backgroundColor: theme.colors.surfaceVariant }]} />}
+      {first ? null : <View style={[styles.hairline, { backgroundColor: theme.colors.background }]} />}
       <TouchableRipple
         onPress={onPress}
         accessibilityRole="button"
@@ -195,7 +384,7 @@ function DetailRow({ detail, first }: { detail: AnswerDetail; first: boolean }) 
       {expandable && open ? (
         <View style={styles.breakdown}>
           {detail.breakdown!.map((row) => (
-            <View key={row.label} style={[styles.breakdownRow, row.tone === 'total' && [styles.breakdownTotal, { borderTopColor: theme.colors.surfaceVariant }]]}>
+            <View key={row.label} style={[styles.breakdownRow, row.tone === 'total' && [styles.breakdownTotal, { borderTopColor: theme.colors.background }]]}>
               <Text style={[styles.breakdownLabel, { color: row.tone === 'total' ? theme.colors.onSurface : theme.colors.onSurfaceVariant }]}>{row.label}</Text>
               <Text
                 style={[
@@ -271,6 +460,20 @@ const PAGE_PADDING = 16;
 const PAGE_TOP_GAP = 24;
 
 const styles = StyleSheet.create({
+  cardStack: { gap: 8 },
+  summaryCard: { borderRadius: Shape.max, overflow: 'hidden' },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderBottomWidth: 1 },
+  summaryTitle: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
+  summaryBody: { gap: 4, padding: 16 },
+  // Buttons in the card's footer, below the same rule as Settlement's deductions row.
+  summaryActions: { flexDirection: 'row', gap: 8 },
+  summaryCount: { fontFamily: Fonts.semiBold, fontSize: 20, lineHeight: 28, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  summaryLine: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  summaryFooter: { borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 14 },
+  summaryFooterRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  flex: { flex: 1 },
+  viewLink: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' },
+  cardBreakdown: { paddingTop: 10 },
   hero: { marginHorizontal: -PAGE_PADDING, marginTop: -PAGE_TOP_GAP },
   content: { paddingHorizontal: PAGE_PADDING, paddingTop: 16, paddingBottom: 20 + HERO_OVERLAP, gap: 20 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: TIME_CONTROL_HEIGHT },
@@ -283,7 +486,7 @@ const styles = StyleSheet.create({
   // Baseline-aligned: the ₹ and paise sit on the rupees' baseline.
   amount: { flexDirection: 'row', alignItems: 'baseline' },
   currency: { fontFamily: Fonts.regular, fontSize: 16, lineHeight: 22, marginRight: 2 },
-  rupees: { flexShrink: 1, fontFamily: Fonts.semiBold, fontSize: 24, lineHeight: 30, letterSpacing: -0.2, fontVariant: ['tabular-nums', 'lining-nums'] },
+  rupees: { flexShrink: 1, fontFamily: Fonts.semiBold, fontSize: 24, lineHeight: 30, letterSpacing: -0.2, fontVariant: ['tabular-nums', 'lining-nums', 'stylistic-one'] },
   countOf: { fontFamily: Fonts.regular, fontSize: 16, lineHeight: 22 },
   paise: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20, marginLeft: 1, opacity: 0.6 },
   line: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20 },
@@ -293,11 +496,11 @@ const styles = StyleSheet.create({
   hairline: { height: 1, marginLeft: 14 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 14 },
   detailLabel: { flex: 1, fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
-  detailValue: { fontFamily: Fonts.semiBold, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
+  detailValue: { fontFamily: Fonts.semiBold, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums', 'stylistic-one'] },
   detailAction: { fontFamily: Fonts.semiBold, fontSize: 14, lineHeight: 20 },
   breakdown: { paddingHorizontal: 14, paddingBottom: 12 },
   breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
   breakdownTotal: { borderTopWidth: 1, marginTop: 6, paddingTop: 10 },
   breakdownLabel: { fontFamily: Fonts.regular, fontSize: 13, lineHeight: 18 },
-  breakdownValue: { fontFamily: Fonts.medium, fontSize: 13, lineHeight: 18, fontVariant: ['tabular-nums'] },
+  breakdownValue: { fontFamily: Fonts.medium, fontSize: 13, lineHeight: 18, fontVariant: ['tabular-nums', 'stylistic-one'] },
 });

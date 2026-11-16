@@ -4,13 +4,14 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Icon, Text, useTheme } from 'react-native-paper';
 
 import { AnswerHero, HERO_OVERLAP } from '@/components/listing-hero/answer-hero';
+import { RowAmount } from '@/components/payments/payment-row';
 import { ListingCard } from '@/components/listing-hero/listing-card';
 import { type RangeScope, type RangeValue, rangePhrase, resolveRange } from '@/components/listing-hero/time-scope';
 import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
 import { DateTimeField, type DateTimeValue, FormField, FormTextInput } from '@/components/shared/form-fields';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { LIST_ROW_INNER_RADIUS, ListCard, ListingToolbar, ListRow, ListRowLine, selectFilter } from '@/components/shared/listing';
+import { ListCard, ListingToolbar, ListRow, ListRowLine, selectFilter, StatusStack } from '@/components/shared/listing';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet, SHEET_BUTTON, SheetRow, SheetSection } from '@/components/shared/panel-sheet';
 import { StatusPill } from '@/components/shared/status';
 import { TabScreen } from '@/components/tab-screen';
@@ -29,10 +30,26 @@ import {
   type PaymentLinkStatus,
   paymentLinkTone,
 } from '@/data/payment-links';
-import { LISTING_HERO_LAYOUT } from '@/constants/experiments';
-import { parseInr } from '@/data/common';
+import { LISTING_HERO_LAYOUT, LISTING_SAMPLE_LAYOUT } from '@/constants/experiments';
+import { daysBetween, parseInr } from '@/data/common';
 import { parseDisplayDate } from '@/data/transactions';
 import { useToast } from '@/hooks/use-toast';
+
+// The demo's "today": the newest link, so expiries read as they would on the day.
+const LINKS_TODAY = new Date(
+  Math.max(0, ...PAYMENT_LINK_ROWS.map((row) => parseDisplayDate(row.createdDate, row.createdTime)?.getTime() ?? 0))
+);
+
+/** A live link's expiry under its status (Figma 7385:90223 pattern): red once it's a day or less away. */
+function linkExpiry(row: PaymentLinkRow): { note?: string; urgent?: boolean } {
+  if (row.status !== 'Created') return {};
+  const expiry = parseDisplayDate(row.expiryDate, row.expiryTime);
+  if (!expiry) return {};
+  const days = daysBetween(LINKS_TODAY, expiry);
+  if (days < 0) return { note: 'Past expiry', urgent: true };
+  const note = days === 0 ? 'Expires today' : days === 1 ? 'Expires tomorrow' : `Expires in ${days} days`;
+  return { note, urgent: days <= 1 };
+}
 
 export type CreatePaymentLinkValues = {
   amount: string;
@@ -234,23 +251,20 @@ export function PaymentLinks({ startCreating = false }: { startCreating?: boolea
   const renderRow = (row: PaymentLinkRow) => (
     <ListRow
       key={row.id}
+      icon="link-simple"
       onPress={() => setSelectedId(row.id)}
       accessibilityLabel={`${row.amount}, ${row.description}, payment link ${row.paymentLink}, ${row.status}. Open details`}>
       <ListRowLine
         left={
           <>
-            <Text variant="titleMedium" style={styles.amount}>
-              {row.amount}
-            </Text>
-            <Text variant="bodySmall" numberOfLines={1}>
-              {row.description === '-' ? 'No description' : row.description}
-            </Text>
+            <RowAmount value={row.amount} />
             <Text variant="bodySmall" numberOfLines={1} style={muted}>
-              {row.paymentLink} · {row.createdTime}
+              {row.description === '-' ? 'No description' : row.description}
             </Text>
           </>
         }
-        right={<StatusPill label={row.status} tone={paymentLinkTone(row.status)} radius={LIST_ROW_INNER_RADIUS} />}
+        right={<StatusStack status={<StatusPill label={row.status} tone={paymentLinkTone(row.status)} />} {...linkExpiry(row)} />}
+        centered
       />
     </ListRow>
   );
@@ -288,7 +302,6 @@ export function PaymentLinks({ startCreating = false }: { startCreating?: boolea
   const paid = inRange.filter((row) => row.status === 'Fully paid');
   // Open links are a balance right now, whatever the dates.
   const open = rows.filter((row) => row.status === 'Created');
-  const expired = inRange.filter((row) => row.status === 'Expired').length;
   const linkTotal = (list: PaymentLinkRow[]) => list.reduce((sum, row) => sum + parseInr(row.amount), 0);
   const dates: RangeScope = {
     kind: 'range',
@@ -334,6 +347,7 @@ export function PaymentLinks({ startCreating = false }: { startCreating?: boolea
               {
                 key: 'paid',
                 label: 'Paid via links',
+                icon: 'check-circle',
                 amount: linkTotal(paid),
                 line: paid.length ? `${paid.length} ${paid.length === 1 ? 'link' : 'links'} paid ${rangePhrase(range)}` : `No links paid ${rangePhrase(range)}`,
                 time: dates,
@@ -341,6 +355,7 @@ export function PaymentLinks({ startCreating = false }: { startCreating?: boolea
               {
                 key: 'open',
                 label: 'Open links',
+                icon: 'hourglass',
                 amount: linkTotal(open),
                 line: `${open.length} ${open.length === 1 ? 'link is' : 'links are'} waiting to be paid`,
                 time: { kind: 'live' },
@@ -348,6 +363,7 @@ export function PaymentLinks({ startCreating = false }: { startCreating?: boolea
             ]}
           />
           <ListingCard
+            belowHero
             style={styles.overHero}
             search={search}
             onSearchChange={(value) => {
@@ -356,22 +372,6 @@ export function PaymentLinks({ startCreating = false }: { startCreating?: boolea
             }}
             searchPlaceholder={`Enter ${activeField.label.toLowerCase()}`}
             time={heroView === 'open' ? dates : undefined}
-            suggestions={
-              expired > 0 && status !== 'Expired'
-                ? [
-                    {
-                      key: 'expired',
-                      label: `${expired} expired`,
-                      icon: 'warning-circle',
-                      color: theme.colors.error,
-                      onPress: () => {
-                        setStatus('Expired');
-                        lazy.reset();
-                      },
-                    },
-                  ]
-                : []
-            }
             filters={linkFilters}
             actions={[{ label: 'Download filtered', icon: 'download-simple' }]}
             totals={{ all: inRange.length, shown: heroFiltered.length, amount: linkTotal(heroFiltered) }}
@@ -514,7 +514,7 @@ function PaymentLinkSheet({
           <Text style={styles.sheetAmount}>{current.amount}</Text>
           {/* The pill sizes itself to the start of its row; centred here under the amount. */}
           <View style={styles.sheetPill}>
-            <StatusPill label={current.status} tone={paymentLinkTone(current.status)} radius={LIST_ROW_INNER_RADIUS} />
+            <StatusPill label={current.status} tone={paymentLinkTone(current.status)} />
           </View>
         </View>
         <SheetSection label="Details">
@@ -542,10 +542,10 @@ function PaymentLinkSheet({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   medium: { fontFamily: Fonts.medium },
-  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums'] },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
   sheetBody: { padding: 16, gap: 16 },
   sheetHero: { alignItems: 'center', gap: 8, paddingVertical: 8 },
-  sheetAmount: { fontFamily: Fonts.semiBold, fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums'] },
+  sheetAmount: { fontFamily: Fonts.semiBold, fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums', 'stylistic-one'] },
   sheetActions: { gap: 8 },
   sheetPill: { flexDirection: 'row', justifyContent: 'center' },
   semiBold: { fontFamily: Fonts.semiBold },
@@ -553,7 +553,8 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 8, padding: 32, borderWidth: 1, borderRadius: Shape.max },
   emptyIcon: { width: 36, height: 36, borderRadius: Shape.small, alignItems: 'center', justifyContent: 'center' },
   panelButton: { borderRadius: PANEL_INNER_RADIUS },
-  heroContainer: { gap: 16 },
+  // The listing sample's sheet rides up over the hero itself.
+  heroContainer: { gap: LISTING_SAMPLE_LAYOUT ? 0 : 16 },
   // The container's gap plus the hero's open foot.
   overHero: { marginTop: -(16 + HERO_OVERLAP) },
 });

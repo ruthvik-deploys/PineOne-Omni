@@ -13,6 +13,8 @@ const SIZES = {
   large: { fontFamily: Fonts.semiBold, fontSize: 24, lineHeight: 28 },
   /** Summary cards (web: text-xl font-semibold). */
   medium: { fontFamily: Fonts.semiBold, fontSize: 20, lineHeight: 28 },
+  /** A listing row's heading (app pages, Figma 7153:139381: text-base medium). */
+  row: { fontFamily: Fonts.medium, fontSize: 16, lineHeight: 24 },
   /** Inline amounts in rows (web: text-sm font-medium). */
   inline: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
 } as const;
@@ -40,7 +42,7 @@ export function DimmedDecimalAmount({ value, size = 'large' }: { value: string; 
 }
 
 const styles = StyleSheet.create({
-  tabular: { fontVariant: ['tabular-nums'] },
+  tabular: { fontVariant: ['tabular-nums', 'stylistic-one'] },
   // The paise are 14px at every size, in the amount's own weight (nested Paper Text doesn't inherit it).
   decimals: { fontSize: 14 },
 });

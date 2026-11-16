@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Icon, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 
 import { AnswerHero, HERO_OVERLAP } from '@/components/listing-hero/answer-hero';
+import { RowAmount } from '@/components/payments/payment-row';
 import { ListingCard } from '@/components/listing-hero/listing-card';
 import { type RangeScope, type RangeValue, rangePhrase, resolveRange } from '@/components/listing-hero/time-scope';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { LIST_ROW_INNER_RADIUS, ListRow, ListRowLine, selectFilter } from '@/components/shared/listing';
+import { ListRow, ListRowLine, selectFilter } from '@/components/shared/listing';
 import type { MoreFilterSelection } from '@/components/shared/more-filters';
 import { DotStatusBadge } from '@/components/shared/status';
+import { LISTING_SAMPLE_LAYOUT } from '@/constants/experiments';
 import { Fonts } from '@/constants/theme';
 import { parseInr } from '@/data/common';
 import { REFUND_AMOUNT_TYPES, REFUND_STATUSES, type RefundRow, type RefundStatus, refundRows, refundStatusTone } from '@/data/refunds';
@@ -63,7 +65,6 @@ export function RefundsHeroView() {
   const refunded = inRange.filter((row) => row.status === 'Success');
   // In progress is a balance right now, whatever the dates.
   const pending = refundRows.filter((row) => row.status === 'Pending');
-  const failed = inRange.filter((row) => row.status === 'Failed').length;
   const phrase = rangePhrase(range);
   const dates: RangeScope = {
     kind: 'range',
@@ -86,6 +87,7 @@ export function RefundsHeroView() {
           {
             key: 'refunded',
             label: 'Refunded',
+            icon: 'arrow-u-up-left',
             amount: total(refunded),
             line: refunded.length ? `${refunded.length} ${refunded.length === 1 ? 'refund' : 'refunds'} reached customers ${phrase}` : `Nothing refunded ${phrase}`,
             time: dates,
@@ -93,6 +95,7 @@ export function RefundsHeroView() {
           {
             key: 'in-progress',
             label: 'In progress',
+            icon: 'hourglass',
             amount: total(pending),
             line: `${pending.length} ${pending.length === 1 ? 'refund is' : 'refunds are'} on the way to customers`,
             time: { kind: 'live' },
@@ -101,16 +104,12 @@ export function RefundsHeroView() {
       />
 
       <ListingCard
+        belowHero
         style={styles.overHero}
         search={search}
         onSearchChange={resetList(setSearch)}
         searchPlaceholder="Search by any ID"
         time={heroView === 'in-progress' ? dates : undefined}
-        suggestions={
-          failed > 0 && status !== 'Failed'
-            ? [{ key: 'failed', label: `${failed} failed`, icon: 'warning-circle', color: theme.colors.error, onPress: () => resetList(setStatus)('Failed') }]
-            : []
-        }
         filters={[
           selectFilter({ label: 'Status', options: STATUS_OPTIONS, value: status, onApply: resetList(setStatus) }),
           {
@@ -135,22 +134,17 @@ export function RefundsHeroView() {
           noun={noun}
           empty={inRange.length ? 'No refunds match. Try clearing the search or filters.' : 'No refunds in these dates.'}
           renderRow={(row) => (
-            <ListRow key={row.id} accessibilityLabel={`Refund ${row.refundId}, ${row.amount}, ${row.status}`}>
+            <ListRow key={row.id} icon="arrow-u-up-left" accessibilityLabel={`Refund ${row.refundId}, ${row.amount}, ${row.status}`}>
               <ListRowLine
                 left={
                   <>
-                    <Text variant="titleMedium" style={styles.amount}>
-                      {row.amount}
+                    <RowAmount value={row.amount} />
+                    <Text variant="bodySmall" numberOfLines={1} style={muted}>
+                      Refund ID {row.refundId}
                     </Text>
-                    <View style={styles.idRow}>
-                      <Icon source="arrow-u-up-left" size={16} color={theme.colors.onSurfaceVariant} />
-                      <Text variant="bodySmall" numberOfLines={1} style={muted}>
-                        Refund ID {row.refundId}
-                      </Text>
-                    </View>
                   </>
                 }
-                right={<DotStatusBadge label={row.status} tone={refundStatusTone(row.status)} radius={LIST_ROW_INNER_RADIUS} />}
+                right={<DotStatusBadge label={row.status} tone={refundStatusTone(row.status)} />}
                 centered
               />
             </ListRow>
@@ -163,9 +157,9 @@ export function RefundsHeroView() {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 16 },
+  // The listing sample's sheet rides up over the hero itself.
+  container: { gap: LISTING_SAMPLE_LAYOUT ? 0 : 16 },
   // The container's gap plus the hero's open foot.
   overHero: { marginTop: -(16 + HERO_OVERLAP) },
-  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums'] },
-  idRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
 });

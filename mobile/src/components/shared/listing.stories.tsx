@@ -9,7 +9,7 @@ import { CopyableValue } from './copyable-value';
 import { getDefaultDateRangePresets, makeDateRangeValue } from './date-range-filter';
 import { DetailSections } from './detail-rows';
 import { LazyListFooter, useLazyList } from './lazy-list';
-import { LIST_ROW_INNER_RADIUS, ListCard, ListRow, ListRowLine, ListingToolbar, selectFilter } from './listing';
+import { ListCard, ListRow, ListRowLine, ListingToolbar, selectFilter } from './listing';
 import { type MoreFilterSelection } from './more-filters';
 import { PanelSection, PanelSheet } from './panel-sheet';
 import { DotStatusBadge, StatusPill } from './status';
@@ -62,7 +62,7 @@ function ListingDemo() {
         ].map((row) => (
           <ListRow key={row.id} onPress={() => {}}>
             <ListRowLine left={<Text variant="bodyMedium">{row.id}</Text>} right={<Text variant="bodyMedium">{row.amount}</Text>} />
-            <ListRowLine left={<Text variant="bodySmall">UPI · PhonePe</Text>} right={<StatusPill label={row.status} tone={row.tone} radius={LIST_ROW_INNER_RADIUS} />} />
+            <ListRowLine left={<Text variant="bodySmall">UPI · PhonePe</Text>} right={<StatusPill label={row.status} tone={row.tone} />} />
           </ListRow>
         ))}
       </ListCard>
@@ -114,10 +114,10 @@ export const Panel: Story = { render: () => <PanelSheetDemo /> };
 export const StatusAndValues: Story = {
   render: () => (
     <View style={{ gap: 12, alignItems: 'flex-start' }}>
-      <StatusPill label="Pending" tone="processing" radius={12} />
-      <StatusPill label="Success" tone="success" radius={12} />
-      <DotStatusBadge label="Settled" tone="success" radius={12} />
-      <DotStatusBadge label="On Hold" tone="warning" radius={12} />
+      <StatusPill label="Pending" tone="processing" />
+      <StatusPill label="Success" tone="success" />
+      <DotStatusBadge label="Settled" tone="success" />
+      <DotStatusBadge label="On Hold" tone="warning" />
       <CopyableValue value="6876347862381" label="UTR: 6876347862381" variant="pill" />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {['HDFC', 'ICICI', 'AXIS', 'SBI'].map((bank) => (

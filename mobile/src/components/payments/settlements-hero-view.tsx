@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Icon, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 
 import { AnswerHero, HERO_OVERLAP } from '@/components/listing-hero/answer-hero';
 import { rangeLabel, type RangeScope, type RangeValue, rangePhrase, resolveRange } from '@/components/listing-hero/time-scope';
@@ -9,17 +9,23 @@ import { ListingCard } from '@/components/listing-hero/listing-card';
 import { BankLogo } from '@/components/shared/bank-logo';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { LIST_ROW_INNER_RADIUS, ListRow, ListRowLine, selectFilter } from '@/components/shared/listing';
+import { ListRow, ListRowLine, selectFilter, StatusStack } from '@/components/shared/listing';
 import type { MoreFilterSelection } from '@/components/shared/more-filters';
 import { DotStatusBadge } from '@/components/shared/status';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Fonts } from '@/constants/theme';
-import { formatCount } from '@/data/common';
+import { formatCount, formatInr } from '@/data/common';
+import { DimmedDecimalAmount } from '@/components/shared/amount';
+import { DotSeparated } from '@/components/payments/payment-row';
+import { OnDemandSheet } from '@/components/payments/on-demand-sheet';
 import { getSettlementSummary, type SettlementRow, type SettlementStatus, settlementRows } from '@/data/settlements';
 import { parseDisplayDate } from '@/data/transactions';
 import { useBusiness } from '@/hooks/use-business';
 import { useToast } from '@/hooks/use-toast';
 
 import { collectionLabel, MORE_FILTER_CATEGORIES, rupees, settlementStatusTone, STATUS_OPTIONS } from './settlements-view';
+
+const IN_FLIGHT: SettlementStatus[] = ['Created', 'Initiated', 'Processing'];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Settled totals are available for this many days at most. */
@@ -50,6 +56,7 @@ export function SettlementsHeroView() {
   const [status, setStatus] = useState<'all' | SettlementStatus>('all');
   const [moreFilters, setMoreFilters] = useState<MoreFilterSelection>({});
   const [heroView, setHeroView] = useState<'settled' | 'to-settle'>('settled');
+  const [onDemandOpen, setOnDemandOpen] = useState(false);
   const lazy = useLazyList();
   const resetList = <T,>(setter: (value: T) => void) => (value: T) => {
     setter(value);
@@ -129,6 +136,7 @@ export function SettlementsHeroView() {
           {
             key: 'settled',
             label: 'Settled',
+            icon: 'check-circle',
             amount: settled.amount,
             line: settled.batches
               ? `${settled.batches} ${settled.batches === 1 ? 'batch' : 'batches'} reached your bank ${settledPhrase}`
@@ -144,12 +152,12 @@ export function SettlementsHeroView() {
                     value: `−${rupees(settled.deductions)}`,
                     tone: 'negative',
                     breakdown: [
-                      { label: 'Collected', value: rupees(settled.gross) },
+                      { label: APP_PAGE_LAYOUT ? 'Gross amount' : 'Collected', value: rupees(settled.gross) },
                       { label: 'Refunds', value: `−${rupees(settled.refunds)}`, tone: 'negative' },
                       { label: 'MSF / MDR', value: `−${rupees(settled.mdr)}`, tone: 'negative' },
                       { label: 'GST', value: `−${rupees(settled.gst)}`, tone: 'negative' },
                       { label: 'Others', value: `−${rupees(settled.others)}`, tone: 'negative' },
-                      { label: 'Settled to your bank', value: rupees(settled.amount), tone: 'total' },
+                      { label: APP_PAGE_LAYOUT ? 'Net settled amount' : 'Settled to your bank', value: rupees(settled.amount), tone: 'total' },
                     ],
                   },
                 ]
@@ -157,25 +165,44 @@ export function SettlementsHeroView() {
           },
           {
             key: 'to-settle',
-            label: 'To settle',
+            // The app pages show both cards at once, so this one names what it is.
+            label: APP_PAGE_LAYOUT ? 'Remaining amount' : 'To settle',
+            icon: 'hourglass',
             amount: summary.unsettledAmount,
             // What's waiting, then when the next run is — when it's a time ("On demand" isn't one).
             line: `${formatCount(summary.remainingCount)} payments waiting${/on demand/i.test(summary.nextSettlementAt) ? '' : ` · next settlement ${summary.nextSettlementAt.toLowerCase()}`}`,
             time: { kind: 'live' },
             // In-store only: On-Demand settlement gets some of it today.
-            details:
-              channel === 'in-store'
+            details: [
+              // What the balance is made of (Figma Settlements 169:36661).
+              ...(summary.unsettledAmount
+                ? [
+                    {
+                      key: 'breakdown',
+                      label: 'Remaining amount breakdown',
+                      breakdown: [
+                        { label: 'To be settled today', value: rupees(summary.toSettleTodayAmount), info: true },
+                        { label: 'To be processed', value: rupees(summary.toProcessAmount), info: true },
+                        { label: 'Failed to settle', value: rupees(summary.failedAmount), info: true },
+                        { label: 'Risk on hold', value: rupees(summary.onHoldAmount), info: true },
+                        { label: 'Remaining amount', value: rupees(summary.unsettledAmount), tone: 'total' as const },
+                      ],
+                    },
+                  ]
+                : []),
+              ...(channel === 'in-store'
                 ? [
                     {
                       key: 'on-demand',
                       icon: 'lightning',
-                      tone: 'accent',
-                      label: 'Get some of it today',
-                      actionLabel: 'On-Demand',
-                      onPress: () => toast("On-Demand settlement isn't in the prototype yet"),
+                      tone: 'accent' as const,
+                      label: APP_PAGE_LAYOUT ? 'Get money in your bank today via On-Demand settlement' : 'Get some of it today',
+                      actionLabel: APP_PAGE_LAYOUT ? 'Settle now' : 'On-Demand',
+                      onPress: () => (APP_PAGE_LAYOUT ? setOnDemandOpen(true) : toast("On-Demand settlement isn't in the prototype yet")),
                     },
                   ]
-                : undefined,
+                : []),
+            ],
           },
         ]}
       />
@@ -184,31 +211,15 @@ export function SettlementsHeroView() {
         style={styles.overHero}
         search={search}
         onSearchChange={resetList(setSearch)}
-        searchPlaceholder="Search by UTR or Trxn ID"
+        searchPlaceholder={APP_PAGE_LAYOUT ? 'Search trxns' : 'Search by UTR or Trxn ID'}
         time={heroView === 'to-settle' ? dates : undefined}
-        // What needs attention sits by the records it's about: one tap filters to it (and widens the dates so older ones show).
-        suggestions={
-          summary.failedCount > 0 && status !== 'Failed'
-            ? [
-                {
-                  key: 'failed',
-                  label: `${summary.failedCount} failed`,
-                  icon: 'warning-circle',
-                  color: theme.colors.error,
-                  onPress: () => {
-                    resetList(setRange)({ preset: '90d' });
-                    resetList(setStatus)('Failed');
-                  },
-                },
-              ]
-            : []
-        }
         filters={[
           selectFilter({ label: 'Status', options: STATUS_OPTIONS, value: status, onApply: resetList(setStatus) }),
           { type: 'more', categories: MORE_FILTER_CATEGORIES, applied: moreFilters, onApply: resetList(setMoreFilters) },
         ]}
         actions={[
-          { label: 'Settlement preferences', icon: 'sliders', onPress: () => router.push('/settlements/preferences') },
+          // The app pages have Preferences in the header.
+          ...(APP_PAGE_LAYOUT ? [] : [{ label: 'Settlement preferences', icon: 'sliders', onPress: () => router.push('/settlements/preferences') }]),
           { label: 'Email filtered', icon: 'envelope-simple' },
           { label: 'Download filtered', icon: 'download-simple' },
         ]}
@@ -223,29 +234,35 @@ export function SettlementsHeroView() {
           renderRow={(row) => (
             <ListRow
               key={row.id}
+              icon={<BankLogo bank={row.bankName} size={24} />}
               onPress={() => router.push(`/settlements/${row.batchId}`)}
               accessibilityLabel={`Settled ${rupees(row.netAmount)} to ${row.bankName} bank ending ${row.accountLabel.slice(-4)}, ${collectionLabel(row)}, ${row.status}`}>
               <ListRowLine
                 left={
-                  <>
-                    <Text variant="titleMedium" style={styles.amount}>
-                      {rupees(row.netAmount)}
-                    </Text>
-                    <View style={styles.line}>
-                      <BankLogo bank={row.bankName} size={16} />
+                  APP_PAGE_LAYOUT ? (
+                    // Figma 7161:93454: "₹75,500.00" over "HDFC • xx7676".
+                    <>
+                      <DimmedDecimalAmount value={formatInr(row.netAmount)} size="row" />
+                      <DotSeparated parts={[row.bankName, `xx${row.accountLabel.slice(-4)}`]} />
+                    </>
+                  ) : (
+                    <>
+                      <Text variant="titleMedium" style={styles.amount}>
+                        {rupees(row.netAmount)}
+                      </Text>
                       <Text variant="bodySmall" numberOfLines={1} style={muted}>
                         {row.bankName} Bank •••• {row.accountLabel.slice(-4)}
                       </Text>
-                    </View>
-                    <View style={styles.line}>
-                      <Icon source="calendar-blank" size={16} color={theme.colors.onSurfaceVariant} />
-                      <Text variant="bodySmall" numberOfLines={1} style={muted}>
-                        {collectionLabel(row)}
-                      </Text>
-                    </View>
-                  </>
+                    </>
+                  )
                 }
-                right={<DotStatusBadge label={row.status} tone={settlementStatusTone(row.status)} radius={LIST_ROW_INNER_RADIUS} />}
+                right={
+                  <StatusStack
+                    status={<DotStatusBadge label={row.status} tone={settlementStatusTone(row.status)} />}
+                    // Still on its way: when it should reach the bank (Figma 7385:90223 pattern).
+                    note={APP_PAGE_LAYOUT && IN_FLIGHT.includes(row.status) && /\d/.test(row.nextSettlementAt) ? `Expected ${row.nextSettlementAt.replace(/\bToday\b/, 'today').replace(/\bTomorrow\b/, 'tomorrow')}` : undefined}
+                  />
+                }
                 centered
               />
             </ListRow>
@@ -254,6 +271,7 @@ export function SettlementsHeroView() {
         <LazyListFooter lazy={lazy} total={filteredRows.length} noun="settlements" />
       </ListingCard>
 
+      <OnDemandSheet visible={onDemandOpen} onDismiss={() => setOnDemandOpen(false)} />
     </View>
   );
 }
@@ -262,6 +280,5 @@ const styles = StyleSheet.create({
   container: { gap: 16 },
   // The container's gap plus the hero's open foot.
   overHero: { marginTop: -(16 + HERO_OVERLAP) },
-  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums'] },
-  line: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
 });

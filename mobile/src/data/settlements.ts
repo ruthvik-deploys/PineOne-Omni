@@ -135,7 +135,8 @@ export const settlementRows: SettlementRow[] = Array.from({ length: 120 }, (_, i
     chargebackAmount,
     netAmount: grossAmount - deductionsTotal,
     transactionCount: source.transactionCount + cycle * 3 + (index % 7),
-    status: channel === 'online' ? 'Settled' : SETTLEMENT_STATUSES[index % SETTLEMENT_STATUSES.length]!,
+    // In-store rows are every other index: halved, so they cycle through every status.
+    status: channel === 'online' ? 'Settled' : SETTLEMENT_STATUSES[(index / 2) % SETTLEMENT_STATUSES.length]!,
     settlementType: SETTLEMENT_TYPES[index % SETTLEMENT_TYPES.length]!,
     paymentMethod: SETTLEMENT_PAYMENT_METHODS[index % SETTLEMENT_PAYMENT_METHODS.length]!,
     acquiringBank: SETTLEMENT_BANKS[index % SETTLEMENT_BANKS.length]!,
@@ -179,6 +180,14 @@ export const SETTLEMENT_ACCOUNTS: { bank: string; bankName: string; accountNumbe
   { bank: 'ICICI', bankName: 'ICICI bank', accountNumber: 'xx9898' },
 ]
 
+/** Settlement accounts as the app pages list them (Figma 7161:112071): the bank, the full account number, the holder. */
+export const APP_SETTLEMENT_ACCOUNTS: { id: string; bank: string; bankName: string; accountNumber: string; holder: string }[] = [
+  { id: 'acc-1', bank: 'HDFC', bankName: 'HDFC bank', accountNumber: '5020 1234 1234 3456', holder: 'N Kumaraswami Pattanduru' },
+  { id: 'acc-2', bank: 'HDFC', bankName: 'HDFC bank', accountNumber: '7887 8787 9898 9043', holder: 'N Kumaraswami Pattanduru' },
+  { id: 'acc-3', bank: 'HDFC', bankName: 'HDFC bank', accountNumber: '7887 8787 9898 9044', holder: 'N Kumaraswami Pattanduru' },
+  { id: 'acc-4', bank: 'HDFC', bankName: 'HDFC bank', accountNumber: '7887 8787 9898 9045', holder: 'N Kumaraswami Pattanduru' },
+];
+
 export function findSettlement(batchId: string) {
   return settlementRows.find((row) => row.batchId === batchId) ?? settlementRows[0]!;
 }
@@ -202,9 +211,17 @@ export function getSettlementSummary(channel: SettlementChannel) {
   const settledAmount = sum(settledRows, (row) => row.netAmount);
   const settledCount = sum(settledRows, (row) => row.transactionCount);
   const totalCount = sum(channelRows, (row) => row.transactionCount);
+  // What's still on its way, split by when it's due; failed and held rows are stuck, so they aren't counted here.
+  const inFlightRows = openRows.filter((row) => row.status !== 'Failed' && row.status !== 'On Hold');
+  const dueToday = (row: SettlementRow) => /today/i.test(row.nextSettlementAt);
   return {
     settledAmount,
     unsettledAmount: sum(openRows, (row) => row.netAmount),
+    // These four add up to unsettledAmount.
+    toSettleTodayAmount: sum(inFlightRows.filter(dueToday), (row) => row.netAmount),
+    toProcessAmount: sum(inFlightRows.filter((row) => !dueToday(row)), (row) => row.netAmount),
+    failedAmount: sum(openRows.filter((row) => row.status === 'Failed'), (row) => row.netAmount),
+    onHoldAmount: sum(openRows.filter((row) => row.status === 'On Hold'), (row) => row.netAmount),
     deductionsAmount: sum(settledRows, (row) => row.deductionsTotal),
     grossAmount: sum(settledRows, (row) => row.grossAmount),
     refundsAmount: sum(settledRows, (row) => row.refundAmount),

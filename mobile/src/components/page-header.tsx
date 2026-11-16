@@ -1,11 +1,13 @@
-import { router, type Href } from 'expo-router';
+import { router, type Href, usePathname } from 'expo-router';
 import { type ReactNode, type RefObject, useState } from 'react';
 import { Animated, type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { Icon, Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useProfileNav } from '@/components/profile-return';
 import { OutlineTag } from '@/components/shared/status';
 import { useAppColors } from '@/constants/app-colors';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 
@@ -136,7 +138,7 @@ export function PageTopBar({
       </View>
       {subtitle ? (
         <View style={styles.smallSubtitleRow}>
-          <Text variant="bodySmall" numberOfLines={1} style={[styles.shrink, { color: theme.colors.onSurfaceVariant }]}>
+          <Text variant={APP_PAGE_LAYOUT ? 'bodyMedium' : 'bodySmall'} numberOfLines={1} style={[styles.shrink, { color: theme.colors.onSurfaceVariant }]}>
             {subtitle}
           </Text>
           {onPressTitle ? <Icon source="caret-down" size={14} color={theme.colors.onSurfaceVariant} /> : null}
@@ -149,7 +151,7 @@ export function PageTopBar({
     <View pointerEvents="box-none" onLayout={onLayout} style={[styles.bar, { paddingTop: insets.top }]}>
       <Animated.View
         pointerEvents="none"
-        style={[styles.surface, roundedSurface && styles.surfaceRounded, { backgroundColor: theme.colors.surface, opacity: surfaceOpacity }]}
+        style={[styles.surface, roundedSurface && !APP_PAGE_LAYOUT && styles.surfaceRounded, { backgroundColor: theme.colors.surface, opacity: surfaceOpacity }]}
       />
       <View style={styles.row}>
         <View style={styles.leading}>
@@ -181,6 +183,8 @@ export function PageTopBar({
 }
 
 type AppHeaderProps = {
+  /** Before the title: Back, on a page opened from the profile rather than the navigation bar. */
+  leading?: ReactNode;
   /** Overview: the signed-in user (initials avatar, name and role). Other tabs: omit, and pass the page's `title`. */
   user?: { name: string; roleLabel: string };
   title?: string;
@@ -200,6 +204,8 @@ type AppHeaderProps = {
   contextHighlight?: Animated.Value;
   trailing?: ReactNode;
   onLayout?: (event: LayoutChangeEvent) => void;
+  /** 0–1 opacity of the white bar, e.g. clear over Support's glow until the page scrolls (Figma 7228:156447). Solid by default. */
+  surfaceOpacity?: number | Animated.AnimatedInterpolation<number>;
 };
 
 /**
@@ -210,6 +216,7 @@ type AppHeaderProps = {
  * put while the page scrolls under it.
  */
 export function AppHeader({
+  leading,
   user,
   title,
   context,
@@ -221,6 +228,7 @@ export function AppHeader({
   onContextLayout,
   contextHighlight,
   trailing,
+  surfaceOpacity = 1,
   onLayout,
 }: AppHeaderProps) {
   const theme = useTheme();
@@ -245,9 +253,11 @@ export function AppHeader({
   ) : null;
 
   return (
-    <View onLayout={onLayout} style={[styles.bar, { paddingTop: insets.top, backgroundColor: theme.colors.surface }]}>
-      <View style={[styles.appHeaderRow, styles.appHeaderRowTitled]}>
-        <View style={styles.appHeaderLeading}>
+    <View onLayout={onLayout} style={[styles.bar, { paddingTop: insets.top }]}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.surface, opacity: surfaceOpacity }]} />
+      <View style={[styles.appHeaderRow, styles.appHeaderRowTitled, leading ? styles.appHeaderRowBack : null]}>
+        <View style={[styles.appHeaderLeading, leading ? styles.appHeaderLeadingBack : null]}>
+          {leading}
           <View style={styles.appHeaderText}>
             {user ? (
               <View style={styles.appHeaderNameRow}>
@@ -274,7 +284,8 @@ export function AppHeader({
                   <Icon source="caret-right" size={16} color={theme.colors.onSurfaceVariant} />
                 </View>
               </TouchableRipple>
-            ) : (
+            ) : APP_PAGE_LAYOUT ? null : (
+              // The app pages (Figma 7228:156447) title unscoped pages alone, without the organisation.
               <View style={styles.appHeaderContextRow}>{contextText}</View>
             )}
           </View>
@@ -289,12 +300,22 @@ export function AppHeader({
               accessibilityRole="button"
               accessibilityLabel={`${user.name}, ${user.roleLabel}. Open profile${unreadCount ? `, ${unreadCount} unread notifications` : ''}`}
               style={styles.avatarTarget}>
-              <View style={[styles.avatar, { backgroundColor: theme.colors.surface, borderColor: theme.colors.surfaceVariant }]}>
+              <View
+                style={[
+                  styles.avatar,
+                  APP_PAGE_LAYOUT ? [styles.appAvatar, { backgroundColor: theme.colors.surfaceVariant }] : { backgroundColor: theme.colors.surface, borderColor: theme.colors.surfaceVariant },
+                ]}>
                 <Text style={[styles.avatarInitials, { color: appColors.brand }]}>{initials}</Text>
               </View>
             </TouchableRipple>
+            {/* Figma 7160:46406: a small menu mark on the tile's corner says it opens more. */}
+            {APP_PAGE_LAYOUT ? (
+              <View pointerEvents="none" style={[styles.avatarMenu, { backgroundColor: theme.colors.surface }]}>
+                <Icon source="list" size={9} color={theme.colors.onSurfaceVariant} />
+              </View>
+            ) : null}
             {/* Outside the ripple, which clips to its round shape: the badge sits over the avatar's corner whole. */}
-            {unreadCount ? (
+            {unreadCount && !APP_PAGE_LAYOUT ? (
               <View pointerEvents="none" style={[styles.avatarBadge, { backgroundColor: theme.colors.error, borderColor: theme.colors.surface }]}>
                 <Text style={[styles.avatarBadgeLabel, { color: theme.colors.onError }]}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
@@ -375,6 +396,8 @@ type HeaderControlProps = {
   quiet?: boolean;
   /** On a white bar (a tab's header): filled grey rather than white, so the control still reads as one. */
   tinted?: boolean;
+  /** Drop the hairline border the app pages put on header buttons (Back on a detail page). */
+  borderless?: boolean;
   onPress?: () => void;
   accessibilityLabel: string;
 };
@@ -384,7 +407,7 @@ type HeaderControlProps = {
  * label (the switcher, a "New" call to action). Borderless white, like the
  * app's other floating surfaces; filled for the page's main action.
  */
-export function HeaderControl({ icon, label, caret = false, primary = false, quiet = false, tinted = false, onPress, accessibilityLabel }: HeaderControlProps) {
+export function HeaderControl({ icon, label, caret = false, primary = false, quiet = false, tinted = false, borderless = false, onPress, accessibilityLabel }: HeaderControlProps) {
   const theme = useTheme();
   const color = primary ? theme.colors.onPrimary : theme.colors.onSurface;
   return (
@@ -393,9 +416,16 @@ export function HeaderControl({ icon, label, caret = false, primary = false, qui
       borderless
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={[styles.control, { backgroundColor: primary ? theme.colors.primary : quiet ? 'transparent' : tinted ? theme.colors.surfaceVariant : theme.colors.surface }, !label && styles.controlIconOnly]}>
+      style={[
+        styles.control,
+        // The app pages (Figma 7161:93454, 7249:196955): header buttons are white with a hairline border.
+        APP_PAGE_LAYOUT && !primary && !quiet
+          ? [styles.appControl, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }, borderless && styles.appControlBorderless]
+          : { backgroundColor: primary ? theme.colors.primary : quiet ? 'transparent' : tinted ? theme.colors.surfaceVariant : theme.colors.surface },
+        !label && (APP_PAGE_LAYOUT ? styles.appControlIconOnly : styles.controlIconOnly),
+      ]}>
       <View style={[styles.controlContent, label ? styles.controlContentLabelled : null]}>
-        {icon ? <Icon source={icon} size={20} color={color} /> : null}
+        {icon ? <Icon source={icon} size={APP_PAGE_LAYOUT ? 18 : 20} color={color} /> : null}
         {label ? (
           <Text variant="labelLarge" numberOfLines={1} style={[styles.controlLabel, { color }]}>
             {label}
@@ -408,9 +438,21 @@ export function HeaderControl({ icon, label, caret = false, primary = false, qui
 }
 
 /** Back, for an inner page: returns to where the user came from, or `fallbackHref` when the page was opened directly. */
-export function BackButton({ fallbackHref }: { fallbackHref: Href }) {
+export function BackButton({ fallbackHref, boxed = false }: { fallbackHref: Href; /** Keep the white box (app pages: over a detail hero, Figma 7132:120253). */ boxed?: boolean }) {
+  const profileNav = useProfileNav();
+  const pathname = usePathname();
+  // The page opened from the profile slides back out to it (see profile-return).
+  const toProfile = profileNav.page !== null && pathname === profileNav.page;
   return (
-    <HeaderControl icon="arrow-left" accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.navigate(fallbackHref))} />
+    <HeaderControl
+      icon="arrow-left"
+      // The app pages (Figma 7249:191734) set Back as a bare arrow.
+      quiet={APP_PAGE_LAYOUT && !boxed}
+      // Back on a detail page is a plain white tile, no border.
+      borderless
+      accessibilityLabel="Back"
+      onPress={() => (toProfile ? profileNav.back() : router.canGoBack() ? router.back() : router.navigate(fallbackHref))}
+    />
   );
 }
 
@@ -426,24 +468,30 @@ const styles = StyleSheet.create({
   bar: { position: 'absolute', top: 0, left: 0, right: 0 },
   appHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingLeft: 12, paddingRight: 16, paddingVertical: 12 },
   // The title lines up with the page's 16dp margin; the controls centre on the two lines.
-  appHeaderRowTitled: { paddingLeft: 16, alignItems: 'center' },
+  appHeaderRowTitled: { paddingLeft: APP_PAGE_LAYOUT ? 20 : 16, alignItems: 'center' },
   appHeaderLeading: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10, minWidth: 0 },
+  // With Back ahead of the title, as an inner page's bar sets it.
+  appHeaderRowBack: { paddingLeft: 16 },
+  appHeaderLeadingBack: { alignItems: 'center', gap: 12 },
   avatarTarget: { width: CONTROL_HEIGHT, height: CONTROL_HEIGHT, borderRadius: Shape.max, alignItems: 'center', justifyContent: 'center' },
   avatar: { width: 32, height: 32, borderRadius: Shape.small, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  appAvatar: { borderWidth: 0 },
+  avatarMenu: { position: 'absolute', right: 0, bottom: 0, width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   avatarInitials: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
   // Unread notifications, on the avatar's top-right corner.
   avatarBadge: { position: 'absolute', right: 0, top: 0, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   avatarBadgeLabel: { fontFamily: Fonts.semiBold, fontSize: 10, lineHeight: 12 },
-  appHeaderText: { flexShrink: 1, minHeight: 48, justifyContent: 'center' },
+  appHeaderText: { flexShrink: 1, minHeight: APP_PAGE_LAYOUT ? 24 : 48, justifyContent: 'center' },
   appHeaderNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   // The same size as the other tabs' page titles (appHeaderTitle).
-  appHeaderName: { fontFamily: Fonts.semiBold, fontSize: 20, lineHeight: 24, flexShrink: 1 },
-  appHeaderTitle: { fontFamily: Fonts.semiBold, fontSize: 20, lineHeight: 24 },
+  // The app pages (Figma 7152:136422) title at 16/24, the scope under it at 12.
+  appHeaderName: { fontFamily: Fonts.semiBold, fontSize: APP_PAGE_LAYOUT ? 16 : 20, lineHeight: 24, flexShrink: 1 },
+  appHeaderTitle: { fontFamily: Fonts.semiBold, fontSize: APP_PAGE_LAYOUT ? 16 : 20, lineHeight: 24 },
   appHeaderContextButton: { alignSelf: 'flex-start', maxWidth: '100%', borderRadius: Shape.extraSmall },
   appHeaderContextRow: { flexDirection: 'row', alignItems: 'center', gap: 2, height: 24 },
   // Bleeds a little past the line so the pulse reads as a highlight, not a box around the text.
   appHeaderContextPulse: { position: 'absolute', top: 0, bottom: 0, left: -6, right: -4, borderRadius: Shape.small },
-  appHeaderContext: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 18, flexShrink: 1 },
+  appHeaderContext: { fontFamily: APP_PAGE_LAYOUT ? Fonts.regular : Fonts.medium, fontSize: APP_PAGE_LAYOUT ? 12 : 14, lineHeight: APP_PAGE_LAYOUT ? 16 : 18, flexShrink: 1 },
   surface: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   // Attached to the top edge: only the content-facing (bottom) corners are rounded.
   surfaceRounded: { borderBottomLeftRadius: Shape.max, borderBottomRightRadius: Shape.max },
@@ -472,4 +520,7 @@ const styles = StyleSheet.create({
   controlContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   controlContentLabelled: { paddingHorizontal: 12 },
   controlLabel: { fontFamily: Fonts.medium, flexShrink: 1 },
+  appControl: { height: 32, borderWidth: 1 },
+  appControlBorderless: { borderWidth: 0 },
+  appControlIconOnly: { width: 32 },
 });

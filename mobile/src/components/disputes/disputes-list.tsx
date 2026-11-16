@@ -6,7 +6,7 @@ import { Icon, Text, useTheme } from 'react-native-paper';
 import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { LIST_ROW_INNER_RADIUS, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
 import { StatusPill } from '@/components/shared/status';
 import { SummaryCards } from '@/components/shared/summary-cards';
 import { TabScreen } from '@/components/tab-screen';
@@ -121,7 +121,7 @@ export function DisputesList() {
                   </View>
                 </>
               }
-              right={<StatusPill label={disputeStatusLabel(row)} tone={disputeStatusTone(row)} radius={LIST_ROW_INNER_RADIUS} />}
+              right={<StatusPill label={disputeStatusLabel(row)} tone={disputeStatusTone(row)} />}
               centered
             />
           </ListRow>
@@ -133,6 +133,6 @@ export function DisputesList() {
 }
 
 const styles = StyleSheet.create({
-  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums'] },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
   idRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 });

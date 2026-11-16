@@ -4,14 +4,14 @@ import type { PropsWithChildren } from 'react';
 /**
  * TEMPORARY: web HTML shell for capturing the app's screens into Figma.
  * Loads Figma's html-to-design capture script and, when the URL carries a
- * capture (or #phone), pins the page to a 412 × 926 phone viewport (the Figma
- * file's "Android Compact" frame) so layouts render as on a phone even in a
+ * capture (or #phone), pins the page to a 360 × 800 phone viewport (the Figma
+ * file's app frames) so layouts render as on a phone even in a
  * wide desktop window. Remove once the captures are done.
  */
 const PHONE_VIEWPORT = `
 (function () {
   if (!/figmacapture|phone/.test(location.hash)) return;
-  var W = 412, H = 926;
+  var W = 360, H = 800;
   // Chrome pauses animation frames while the window is hidden (e.g. behind Figma), which stalls
   // the capture; fall back to timers, which keep running (throttled) in the background.
   var nativeRaf = window.requestAnimationFrame.bind(window);

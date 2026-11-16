@@ -28,7 +28,16 @@ export type KnowledgeVideo = {
   duration: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
   topicSlug: SupportTopicSlug;
+  /** The video's cover (Figma 7228:190799, Support → Tutorial video); without one the thumbnail is a placeholder. */
+  image?: number;
 };
+
+/** Video covers exported from the design (Support → Tutorial video). */
+const VIDEO_COVERS = [
+  require('../../assets/images/support/videos/video-1.jpg'),
+  require('../../assets/images/support/videos/video-2.jpg'),
+  require('../../assets/images/support/videos/video-3.jpg'),
+];
 
 /** The 8-topic taxonomy shown across the support landing page, chat topic picker,
  *  FAQ tabs, and ticket categorization — same list, same order, everywhere. */
@@ -42,6 +51,9 @@ export const SUPPORT_TOPICS: SupportTopic[] = [
   { slug: 'training', label: 'Training', icon: 'graduation-cap' },
   { slug: 'pine-checkout', label: 'Pine Checkout', icon: 'storefront' },
 ];
+
+/** A topic as the app pages write it (Figma 7228:190532): sentence case, "UPI" kept whole — "Device & hardware". */
+export const topicLabel = (label: string) => (label.charAt(0) + label.slice(1).toLowerCase()).replace(/\bupi\b/i, 'UPI');
 
 export function getSupportTopic(slug: string) {
   return SUPPORT_TOPICS.find((topic) => topic.slug === slug) ?? null;
@@ -230,6 +242,15 @@ export const SUPPORT_VIDEOS: KnowledgeVideo[] = [
     duration: '04:12',
     level: 'Beginner',
     topicSlug: 'device-hardware',
+    image: VIDEO_COVERS[0],
+  },
+  {
+    title: 'How to fix card machine battery drain during store hours',
+    summary: 'Settings and habits that keep a card machine charged through a shift.',
+    duration: '05:20',
+    level: 'Beginner',
+    topicSlug: 'device-hardware',
+    image: VIDEO_COVERS[1],
   },
   {
     title: 'Printer issue deep-dive',
@@ -254,6 +275,7 @@ export const SUPPORT_VIDEOS: KnowledgeVideo[] = [
   },
   {
     title: 'How to retry a failed card payment without double charging',
+    image: VIDEO_COVERS[2],
     summary: 'Safe retry patterns for card and UPI failures.',
     duration: '05:40',
     level: 'Beginner',

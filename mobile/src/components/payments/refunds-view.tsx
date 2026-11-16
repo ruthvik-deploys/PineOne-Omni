@@ -4,7 +4,7 @@ import { Icon, Text, useTheme } from 'react-native-paper';
 
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
-import { LIST_ROW_INNER_RADIUS, ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
 import { type MoreFilterSelection } from '@/components/shared/more-filters';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
 import { DotStatusBadge } from '@/components/shared/status';
@@ -97,7 +97,7 @@ export function RefundsView() {
                     </View>
                   </>
                 }
-                right={<DotStatusBadge label={row.status} tone={refundStatusTone(row.status)} radius={LIST_ROW_INNER_RADIUS} />}
+                right={<DotStatusBadge label={row.status} tone={refundStatusTone(row.status)} />}
                 centered
               />
             </ListRow>
@@ -111,6 +111,6 @@ export function RefundsView() {
 
 const styles = StyleSheet.create({
   container: { gap: 16 },
-  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums'] },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
   idRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 });

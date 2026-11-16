@@ -25,3 +25,31 @@
  * support/support-tickets.tsx).
  */
 export const LISTING_HERO_LAYOUT = true;
+
+/**
+ * Sample for review: listings as "information, then the listing", after the
+ * Starling references in Figma (App references): the number centred on a
+ * coloured hero, then the records on a white sheet with Search & filter
+ * behind one button, by day. Takes precedence over LISTING_HERO_LAYOUT on
+ * Payments and Settlements only.
+ *
+ * Files: components/listing-sample/*, the switches in app/payments/index.tsx
+ * and app/settlements/index.tsx.
+ */
+export const LISTING_SAMPLE_LAYOUT = false;
+
+/**
+ * The app pages from Figma ("PineOne - Omni-channel", App: Home & Payments
+ * 7132:120094, Settlement 7161:77755, Support 7228:156164): grey page, white
+ * cards 8dp from the screen's edges and 8dp apart. A listing opens with its
+ * dates as one full-width pill, then a summary card per number (icon and
+ * title, the amount, one line, an optional footer row), then the records card:
+ * search with Filters, grey day bands, 76dp rows. Takes precedence over the
+ * two listing layouts above wherever they meet.
+ *
+ * Files: components/listing-hero/answer-hero.tsx (CardAnswerHero),
+ * listing-hero/listing-card.tsx, shared/day-groups.tsx, shared/listing.tsx
+ * (rows), tab-screen.tsx (page spacing).
+ */
+export const APP_PAGE_LAYOUT = true;
+

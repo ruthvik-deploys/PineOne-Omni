@@ -5,7 +5,9 @@ import { Button, Icon, Text, useTheme } from 'react-native-paper';
 import { OutlinedActionButton } from '@/components/shared/controls';
 import { FormField, FormTextInput } from '@/components/shared/form-fields';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from '@/components/shared/panel-sheet';
-import { StatusPill } from '@/components/shared/status';
+import { DotStatusBadge, STATUS_DOT_TONE, StatusPill } from '@/components/shared/status';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
+import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 import {
   buildTicketTrail,
@@ -20,7 +22,7 @@ import {
 function DetailRow({ label, value, first = false }: { label: string; value: string; first?: boolean }) {
   const theme = useTheme();
   return (
-    <View style={[styles.detailRow, !first && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.outlineVariant }]}>
+    <View style={[styles.detailRow, !first && { borderTopWidth: 1, borderTopColor: theme.colors.background }]}>
       <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
         {label}
       </Text>
@@ -62,11 +64,61 @@ export function TicketDetailSheet({
     ['Created', ticket.createdAt],
   ];
 
+  // The app pages (Figma 7249:193498): a white sheet — the reference and its status, the issue, the facts in a bordered box, then Activity.
+  if (APP_PAGE_LAYOUT) {
+    return (
+      <PanelSheet visible={visible} onDismiss={onDismiss} title="Ticket details" grouped={false}>
+        <View style={styles.appTop}>
+          <View style={styles.appIdRow}>
+            <Text style={[styles.appId, { color: theme.colors.onSurface }]}>{ticket.id}</Text>
+            <DotStatusBadge label={ticket.status} tone={STATUS_DOT_TONE[ticketStatusTone(ticket.status)]} />
+          </View>
+          <Text style={[styles.appBody, muted]}>{ticket.issue}</Text>
+          <View style={[styles.appFacts, { borderColor: theme.colors.outlineVariant }]}>
+            {rows
+              .filter((row): row is [string, string] => Boolean(row[1]))
+              .map(([label, value]) => (
+                <View key={label} style={styles.appFact}>
+                  <Text style={[styles.appBody, muted]}>{label}</Text>
+                  <Text style={[styles.appBody, styles.medium, styles.detailValue, { color: theme.colors.onSurface }]}>{value}</Text>
+                </View>
+              ))}
+          </View>
+        </View>
+        <View style={[styles.appHairline, { backgroundColor: theme.colors.background }]} />
+        <View style={styles.appActivity}>
+          <View style={styles.trailHeader}>
+            <Text style={[styles.appHeading, { color: theme.colors.onSurface }]}>Activity</Text>
+            <OutlinedActionButton label="Edit" icon="pencil-simple" onPress={() => onEdit(ticket)} />
+          </View>
+          <View style={[styles.appExpected, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <Text style={[styles.appBody, muted]}>Expected resolution</Text>
+            <Text style={[styles.appBody, styles.medium, { color: theme.colors.onSurface }]}>{expectedResolution(ticket)}</Text>
+          </View>
+          <View style={styles.trail}>
+            <View style={[styles.trailLine, { backgroundColor: theme.colors.outlineVariant }]} />
+            {trail.map((step) => (
+              <View key={step.title} style={styles.trailStep}>
+                <View style={[styles.trailIcon, { backgroundColor: theme.colors.surface }]}>
+                  <Icon source={step.complete ? 'check' : 'circle'} size={16} color={step.complete ? theme.colors.onSurface : '#2563eb'} />
+                </View>
+                <View style={[styles.flex, styles.appStep]}>
+                  <Text style={[styles.appBody, muted]}>{step.timestamp}</Text>
+                  <Text style={[styles.appBody, styles.medium, { color: theme.colors.onSurface }]}>{step.title}</Text>
+                  <Text style={[styles.appBody, muted]}>{step.description}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </PanelSheet>
+    );
+  }
   return (
     <PanelSheet visible={visible} onDismiss={onDismiss} title={ticket.id}>
       <PanelSection>
         <View style={styles.headerRow}>
-          <StatusPill label={ticket.status} tone={ticketStatusTone(ticket.status)} radius={PANEL_INNER_RADIUS} />
+          <StatusPill label={ticket.status} tone={ticketStatusTone(ticket.status)} />
         </View>
         <Text variant="bodyMedium" style={muted}>
           {ticket.issue}
@@ -212,6 +264,17 @@ export function TicketEditSheet({
 const TRAIL_ICON = 16;
 
 const styles = StyleSheet.create({
+  appTop: { padding: 16, gap: 8 },
+  appIdRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  appId: { fontFamily: Fonts.semiBold, fontSize: 16, lineHeight: 24 },
+  appBody: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20 },
+  appFacts: { borderWidth: 1, borderRadius: Shape.max, padding: 12, gap: 16, marginTop: 8 },
+  appFact: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  appHairline: { height: 1, marginTop: 8 },
+  appActivity: { padding: 16, gap: 12 },
+  appHeading: { fontFamily: Fonts.semiBold, fontSize: 16, lineHeight: 24 },
+  appExpected: { borderRadius: Shape.small, padding: 12, gap: 4 },
+  appStep: { gap: 4 },
   flex: { flex: 1 },
   medium: { fontFamily: Fonts.medium },
   semiBold: { fontFamily: Fonts.semiBold },

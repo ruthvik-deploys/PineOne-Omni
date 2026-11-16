@@ -12,10 +12,10 @@ import {
 } from '@/components/shared/date-range-filter';
 import { EmailReportSheet } from '@/components/shared/email-report-sheet';
 import { useShellTabs } from '@/components/shell-tabs';
-import { LIST_ROW_INNER_RADIUS, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { ListingToolbar, selectFilter } from '@/components/shared/listing';
 import { type MoreFilterCategory, type MoreFilterSelection } from '@/components/shared/more-filters';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { StatusPill } from '@/components/shared/status';
+import { DotStatusBadge, STATUS_DOT_TONE } from '@/components/shared/status';
 import { SummaryCards } from '@/components/shared/summary-cards';
 import { Shape } from '@/constants/shape';
 import { useBusiness } from '@/hooks/use-business';
@@ -87,15 +87,7 @@ export function toStatusFilterKey(label: string): StatusFilter {
  * chosen only in the header's scope switcher on mobile (user decision).
  */
 export const MORE_FILTER_CATEGORIES: MoreFilterCategory[] = [
-  {
-    id: 'payment-modes',
-    label: 'Payment modes',
-    options: [
-      { id: 'upi', label: 'UPI' },
-      { id: 'card', label: 'Card' },
-      { id: 'netbanking', label: 'Net banking' },
-    ],
-  },
+  // No "Payment modes" category: the Mode filter already covers it.
   { id: 'hardware-id', label: 'Hardware ID', options: ['HW-1001', 'HW-1002', 'HW-1003'].map((id) => ({ id: id.toLowerCase(), label: id })) },
   {
     id: 'terminal-id',
@@ -192,7 +184,6 @@ export function TransactionsView() {
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const paymentModes = moreFilters['payment-modes'] ?? [];
     const transactionModes = moreFilters['transaction-modes'] ?? [];
     const start = appliedRange?.from ? new Date(appliedRange.from) : null;
     start?.setHours(0, 0, 0, 0);
@@ -202,7 +193,6 @@ export function TransactionsView() {
     return modeRows.filter((row) => {
       if (statusFilter !== 'all' && toStatusFilterKey(row.status.label) !== statusFilter) return false;
       if (mode === 'in-store') {
-        if (paymentModes.length && !paymentModes.includes(row.paymentMode)) return false;
         if (transactionModes.length && !transactionModes.includes(row.transactionType.toLowerCase())) return false;
         if (paymentModeFilter !== 'all' && row.paymentMode !== paymentModeFilter) return false;
         if (providerFilter !== 'all' && row.provider !== providerFilter) return false;
@@ -310,7 +300,7 @@ export function TransactionsView() {
             amount={formatInr(row.amount)}
             paymentMode={row.paymentMode}
             paymentLabel={row.paymentLabel}
-            status={<StatusPill label={row.status.label} tone={row.status.tone} radius={LIST_ROW_INNER_RADIUS} />}
+            status={<DotStatusBadge label={row.status.label} tone={STATUS_DOT_TONE[row.status.tone]} />}
             onPress={() => router.push(`/payments/transactions/${row.transactionId}?channel=${mode}`)}
             accessibilityLabel={`${formatInr(row.amount)}, ${row.paymentLabel}, ${row.status.label}`}
           />

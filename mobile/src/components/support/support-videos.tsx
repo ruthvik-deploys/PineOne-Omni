@@ -5,7 +5,8 @@ import { Icon, Text, useTheme } from 'react-native-paper';
 import { SearchField } from '@/components/search-field';
 import { DetailScreen } from '@/components/shared/detail-screen';
 import { OutlineTag } from '@/components/shared/status';
-import { Shape } from '@/constants/shape';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
+import { concentric, Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 import { SUPPORT_VIDEOS } from '@/data/support';
 
@@ -25,11 +26,19 @@ export function SupportVideos() {
 
   return (
     <DetailScreen title="All videos" fallbackHref="/support">
-      <SearchField value={search} onChangeText={setSearch} placeholder="Search videos" radius={Shape.small} />
+      <SearchField value={search} onChangeText={setSearch} placeholder={APP_PAGE_LAYOUT ? 'Search topic' : 'Search videos'} radius={Shape.small} />
       {videos.length === 0 ? (
         <Text variant="bodyMedium" style={muted}>
           No videos match your search.
         </Text>
+      ) : APP_PAGE_LAYOUT ? (
+        // Figma 7249:196365: each video a white card, the thumbnail inset 8dp, the title under it.
+        videos.map((video) => (
+          <View key={video.title} style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+            <VideoThumbnail radius={concentric(Shape.max, 8)} image={video.image} />
+            <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{video.title}</Text>
+          </View>
+        ))
       ) : (
         videos.map((video) => (
           <View key={video.title} style={styles.video}>
@@ -57,6 +66,8 @@ export function SupportVideos() {
 }
 
 const styles = StyleSheet.create({
+  card: { borderRadius: Shape.max, padding: 8, gap: 12 },
+  cardTitle: { fontFamily: Fonts.medium, fontSize: 16, lineHeight: 24, paddingHorizontal: 4, paddingBottom: 4 },
   medium: { fontFamily: Fonts.medium },
   video: { gap: 4 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },

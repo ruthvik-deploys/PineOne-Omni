@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
+import { router } from 'expo-router';
 import { ORGANISATIONS, type Organisation, type Shop } from '@/data/businesses';
 import { CHANNEL_MULTIPLIER, CHANNEL_OPTIONS, type ChannelFilter, MIN_STORE_SCALE } from '@/data/overview';
 
@@ -31,6 +32,12 @@ type BusinessContextValue = {
   applyScope: (scope: { organisationId: string; shopIds: string[]; channel: ChannelFilter }) => void;
   /** Switching organisation selects its first shop. */
   selectOrganisation: (organisationId: string) => void;
+  /** Start over on another organisation: all its stores and channels, the app rebuilt from Overview. */
+  switchOrganisation: (organisationId: string) => void;
+  /** Changes on each switch; keying the app on it drops every page's state. */
+  appKey: number;
+  /** The organisation being switched to, while the app reloads. */
+  switchingTo: string | null;
   /** Single shop (header switcher). */
   selectShop: (shopId: string) => void;
   /** Any subset; [] = all shops (Overview's "Change store"). */
@@ -41,6 +48,9 @@ export type SpecificChannel = Exclude<ChannelFilter, 'all'>;
 
 const BusinessContext = createContext<BusinessContextValue | null>(null);
 
+/** How long the reload screen shows on an organisation switch. */
+const RELOAD_MS = 900;
+
 /**
  * The org, shop(s) and channel the whole app is scoped to. Only the header
  * switcher changes them: pages have no store or channel filters of their own
@@ -50,10 +60,12 @@ const BusinessContext = createContext<BusinessContextValue | null>(null);
  */
 export function BusinessProvider({ children }: { children: ReactNode }) {
   const [organisationId, setOrganisationId] = useState(ORGANISATIONS[0].id);
-  // Starts on a single shop, matching the Figma app shell (Health & Glow · Koramangala).
-  const [shopIds, setShopIds] = useState<string[]>([ORGANISATIONS[0].shops[0].id]);
+  // Starts on all stores (user decision).
+  const [shopIds, setShopIds] = useState<string[]>([]);
   const [channel, setChannel] = useState<ChannelFilter>('all');
   const [lastSpecific, setLastSpecific] = useState<SpecificChannel>('in-store');
+  const [appKey, setAppKey] = useState(0);
+  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
 
   const value = useMemo(() => {
     const specificChannel: SpecificChannel = channel === 'all' ? lastSpecific : channel;
@@ -98,10 +110,28 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         setOrganisationId(next.id);
         setShopIds([next.shops[0].id]);
       },
+      switchOrganisation: (id: string) => {
+        const next = ORGANISATIONS.find((org) => org.id === id);
+        if (!next || next.id === organisation.id) return;
+        setSwitchingTo(next.name);
+        setOrganisationId(next.id);
+        setShopIds([]);
+        setChannel('all');
+        setLastSpecific('in-store');
+        if (router.canDismiss()) router.dismissAll();
+        router.replace('/');
+        // Rebuilt as the reload screen clears, so the scope intro plays in full (scope-intro.tsx).
+        setTimeout(() => {
+          setAppKey((key) => key + 1);
+          setSwitchingTo(null);
+        }, RELOAD_MS);
+      },
+      appKey,
+      switchingTo,
       selectShop: (id: string) => setShopIds([id]),
       setShopIds: (ids: string[]) => setShopIds(ids.length === organisation.shops.length ? [] : ids),
     };
-  }, [organisationId, shopIds, channel, lastSpecific]);
+  }, [organisationId, shopIds, channel, lastSpecific, appKey, switchingTo]);
 
   return <BusinessContext.Provider value={value}>{children}</BusinessContext.Provider>;
 }

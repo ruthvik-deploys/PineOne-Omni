@@ -21,6 +21,8 @@ import { useBusiness } from '@/hooks/use-business';
  *   or a page that shows it differently, e.g. Overview's All channels →
  *   Payments' In-store), the header's scope line pulses lime once.
  *
+ * An organisation switch rebuilds the app, so the intro plays again there.
+ *
  * Tapping skips the intro; with Reduce Motion on it fades instead of moving.
  */
 
@@ -188,7 +190,7 @@ function IntroOverlay({ icon, label, anchor, background, onStart, onLanded, onDo
       onPress={leave}
       accessibilityRole="button"
       accessibilityLabel={`Viewing ${label.replace(' • ', ', ')}. Tap to continue`}
-      style={StyleSheet.absoluteFill}>
+      style={styles.overlay}>
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, { backgroundColor: background, opacity: exit.interpolate({ inputRange: [0, 0.25, 1], outputRange: [1, 1, 0] }) }]}
@@ -251,6 +253,8 @@ function landingScale(anchor: Rect, group: Rect) {
 const TILE_SIZE = 72;
 
 const styles = StyleSheet.create({
+  // Above the shell's page layer and the profile (app-tabs.tsx), which sit at zIndex 1 and 2.
+  overlay: { ...StyleSheet.absoluteFill, zIndex: 3 },
   center: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 32 },
   group: { alignItems: 'center', gap: 16 },
   tile: { width: TILE_SIZE, height: TILE_SIZE, borderRadius: Shape.max, alignItems: 'center', justifyContent: 'center' },

@@ -10,9 +10,11 @@ import { CopyableValue } from '@/components/shared/copyable-value';
 import { DetailRow, DetailSections, SECTION_CARD_INNER_RADIUS, SectionCard } from '@/components/shared/detail-rows';
 import { CollapsingDetailScreen, DETAIL_FOOTER_BUTTON_RADIUS, type StatusGradientTone } from '@/components/shared/detail-screen';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from '@/components/shared/panel-sheet';
-import { StatusPill } from '@/components/shared/status';
+import { DotStatusBadge, STATUS_DOT_TONE } from '@/components/shared/status';
+import { HelpCard } from '@/components/shared/help-card';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Shape } from '@/constants/shape';
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 import { formatInr } from '@/data/common';
 import {
   CHARGE_SLIPS,
@@ -26,6 +28,7 @@ import {
 import type { TransactionRecord } from '@/data/transactions';
 
 import { ActivityTimeline } from './activity-timeline';
+import { ChargeSlipSheet, MapImeiSheet, ProductSheet, RefundSheet } from './payment-sheets';
 
 const GRADIENT: Record<TransactionRecord['status']['tone'], StatusGradientTone> = {
   success: 'success',
@@ -50,17 +53,20 @@ export function TransactionDetail({ transaction, channel }: { transaction: Trans
   const [refundOpen, setRefundOpen] = useState(false);
   const [chargeSlipOpen, setChargeSlipOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
+  const [mapImeiOpen, setMapImeiOpen] = useState(false);
+  const [imeiMapped, setImeiMapped] = useState(false);
 
   // Centred summary; it collapses into the header (amount + pay mode) on scroll.
   const hero = (
     <View style={styles.hero}>
-      <View style={[styles.modeTile, { backgroundColor: theme.colors.primary }]}>
-        <Icon source={transaction.paymentMode === 'card' ? 'credit-card' : 'qr-code'} size={32} color={theme.colors.onPrimary} />
+      <View style={[styles.modeTile, APP_PAGE_LAYOUT && styles.appModeTile, { backgroundColor: theme.colors.primary }]}>
+        <Icon source={transaction.paymentMode === 'card' ? 'credit-card' : 'qr-code'} size={APP_PAGE_LAYOUT ? 20 : 32} color={theme.colors.onPrimary} />
       </View>
-      <DimmedDecimalAmount value={amount(transaction.amount)} size="hero" />
+      {/* The app pages (Figma 7132:120257) set the amount at 20dp with its paise. */}
+      <DimmedDecimalAmount value={APP_PAGE_LAYOUT ? formatInr(transaction.amount) : amount(transaction.amount)} size={APP_PAGE_LAYOUT ? 'medium' : 'hero'} />
       {/* Wrapped so the pill (which aligns itself to the start) centres in the hero. */}
       <View>
-        <StatusPill label={transaction.status.label} tone={transaction.status.tone} radius={Shape.max} />
+        <DotStatusBadge label={transaction.status.label} tone={STATUS_DOT_TONE[transaction.status.tone]} />
       </View>
       <Text variant="bodyMedium" style={[styles.meta, { color: theme.colors.onSurfaceVariant }]}>
         Payment mode: {transaction.provider}
@@ -85,6 +91,28 @@ export function TransactionDetail({ transaction, channel }: { transaction: Trans
       compactSubtitle={`${transaction.paymentLabel} · ${transaction.provider}`}
       hero={hero}
       footer={
+        APP_PAGE_LAYOUT ? (
+          // Figma 7132:120434 / 7138:127499: Charge slip (in-store) or Map IMEI number (online), then Refund transaction.
+          <>
+            <Button
+              mode="outlined"
+              onPress={() => (online ? setMapImeiOpen(true) : setChargeSlipOpen(true))}
+              textColor={theme.colors.onSurface}
+              style={[styles.footerButton, { borderColor: theme.colors.outlineVariant }]}
+              contentStyle={styles.appFooterContent}
+              labelStyle={[styles.footerLabel, styles.appFooterLabel]}>
+              {online ? 'Map IMEI number' : 'Chargeslip / Receipt'}
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => setRefundOpen(true)}
+              style={styles.footerButton}
+              contentStyle={styles.appFooterContent}
+              labelStyle={[styles.footerLabel, styles.appFooterLabel]}>
+              Refund transaction
+            </Button>
+          </>
+        ) : (
         <>
           {!online ? (
             <Button
@@ -92,26 +120,48 @@ export function TransactionDetail({ transaction, channel }: { transaction: Trans
               onPress={() => setChargeSlipOpen(true)}
               textColor={theme.colors.onSurface}
               style={[styles.footerButton, { borderColor: theme.colors.outlineVariant }]}
-              labelStyle={styles.footerLabel}>
+              contentStyle={APP_PAGE_LAYOUT ? styles.appFooterContent : undefined}
+              labelStyle={[styles.footerLabel, APP_PAGE_LAYOUT && styles.appFooterLabel]}>
               Chargeslip / receipt
             </Button>
           ) : null}
-          <Button mode="contained" onPress={() => setRefundOpen(true)} style={styles.footerButton} labelStyle={styles.footerLabel}>
+          <Button
+            mode="contained"
+            onPress={() => setRefundOpen(true)}
+            style={styles.footerButton}
+            contentStyle={APP_PAGE_LAYOUT ? styles.appFooterContent : undefined}
+            labelStyle={[styles.footerLabel, APP_PAGE_LAYOUT && styles.appFooterLabel]}>
             Refund transaction
           </Button>
         </>
+        )
       }>
 
       {/* One card per segment, evenly spaced; Activity comes first (user decision). */}
       <View style={styles.cards}>
-        <ActivityTimeline events={events} carded />
+        <ActivityTimeline events={events} carded detailLinks={online} />
         <DetailSections
           carded
           sections={(online ? ONLINE_SECTIONS : getInStoreSections(transaction)).map((section) => ({ title: section.title, rows: section.fields }))}
         />
         {online ? (
           <SectionCard title="Product details">
-            {ONLINE_PRODUCTS.map((product, index) => (
+            {APP_PAGE_LAYOUT
+              ? ONLINE_PRODUCTS.map((product, index) => (
+                  // Figma 7138:127499: the product, "IMEI not mapped" under it, and View at the end.
+                  <View key={index} style={[styles.appProduct, index > 0 && [styles.appProductRule, { borderTopColor: theme.colors.background }]]}>
+                    <View style={styles.appProductText}>
+                      <Text style={[styles.appProductTitle, { color: theme.colors.onSurface }]}>Product: {product}</Text>
+                      <View style={[styles.appTag, { borderColor: theme.colors.outlineVariant }]}>
+                        <Text style={[styles.appTagLabel, { color: theme.colors.onSurface }]}>{imeiMapped ? 'IMEI mapped' : 'IMEI not mapped'}</Text>
+                      </View>
+                    </View>
+                    <Text onPress={() => setProductOpen(true)} accessibilityRole="button" accessibilityLabel={`View product ${product}`} style={[styles.appView, { color: theme.colors.primary }]}>
+                      View
+                    </Text>
+                  </View>
+                ))
+              : ONLINE_PRODUCTS.map((product, index) => (
               <TouchableRipple
                 key={index}
                 onPress={() => setProductOpen(true)}
@@ -134,11 +184,23 @@ export function TransactionDetail({ transaction, channel }: { transaction: Trans
             ))}
           </SectionCard>
         ) : null}
+        {APP_PAGE_LAYOUT ? <HelpCard subject="transaction" carded /> : null}
       </View>
 
-      <ProductPanel visible={productOpen} onDismiss={() => setProductOpen(false)} />
-      <RefundPanel transaction={transaction} visible={refundOpen} onDismiss={() => setRefundOpen(false)} />
-      <ChargeSlipPanel transaction={transaction} visible={chargeSlipOpen} onDismiss={() => setChargeSlipOpen(false)} />
+      {APP_PAGE_LAYOUT ? (
+        <>
+          <ProductSheet visible={productOpen} onDismiss={() => setProductOpen(false)} />
+          <RefundSheet transaction={transaction} channel={channel} visible={refundOpen} onDismiss={() => setRefundOpen(false)} />
+          <ChargeSlipSheet visible={chargeSlipOpen} onDismiss={() => setChargeSlipOpen(false)} />
+          <MapImeiSheet visible={mapImeiOpen} onDismiss={() => setMapImeiOpen(false)} onMapped={() => setImeiMapped(true)} />
+        </>
+      ) : (
+        <>
+          <ProductPanel visible={productOpen} onDismiss={() => setProductOpen(false)} />
+          <RefundPanel transaction={transaction} visible={refundOpen} onDismiss={() => setRefundOpen(false)} />
+          <ChargeSlipPanel transaction={transaction} visible={chargeSlipOpen} onDismiss={() => setChargeSlipOpen(false)} />
+        </>
+      )}
     </CollapsingDetailScreen>
   );
 }
@@ -299,7 +361,18 @@ const styles = StyleSheet.create({
   footerButton: { flex: 1, borderRadius: DETAIL_FOOTER_BUTTON_RADIUS },
   footerLabel: { marginHorizontal: 8 },
   hero: { gap: 10, alignItems: 'center', paddingBottom: 8 },
-  cards: { gap: 12 },
+  cards: { gap: APP_PAGE_LAYOUT ? 8 : 12 },
+  appModeTile: { width: 36, height: 36 },
+  appProduct: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  appProductRule: { borderTopWidth: 1 },
+  appProductText: { flex: 1, gap: 6, alignItems: 'flex-start' },
+  appProductTitle: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
+  appTag: { height: 20, paddingHorizontal: 8, borderRadius: 10, borderWidth: 1, justifyContent: 'center' },
+  appTagLabel: { fontFamily: Fonts.regular, fontSize: 12, lineHeight: 16 },
+  appView: { fontFamily: Fonts.semiBold, fontSize: 14, lineHeight: 20 },
+  // Figma 7132:120435: 32dp footer buttons.
+  appFooterContent: { height: 32 },
+  appFooterLabel: { marginVertical: 0, fontSize: 14, lineHeight: 20 },
   modeTile: { width: 48, height: 48, borderRadius: Shape.small, alignItems: 'center', justifyContent: 'center' },
   meta: { fontFamily: Fonts.regular, lineHeight: 22, textAlign: 'center' },
   pills: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
@@ -310,7 +383,7 @@ const styles = StyleSheet.create({
   medium: { fontFamily: Fonts.medium },
   semiBold: { fontFamily: Fonts.semiBold },
   center: { textAlign: 'center' },
-  input: { height: 44, borderWidth: 1, borderRadius: PANEL_INNER_RADIUS, paddingHorizontal: 12, fontFamily: Fonts.regular, fontSize: 14 },
+  input: { fontVariant: OPEN_DIGITS, height: 44, borderWidth: 1, borderRadius: PANEL_INNER_RADIUS, paddingHorizontal: 12, fontFamily: Fonts.regular, fontSize: 14 },
   note: { borderWidth: 1, borderRadius: PANEL_INNER_RADIUS, paddingHorizontal: 12, paddingVertical: 8 },
   panelButton: { borderRadius: PANEL_INNER_RADIUS },
   success: { borderWidth: 1, borderRadius: PANEL_INNER_RADIUS, padding: 16, gap: 4 },

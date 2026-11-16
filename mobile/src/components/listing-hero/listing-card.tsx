@@ -2,50 +2,24 @@ import { type ReactNode, useState } from 'react';
 import { ScrollView, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { Icon, IconButton, Menu, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
+import { useTabLayout } from '@/components/app-tabs';
+import { HeroNumber, HeroTopRow, SampleHero, SampleSheet } from '@/components/listing-sample/sample-layout';
 import { LazyMenu } from '@/components/shared/lazy-menu';
 import { SearchField } from '@/components/search-field';
 import { FiltersButton, type ListingFilter } from '@/components/shared/filters-sheet';
-import type { ListingAction } from '@/components/shared/listing';
+import { ListDivider, type ListingAction } from '@/components/shared/listing';
 import { useAppColors } from '@/constants/app-colors';
+import { APP_PAGE_LAYOUT, LISTING_SAMPLE_LAYOUT } from '@/constants/experiments';
 import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 import { formatInr } from '@/data/common';
 
-import { DateButton, type RangeScope } from './time-scope';
+import { appliedChips, clearAll } from './applied-filters';
+import { DateButton, type RangeScope, rangePhrase } from './time-scope';
 
-const CONTROL_HEIGHT = 36;
+/** The app pages (APP_PAGE_LAYOUT, Figma 7153:139371) set search and Filters at 28dp. */
+const CONTROL_HEIGHT = APP_PAGE_LAYOUT ? 28 : 36;
 const PADDING = 12;
-
-type Chip = { key: string; label: string; onRemove: () => void };
-
-/** One removable chip per filter that's set (date filters aren't expected here: the hero owns the period). */
-function appliedChips(filters: ListingFilter[]): Chip[] {
-  return filters.flatMap((filter, index): Chip[] => {
-    if (filter.type === 'select') {
-      const fallback = filter.defaultValue ?? filter.options[0]?.value ?? '';
-      if (filter.value === fallback) return [];
-      const option = filter.options.find((item) => item.value === filter.value);
-      return [{ key: `${index}`, label: `${filter.label}: ${option?.label ?? filter.value}`, onRemove: () => filter.onApply(fallback) }];
-    }
-    if (filter.type === 'more') {
-      return filter.categories.flatMap((category) =>
-        (filter.applied[category.id] ?? []).map((id) => ({
-          key: `${index}-${category.id}-${id}`,
-          label: category.options.find((option) => option.id === id)?.label ?? id,
-          onRemove: () => filter.onApply({ ...filter.applied, [category.id]: (filter.applied[category.id] ?? []).filter((item) => item !== id) }),
-        }))
-      );
-    }
-    return [];
-  });
-}
-
-function clearAll(filters: ListingFilter[]) {
-  filters.forEach((filter) => {
-    if (filter.type === 'select') filter.onApply(filter.defaultValue ?? filter.options[0]?.value ?? '');
-    else if (filter.type === 'more') filter.onApply({});
-  });
-}
 
 type ListingCardProps = {
   search: string;
@@ -66,18 +40,16 @@ type ListingCardProps = {
    * Shown as the date button first in the control row, so the list's dates are never a guess.
    */
   time?: RangeScope;
-  /**
-   * One-tap filters for what needs attention (e.g. "20 failed"), shown with
-   * the applied filters while they'd still narrow the list. The page's
-   * exceptions live here, by the records they're about, not in the hero.
-   */
-  suggestions?: { key: string; label: string; icon: string; color: string; onPress: () => void }[];
   /** Ends the narrowed summary's count when the list follows the hero's period, e.g. "today". */
   periodPhrase?: string;
   /** A note about the list, under the search (e.g. "Pick the payment to refund"). */
   notice?: ReactNode;
   /** e.g. pulling the card up over the hero's foot. */
   style?: StyleProp<ViewStyle>;
+  /** The page shows an AnswerHero above (listing sample: no count hero is added). */
+  belowHero?: boolean;
+  /** The list's title on the listing sample's sheet; defaults to "All {noun}". */
+  title?: string;
   children: ReactNode;
 };
 
@@ -88,7 +60,50 @@ type ListingCardProps = {
  * ₹1,12,000" while filtered) with the list's actions behind ⋯, then the
  * day-grouped rows.
  */
-export function ListingCard({
+export function ListingCard(props: ListingCardProps) {
+  return LISTING_SAMPLE_LAYOUT ? <SampleListingCard {...props} /> : <ClassicListingCard {...props} />;
+}
+
+/**
+ * The records in the listing sample's style (LISTING_SAMPLE_LAYOUT): the
+ * white sheet with Search & filter, ⋯ and the list. On a tab page without
+ * an AnswerHero it adds one of its own — how many records, over the list's
+ * dates — so every listing opens the same way. Inner pages (no navigation
+ * bar, their own large title) get the sheet alone.
+ */
+function SampleListingCard({ search, onSearchChange, searchPlaceholder, focusSearch, filters, actions, totals, noun, time, notice, belowHero = false, title, children }: ListingCardProps) {
+  const { headerHeight } = useTabLayout();
+  const countHero = !belowHero && headerHeight > 0;
+  const phrase = time ? rangePhrase(time.value) : '';
+  const capitalised = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+  return (
+    <View>
+      {countHero ? (
+        <SampleHero>
+          <HeroTopRow label={capitalised(time?.subject ?? noun.other)} period={time ? <DateButton scope={time} compact /> : undefined} />
+          <HeroNumber count={{ value: totals.all }} line={`${totals.all === 1 ? noun.one : noun.other} ${phrase || 'in total'}`} />
+        </SampleHero>
+      ) : null}
+      <SampleSheet
+        title={title ?? `All ${noun.other}`}
+        search={search}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={searchPlaceholder}
+        openSearch={focusSearch}
+        filters={filters}
+        actions={actions}
+        notice={notice}
+        // The list's own dates sit with it when the hero above doesn't show them.
+        accessory={time && !countHero ? <View style={styles.sheetDates}><DateButton scope={time} compact /></View> : undefined}
+        totals={totals}
+        noun={noun}>
+        {children}
+      </SampleSheet>
+    </View>
+  );
+}
+
+function ClassicListingCard({
   search,
   onSearchChange,
   searchPlaceholder,
@@ -97,7 +112,6 @@ export function ListingCard({
   actions = [],
   totals,
   noun,
-  suggestions = [],
   periodPhrase,
   time,
   notice,
@@ -114,7 +128,9 @@ export function ListingCard({
 
   return (
     // The shadow sits on a wrapper: iOS drops shadows on a view that clips its content.
-    <View style={[styles.lift, style]}>
+    <View style={[!APP_PAGE_LAYOUT && styles.lift, APP_PAGE_LAYOUT && styles.appStack, style]}>
+      {/* The app pages (Figma 7249:191734) put the list's dates above it, as the full-width pill. */}
+      {APP_PAGE_LAYOUT && time ? <DateButton scope={time} wide /> : null}
       <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <View style={styles.toolbar}>
           <View style={styles.searchRow}>
@@ -161,24 +177,10 @@ export function ListingCard({
 
           {notice}
 
-          {/* One row of everything that shapes the list: its dates, what needs attention, the filters that are set. */}
-          {time || chips.length || suggestions.length ? (
+          {/* One row of everything that shapes the list: its dates and the filters that are set. */}
+          {(time && !APP_PAGE_LAYOUT) || chips.length ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-              {time ? <DateButton scope={time} compact /> : null}
-              {suggestions.map((suggestion) => (
-                <TouchableRipple
-                  key={suggestion.key}
-                  onPress={suggestion.onPress}
-                  borderless
-                  accessibilityRole="button"
-                  accessibilityLabel={`Show ${suggestion.label}`}
-                  style={[styles.chip, styles.suggestion, { borderColor: theme.colors.outlineVariant }]}>
-                  <View style={styles.chipContent}>
-                    <Icon source={suggestion.icon} size={14} color={suggestion.color} />
-                    <Text style={[styles.chipLabel, { color: theme.colors.onSurface }]}>{suggestion.label}</Text>
-                  </View>
-                </TouchableRipple>
-              ))}
+              {time && !APP_PAGE_LAYOUT ? <DateButton scope={time} compact /> : null}
               {chips.map((chip) => (
                 <TouchableRipple
                   key={chip.key}
@@ -210,7 +212,8 @@ export function ListingCard({
             </Text>
           ) : null}
         </View>
-        <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
+        {/* The app pages' day bands start straight under the toolbar; their grey is the edge. */}
+        {APP_PAGE_LAYOUT ? null : <View style={[styles.divider, { backgroundColor: theme.colors.background }]} />}
         {children}
       </View>
     </View>
@@ -218,6 +221,8 @@ export function ListingCard({
 }
 
 const styles = StyleSheet.create({
+  sheetDates: { flexDirection: 'row' },
+  appStack: { gap: 8 },
   // A soft lift, so its top edge shows where it rides over the hero's white.
   lift: {
     borderRadius: Shape.max,
@@ -235,8 +240,7 @@ const styles = StyleSheet.create({
   chip: { borderRadius: Shape.small },
   chipContent: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 32, paddingHorizontal: 10 },
   chipLabel: { fontFamily: Fonts.medium, fontSize: 12, lineHeight: 16 },
-  suggestion: { borderWidth: 1 },
-  summary: { paddingBottom: 6, fontFamily: Fonts.medium, fontSize: 12, lineHeight: 16, fontVariant: ['tabular-nums'] },
+  summary: { paddingBottom: 6, fontFamily: Fonts.medium, fontSize: 12, lineHeight: 16, fontVariant: ['tabular-nums', 'stylistic-one'] },
   // Same height and edge as Filters beside it.
   more: { margin: 0, width: CONTROL_HEIGHT, height: CONTROL_HEIGHT, borderRadius: Shape.small, borderWidth: 1 },
   divider: { height: 1 },
@@ -257,7 +261,7 @@ export function ListingRows({ children, empty }: { children: ReactNode[]; empty:
     <View>
       {rows.map((row, index) => (
         <View key={index}>
-          {index > 0 ? <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} /> : null}
+          {index > 0 || APP_PAGE_LAYOUT ? <ListDivider /> : null}
           {row}
         </View>
       ))}

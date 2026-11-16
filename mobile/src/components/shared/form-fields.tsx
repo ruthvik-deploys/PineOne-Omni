@@ -4,7 +4,7 @@ import { Checkbox, Icon, Menu, RadioButton, Text, TouchableRipple, useTheme } fr
 import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
 
 import { LazyMenu } from '@/components/shared/lazy-menu';
-import { Fonts } from '@/constants/theme';
+import { Fonts, OPEN_DIGITS } from '@/constants/theme';
 
 import type { DateRange } from './date-range-filter';
 import { PANEL_INNER_RADIUS } from './panel-sheet';
@@ -385,13 +385,13 @@ const styles = StyleSheet.create({
   field: { gap: 8 },
   label: { fontFamily: Fonts.medium },
   semiBold: { fontFamily: Fonts.semiBold },
-  input: { height: FIELD_HEIGHT, paddingHorizontal: 12, borderWidth: 1, fontFamily: Fonts.regular, fontSize: 14 },
+  input: { fontVariant: OPEN_DIGITS, height: FIELD_HEIGHT, paddingHorizontal: 12, borderWidth: 1, fontFamily: Fonts.regular, fontSize: 14 },
   prefixed: { height: FIELD_HEIGHT, flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 12, borderWidth: 1 },
-  prefixedInput: { flex: 1, height: '100%', borderWidth: 0, paddingLeft: 0 },
+  prefixedInput: { fontVariant: OPEN_DIGITS, flex: 1, height: '100%', borderWidth: 0, paddingLeft: 0 },
   dateTime: { flexDirection: 'row', gap: 8 },
   dateTimeDate: { flex: 1.3 },
   dateTimeTime: { flex: 1 },
-  textArea: { height: undefined, minHeight: 80, paddingVertical: 10, textAlignVertical: 'top' },
+  textArea: { fontVariant: OPEN_DIGITS, height: undefined, minHeight: 80, paddingVertical: 10, textAlignVertical: 'top' },
   fieldButton: { height: FIELD_HEIGHT, borderWidth: 1, justifyContent: 'center' },
   fieldButtonContent: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 },
   fieldValue: { flex: 1, fontFamily: Fonts.regular },

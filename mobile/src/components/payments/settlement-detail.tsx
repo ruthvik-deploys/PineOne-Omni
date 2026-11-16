@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Divider, FAB, IconButton, Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Button, FAB, IconButton, Text, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { SearchField } from '@/components/search-field';
 import { DimmedDecimalAmount } from '@/components/shared/amount';
 import { BankLogo } from '@/components/shared/bank-logo';
@@ -11,13 +12,15 @@ import { DetailRow, SECTION_CARD_INNER_RADIUS, SectionCard } from '@/components/
 import { HelpCard } from '@/components/shared/help-card';
 import { CollapsingDetailScreen, DETAIL_FOOTER_BUTTON_RADIUS, type StatusGradientTone } from '@/components/shared/detail-screen';
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
-import { LIST_ROW_INNER_RADIUS } from '@/components/shared/listing';
 import { DotStatusBadge } from '@/components/shared/status';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { concentric, Shape } from '@/constants/shape';
+import { formatCount, formatInr } from '@/data/common';
 import { Fonts } from '@/constants/theme';
 import { type SettlementRow, type SettlementStatus, settlementDetailRows } from '@/data/settlements';
 import { useToast } from '@/hooks/use-toast';
 
+import { ActivityTimeline, type TimelineEvent } from './activity-timeline';
 import { PaymentRow } from './payment-row';
 import { rupees, settlementStatusTone } from './settlements-view';
 
@@ -45,13 +48,27 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
   const [loadingMore, setLoadingMore] = useState(false);
   const muted = { color: theme.colors.onSurfaceVariant };
 
-  const deductions = [
+  // The app pages (Figma 7161:116068) show four lines, all at once: Refunds, MSF / MDR, GST and Others.
+  const deductions = APP_PAGE_LAYOUT
+    ? [
+        { label: 'Refunds', value: settlement.refundAmount },
+        { label: 'MSF / MDR', value: settlement.mdrAmount },
+        { label: 'GST', value: settlement.gstAmount },
+        { label: 'Others', value: settlement.platformFees + settlement.recoveryAmount + settlement.chargebackAmount },
+      ]
+    : [
     { label: 'Refunds', value: settlement.refundAmount },
     { label: 'Chargeback', value: settlement.chargebackAmount },
     { label: 'Loan recovery', value: settlement.recoveryAmount },
     { label: 'MSF / MDR', value: settlement.mdrAmount },
     { label: 'MCF', value: settlement.platformFees },
     ...(showAll ? [{ label: 'GST', value: settlement.gstAmount }] : []),
+      ];
+  const activity: TimelineEvent[] = [
+    { id: 'initiated', title: 'Settlement initiated', timestamp: `${settlement.initiationDatePrimary}, ${settlement.initiationDateSecondary}`, tone: 'processing', details: [] },
+    ...(settlement.status === 'Settled'
+      ? [{ id: 'settled', title: 'Settled in account', timestamp: `${settlement.settlementDatePrimary}, ${settlement.settlementDateSecondary}`, tone: 'success' as const, details: [] }]
+      : []),
   ];
 
   const filtered = useMemo(() => {
@@ -101,13 +118,28 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
   };
 
   // Centred summary; it collapses into the header (settled amount + bank) on scroll.
-  const hero = (
+  // The app pages (Figma 7161:116068): the bank, the amount at 20dp, the status beside the UTR, then where it went.
+  const hero = APP_PAGE_LAYOUT ? (
+    <View style={styles.hero}>
+      <View style={[styles.bankTile, { backgroundColor: theme.colors.surface }]}>
+        <BankLogo bank={settlement.bankName} size={20} />
+      </View>
+      <DimmedDecimalAmount value={formatInr(settlement.netAmount)} size="medium" />
+      <View style={styles.heroPills}>
+        <DotStatusBadge label={settlement.status} tone={settlementStatusTone(settlement.status)} />
+        <CopyableValue variant="pill" value={settlement.utr} label={`UTR: ${settlement.utr}`} />
+      </View>
+      <Text variant="bodyMedium" style={[styles.meta, muted]}>
+        Settled to: {settlement.bankName} bank, {settlement.accountLabel}
+      </Text>
+    </View>
+  ) : (
     <View style={styles.hero}>
       <BankLogo bank={settlement.bankName} size={48} />
       <DimmedDecimalAmount value={rupees(settlement.netAmount)} size="hero" />
       {/* Wrapped so the badge (which aligns itself to the start) centres in the hero. */}
       <View>
-        <DotStatusBadge label={settlement.status} tone={settlementStatusTone(settlement.status)} radius={Shape.max} />
+        <DotStatusBadge label={settlement.status} tone={settlementStatusTone(settlement.status)} />
       </View>
       <Text variant="bodyMedium" style={[styles.meta, muted]}>
         Settled to: {settlement.bankName} bank, {settlement.accountLabel} on {settlement.settlementDatePrimary}, {settlement.settlementDateSecondary}
@@ -128,7 +160,7 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
       compactTitle={rupees(settlement.netAmount)}
       compactSubtitle={`${settlement.bankName} Bank •••• ${last4}`}
       onScroll={handleScroll}
-      floating={
+      floating={APP_PAGE_LAYOUT ? undefined : (
         <Animated.View
           pointerEvents={searchShown ? 'box-none' : 'none'}
           style={[styles.floatingSearch, { opacity: searchAnim, transform: [{ translateY: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] }]}>
@@ -164,15 +196,26 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
             />
           )}
         </Animated.View>
-      }
+      )}
       footer={
-        <Button mode="contained" icon="download-simple" onPress={() => toast('Downloading MPR...')} accessibilityLabel="Download MPR (merchant payment report)" style={styles.footerButton}>
-          Download MPR
+        <Button
+          mode="contained"
+          icon={APP_PAGE_LAYOUT ? undefined : 'download-simple'}
+          onPress={() => toast('Downloading MPR...')}
+          accessibilityLabel="Download MPR (merchant payment report)"
+          style={styles.footerButton}
+          contentStyle={APP_PAGE_LAYOUT ? styles.appFooterContent : undefined}
+          labelStyle={APP_PAGE_LAYOUT ? styles.appFooterLabel : undefined}>
+          {APP_PAGE_LAYOUT ? 'Download MPR report' : 'Download MPR'}
         </Button>
       }>
       {/* One card per segment, evenly spaced (same layout as Transaction details). */}
       <View style={styles.cards} onLayout={(event) => setCardsTop(event.nativeEvent.layout.y)}>
-        <SectionCard title="Amount breakdown" icon="wallet">
+        {APP_PAGE_LAYOUT ? <ActivityTimeline events={activity} carded /> : null}
+        <SectionCard
+          title={APP_PAGE_LAYOUT ? 'Deductions' : 'Amount breakdown'}
+          icon="wallet"
+          trailing={APP_PAGE_LAYOUT ? rupees(settlement.deductionsTotal) : undefined}>
           <DetailRow label="Gross amount">
             <Text variant="bodyMedium" style={styles.medium}>
               {rupees(settlement.grossAmount)}
@@ -185,7 +228,7 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
               </Text>
             </DetailRow>
           ))}
-          <Button
+          {APP_PAGE_LAYOUT ? null : <Button
             mode="text"
             compact
             icon={showAll ? 'caret-up' : 'caret-down'}
@@ -193,7 +236,7 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
             contentStyle={styles.trailingIcon}
             style={styles.viewAll}>
             {showAll ? 'View less' : 'View all'}
-          </Button>
+          </Button>}
           <Divider />
           <DetailRow label="Net settled amount">
             <Text variant="bodyMedium" style={styles.semiBold}>
@@ -203,7 +246,12 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
         </SectionCard>
 
         <View onLayout={(event) => setSection({ top: event.nativeEvent.layout.y, height: event.nativeEvent.layout.height })}>
-        <SectionCard title={`${settlement.transactionCount} Transactions included`} icon="arrows-left-right">
+        <SectionCard
+          title={APP_PAGE_LAYOUT ? 'Transactions included' : `${settlement.transactionCount} Transactions included`}
+          icon="arrows-left-right"
+          trailing={APP_PAGE_LAYOUT ? formatCount(settlement.transactionCount) : undefined}>
+          {/* The app pages search inline, at the top of the list (Figma 7161:116068). */}
+          {APP_PAGE_LAYOUT ? <SearchField value={search} onChangeText={updateSearch} placeholder="Search trxns" radius={Shape.small} height={28} /> : null}
           {/* Same rows as Payments → Transactions, grouped by day; no inner box — the section card frames them. */}
           <View style={styles.bleed}>
             <DayGroupedList
@@ -214,10 +262,10 @@ export function SettlementDetail({ settlement }: { settlement: SettlementRow }) 
               empty="No transactions match your search."
               renderRow={(row) => (
                 <PaymentRow
-                  amount={rupees(row.transactionAmount)}
+                  amount={APP_PAGE_LAYOUT ? formatInr(row.transactionAmount) : rupees(row.transactionAmount)}
                   paymentMode={row.paymentMethod}
-                  paymentLabel={row.paymentMethodLabel}
-                  status={<DotStatusBadge label={row.payoutStatus} tone={settlementStatusTone(row.payoutStatus)} radius={LIST_ROW_INNER_RADIUS} />}
+                  paymentLabel={APP_PAGE_LAYOUT ? `${row.paymentTime} · ${row.paymentMethodLabel}` : row.paymentMethodLabel}
+                  status={<DotStatusBadge label={row.payoutStatus} tone={settlementStatusTone(row.payoutStatus)} />}
                   onPress={() => router.push(`/payments/transactions/${row.id}`)}
                   accessibilityLabel={`${rupees(row.transactionAmount)}, ${row.paymentMethodLabel}, ${row.payoutStatus}`}
                 />
@@ -251,8 +299,12 @@ const SEARCH_INNER_RADIUS = concentric(Shape.max, SEARCH_PADDING);
 
 const styles = StyleSheet.create({
   hero: { gap: 10, alignItems: 'center', paddingBottom: 8 },
+  bankTile: { width: 36, height: 36, borderRadius: Shape.small, alignItems: 'center', justifyContent: 'center' },
+  heroPills: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  appFooterContent: { height: 32 },
+  appFooterLabel: { marginVertical: 0, fontSize: 14, lineHeight: 20 },
   meta: { fontFamily: Fonts.regular, lineHeight: 22, textAlign: 'center' },
-  cards: { gap: 12 },
+  cards: { gap: APP_PAGE_LAYOUT ? 8 : 12 },
   medium: { fontFamily: Fonts.medium },
   semiBold: { fontFamily: Fonts.semiBold },
   viewAll: { alignSelf: 'center', borderRadius: SECTION_CARD_INNER_RADIUS },
@@ -260,7 +312,8 @@ const styles = StyleSheet.create({
   loadMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 4 },
   endOfList: { textAlign: 'center', paddingTop: 4 },
   // Rows span the card edge to edge, flush under the header divider (cancels the card body's padding).
-  bleed: { marginHorizontal: -16, marginTop: -16 },
+  // The app pages' search sits above the list, so the bands start under it.
+  bleed: { marginHorizontal: -16, marginTop: APP_PAGE_LAYOUT ? 0 : -16 },
   footerButton: { flex: 1, borderRadius: DETAIL_FOOTER_BUTTON_RADIUS },
   flex: { flex: 1 },
   floatingSearch: { alignItems: 'flex-end' },

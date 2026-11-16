@@ -32,7 +32,7 @@ export function ScreenTabs({ tabs, activeKey, onChange }: ScreenTabsProps) {
       indicatorColor={theme.colors.onSurface}
       tabRadius={concentric(Shape.max, INSET_BOTTOM, TRIGGER_HEIGHT)}
       // Transparent: the shell paints the surface behind them (faded in once they dock under the header).
-      style={{ paddingTop: 12, paddingHorizontal: INSET_X, paddingBottom: INSET_BOTTOM, borderBottomWidth: 0, backgroundColor: 'transparent' }}
+      style={{ paddingHorizontal: INSET_X, paddingBottom: INSET_BOTTOM, borderBottomWidth: 0, backgroundColor: 'transparent' }}
     />
   );
 }

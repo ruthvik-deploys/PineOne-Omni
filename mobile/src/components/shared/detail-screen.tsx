@@ -2,11 +2,13 @@ import { type Href } from 'expo-router';
 import { type ReactNode, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { Appbar, Text, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { BackButton, HeaderControl, PageTitle, PageTopBar, useCollapsingHeader } from '@/components/page-header';
 import { useOpenScopeSwitcher } from '@/components/scope-switcher';
 import { useBusiness } from '@/hooks/use-business';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { concentric, Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 
@@ -74,7 +76,10 @@ type DetailScreenProps = {
   children: ReactNode;
 };
 
-const FOOTER_PADDING = 16;
+// The app pages (APP_PAGE_LAYOUT, Figma 7132:120434) pad the footer 8dp.
+const FOOTER_PADDING = APP_PAGE_LAYOUT ? 8 : 16;
+/** Space after the last card; without a footer, the home indicator's inset is added to it. */
+const CONTENT_END = 32;
 /** Radius for buttons in the pinned footer (16dp inside its rounded top corners). */
 export const DETAIL_FOOTER_BUTTON_RADIUS = concentric(Shape.max, FOOTER_PADDING);
 
@@ -88,6 +93,7 @@ export const DETAIL_FOOTER_BUTTON_RADIUS = concentric(Shape.max, FOOTER_PADDING)
  */
 export function DetailScreen({ title, subtitle, fallbackHref, gradient, action, actions, scroll = true, footer, scoped = false, children }: DetailScreenProps) {
   const theme = useTheme();
+  const bottom = useSafeAreaInsets().bottom;
   const endReached = useEndReached();
   const header = useCollapsingHeader();
   const [shown] = useState(() => new Animated.Value(1));
@@ -112,36 +118,39 @@ export function DetailScreen({ title, subtitle, fallbackHref, gradient, action, 
             useNativeDriver: true,
             listener: endReached.scrollProps.onScroll,
           })}
-          contentContainerStyle={[styles.content, { paddingTop: header.barHeight }]}
+          contentContainerStyle={[styles.content, { paddingTop: header.barHeight }, !footer && { paddingBottom: CONTENT_END + bottom }]}
           keyboardShouldPersistTaps="handled">
           {gradient ? <StatusGradient tone={gradient} /> : null}
-          <PageTitle
+          {/* The app pages (Figma 7249:191734) keep the title in the white bar: no large title. */}
+          {APP_PAGE_LAYOUT ? null : <PageTitle
             title={title}
             subtitle={scope ?? subtitle}
             onPressSubtitle={scope ? openScopeSwitcher : undefined}
             subtitleAccessibilityLabel={scope ? `${scope}. Switch store or channel` : undefined}
             style={header.titleStyle}
             onLayout={header.onTitleLayout}
-          />
+          />}
           {/* Lazy lists on the page load their next rows as the end comes into view. */}
           <EndReachedProvider value={endReached.value}>{children}</EndReachedProvider>
         </Animated.ScrollView>
       ) : (
+        // Without its own scrolling the page lays out its own bottom edge (e.g. Support chat's composer pads for the home indicator).
         <View style={[styles.screen, { paddingTop: header.barHeight }]}>{children}</View>
       )}
       <PageTopBar
         onLayout={header.onBarLayout}
         leading={<BackButton fallbackHref={fallbackHref} />}
         title={title}
-        subtitle={scope}
+        subtitle={scope ?? (APP_PAGE_LAYOUT ? subtitle : undefined)}
         onPressTitle={scope ? openScopeSwitcher : undefined}
         titleAccessibilityLabel={scope ? `${title}. ${scope}. Switch store or channel` : undefined}
         trailing={trailing}
         // Without its own scrolling the page has no large title: the small one shows from the start.
-        collapsed={scroll ? header.collapsed : shown}
-        surfaceOpacity={scroll ? header.surfaceOpacity : shown}
+        collapsed={scroll && !APP_PAGE_LAYOUT ? header.collapsed : shown}
+        surfaceOpacity={scroll && !APP_PAGE_LAYOUT ? header.surfaceOpacity : shown}
       />
-      {footer ? <View style={[styles.footer, { backgroundColor: theme.colors.surface }]}>{footer}</View> : null}
+      {/* Pinned to the screen's bottom edge; its padding keeps the buttons above the home indicator. */}
+      {footer ? <View style={[styles.footer, { backgroundColor: theme.colors.surface, paddingBottom: FOOTER_PADDING + bottom }]}>{footer}</View> : null}
     </View>
   );
 }
@@ -156,6 +165,8 @@ type CollapsingDetailScreenProps = {
   /** …and the pay mode under it. */
   compactSubtitle?: string;
   footer?: ReactNode;
+  /** Header controls at the top right (HeaderControl), e.g. Switch on Business profile. */
+  actions?: ReactNode;
   /** Floats just above the footer (e.g. a search button); the caller animates it. */
   floating?: ReactNode;
   /** Scroll offset and visible height, e.g. to show `floating` only over a section. */
@@ -177,6 +188,7 @@ export function CollapsingDetailScreen({
   compactTitle,
   compactSubtitle,
   footer,
+  actions,
   floating,
   onScroll,
   children,
@@ -187,6 +199,7 @@ export function CollapsingDetailScreen({
   const [heroHeight, setHeroHeight] = useState(180);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
+  const bottom = useSafeAreaInsets().bottom;
   // Scroll distance over which the hero hands off to the header.
   const collapse = Math.max(heroHeight - 24, 1);
   const range = (input: number[], output: number[]) => scrollY.interpolate({ inputRange: input, outputRange: output, extrapolate: 'clamp' });
@@ -211,7 +224,7 @@ export function CollapsingDetailScreen({
         onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { paddingTop: headerHeight }]}>
+        contentContainerStyle={[styles.content, { paddingTop: headerHeight }, !footer && { paddingBottom: CONTENT_END + bottom }]}>
         {gradient ? <StatusGradient tone={gradient} /> : null}
         <Animated.View
           onLayout={(event) => setHeroHeight(event.nativeEvent.layout.height)}
@@ -225,7 +238,7 @@ export function CollapsingDetailScreen({
       <View style={styles.floatingHeader} onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}>
         <Animated.View pointerEvents="none" style={[styles.headerSurface, { backgroundColor: theme.colors.surface, opacity: surfaceOpacity }]} />
         <Appbar.Header mode="small" elevated={false} style={styles.appbar}>
-          <BackButton fallbackHref={fallbackHref} />
+          <BackButton fallbackHref={fallbackHref} boxed />
           <Animated.View
             pointerEvents="none"
             accessibilityElementsHidden
@@ -240,6 +253,7 @@ export function CollapsingDetailScreen({
               </Text>
             ) : null}
           </Animated.View>
+          {actions}
         </Appbar.Header>
       </View>
 
@@ -250,7 +264,9 @@ export function CollapsingDetailScreen({
       ) : null}
 
       {footer ? (
-        <View onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)} style={[styles.footer, { backgroundColor: theme.colors.surface }]}>
+        <View
+          onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
+          style={[styles.footer, { backgroundColor: theme.colors.surface, paddingBottom: FOOTER_PADDING + bottom }]}>
           {footer}
         </View>
       ) : null}
@@ -261,8 +277,9 @@ export function CollapsingDetailScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   // Back lines up with the page's 16dp content edge, as on the other pages' header.
-  appbar: { backgroundColor: 'transparent', paddingHorizontal: 16, gap: 8 },
-  content: { padding: 16, paddingBottom: 32, gap: 24 },
+  // App pages: Back 8dp from the edge, cards 8dp from the edges and each other (Figma 7132:120234).
+  appbar: { backgroundColor: 'transparent', paddingHorizontal: APP_PAGE_LAYOUT ? 8 : 16, gap: 8 },
+  content: { padding: APP_PAGE_LAYOUT ? 8 : 16, paddingBottom: CONTENT_END, gap: APP_PAGE_LAYOUT ? 8 : 24 },
   gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: GRADIENT_HEIGHT },
   floatingHeader: { position: 'absolute', top: 0, left: 0, right: 0 },
   floating: { position: 'absolute', left: 16, right: 16 },

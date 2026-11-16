@@ -5,6 +5,7 @@ import { TabChrome, useTabNavBar, useTabScroll } from '@/components/app-tabs';
 import { type HeaderAction, type HeaderActionsMenu, useHeaderActions } from '@/components/header-actions';
 import { usePullToRefresh } from '@/components/pull-to-refresh';
 import { EndReachedProvider, useEndReached } from '@/components/shared/lazy-list';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 
 type TabScreenProps = {
   tab: ComponentProps<typeof TabChrome>['tab'];
@@ -50,8 +51,8 @@ function TabScrollContent({ children }: { children: ReactNode }) {
         refreshControl={refreshControl}
         {...endReached.scrollProps}
         {...tabScroll.scrollProps}
-        // 24dp clear of the header (or its sub-tabs), as on Overview.
-        contentContainerStyle={[styles.content, { paddingTop: tabScroll.contentTop + 24, paddingBottom: 32 + navBar.height }]}
+        // Clear of the header (or its sub-tabs) by the page's gap, as on Overview.
+        contentContainerStyle={[styles.content, { paddingTop: tabScroll.contentTop + PAGE_GAP, paddingBottom: 32 + navBar.height }]}
         keyboardShouldPersistTaps="handled">
         <EndReachedProvider value={endReached.value}>
           <View style={styles.stack}>{children}</View>
@@ -62,9 +63,13 @@ function TabScrollContent({ children }: { children: ReactNode }) {
   );
 }
 
+/** The app pages (APP_PAGE_LAYOUT): cards 8dp from the screen's edges, the header, and each other. */
+export const PAGE_PADDING = APP_PAGE_LAYOUT ? 8 : 16;
+export const PAGE_GAP = APP_PAGE_LAYOUT ? 8 : 24;
+
 const styles = StyleSheet.create({
   area: { flex: 1 },
-  content: { padding: 16 },
-  // Sections of a page (e.g. summary cards, toolbar, listing) are 24dp apart.
-  stack: { gap: 24 },
+  content: { padding: PAGE_PADDING },
+  // Sections of a page (e.g. summary cards, toolbar, listing).
+  stack: { gap: PAGE_GAP },
 });

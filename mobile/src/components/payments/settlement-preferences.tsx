@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { PAGE_PADDING } from '@/components/tab-screen';
 import { StyleSheet, View } from 'react-native';
-import { Button, Card, Divider, Icon, Switch, Text, useTheme } from 'react-native-paper';
+import { Button, Card, Icon, Switch, Text, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { Tabs } from '@/components/material3/tabs';
 import { BankLogo } from '@/components/shared/bank-logo';
 import { DetailScreen } from '@/components/shared/detail-screen';
@@ -151,7 +153,7 @@ export function SettlementPreferences() {
 }
 
 const styles = StyleSheet.create({
-  tabs: { backgroundColor: 'transparent', marginHorizontal: -16 },
+  tabs: { marginHorizontal: -PAGE_PADDING },
   block: { gap: 16 },
   card: { borderRadius: Shape.max, overflow: 'hidden' },
   cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: CARD_PADDING },

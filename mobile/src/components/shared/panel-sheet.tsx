@@ -1,10 +1,14 @@
 import { Fragment, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Divider, Icon, IconButton, Portal, Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Icon, IconButton, Portal, Text, TouchableRipple, useTheme } from 'react-native-paper';
+
+import { Divider } from '@/components/shared/divider';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/material3/bottom-sheet';
 import { SelectionMark } from '@/components/shared/selection-mark';
 import { useAppColors } from '@/constants/app-colors';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { concentric, Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 
@@ -20,7 +24,7 @@ type PanelSheetProps = {
   children: ReactNode;
   /** Pinned under the scrolling body, e.g. an Apply or Send button. */
   footer?: ReactNode;
-  /** Defaults to 86% of the screen height, like the web panel's phone layout. */
+  /** Defaults to 86% of the screen height, like the web panel's phone layout. The home-indicator area is added on top. */
   height?: number;
   /** Set false when the body manages its own scrolling or layout (e.g. a two-level filter list). */
   scroll?: boolean;
@@ -38,38 +42,62 @@ type PanelSheetProps = {
  * Every web side panel (refund, charge slip, activity details, deductions,
  * email report, filters…) opens in one of these on mobile.
  */
-export function PanelSheet({ visible, onDismiss, title, children, footer, height, scroll = true, grouped = true }: PanelSheetProps) {
+export function PanelSheet({ visible, onDismiss, title, children, footer, height, scroll = true, grouped: groupedProp = true }: PanelSheetProps) {
+  // The app pages' sheets are white throughout (Figma 7249:193498).
+  const grouped = groupedProp && !APP_PAGE_LAYOUT;
   const theme = useTheme();
   const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // The sheet runs to the screen's bottom edge: keep its content clear of the home indicator.
+  const safeBottom = footer ? Math.max(0, insets.bottom - PANEL_PADDING) : insets.bottom;
 
   return (
     <Portal>
-      <BottomSheet variant="modal" height={height ?? Math.round(windowHeight * 0.86)} visible={visible} onDismiss={onDismiss}>
-        <View style={styles.header}>
-          <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }} accessibilityRole="header">
-            {title}
-          </Text>
-          <IconButton
-            icon="x"
-            mode="outlined"
-            size={16}
-            onPress={onDismiss}
-            accessibilityLabel="Close panel"
-            style={[styles.close, { borderRadius: PANEL_INNER_RADIUS, borderColor: theme.colors.outlineVariant }]}
-          />
-        </View>
-        <Divider />
+      <BottomSheet variant="modal" height={(height ?? Math.round(windowHeight * 0.86)) + safeBottom} visible={visible} onDismiss={onDismiss}>
+        {APP_PAGE_LAYOUT ? (
+          // Figma 7249:193499: 16dp all round, the title 14dp medium and muted, a 28dp outlined ✕, a hairline under it.
+          <View style={[styles.appHeader, { borderBottomColor: theme.colors.background }]}>
+            <Text style={[styles.appTitle, { color: theme.colors.onSurfaceVariant }]} accessibilityRole="header">
+              {title}
+            </Text>
+            <TouchableRipple
+              onPress={onDismiss}
+              borderless
+              accessibilityRole="button"
+              accessibilityLabel="Close panel"
+              style={[styles.appClose, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}>
+              <Icon source="x" size={16} color={theme.colors.onSurface} />
+            </TouchableRipple>
+          </View>
+        ) : (
+          <>
+            <View style={styles.header}>
+              <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }} accessibilityRole="header">
+                {title}
+              </Text>
+              <IconButton
+                icon="x"
+                mode="outlined"
+                size={16}
+                onPress={onDismiss}
+                accessibilityLabel="Close panel"
+                style={[styles.close, { borderRadius: PANEL_INNER_RADIUS, borderColor: theme.colors.outlineVariant }]}
+              />
+            </View>
+            <Divider />
+          </>
+        )}
         {scroll ? (
-          <ScrollView style={[styles.body, grouped && { backgroundColor: theme.colors.background }]} keyboardShouldPersistTaps="handled">
+          <ScrollView style={[styles.body, grouped && { backgroundColor: theme.colors.background }]} contentContainerStyle={!footer && { paddingBottom: safeBottom }} keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         ) : (
-          <View style={[styles.body, grouped && { backgroundColor: theme.colors.background }]}>{children}</View>
+          <View style={[styles.body, grouped && { backgroundColor: theme.colors.background }, !footer && { paddingBottom: safeBottom }]}>{children}</View>
         )}
         {footer ? (
           <>
             <Divider />
-            <View style={styles.footer}>{footer}</View>
+            <View style={[styles.footer, { paddingBottom: PANEL_PADDING + safeBottom }]}>{footer}</View>
           </>
         ) : null}
       </BottomSheet>
@@ -84,6 +112,15 @@ export function PanelSheet({ visible, onDismiss, title, children, footer, height
  */
 export function PanelSection({ children, last = false, label }: { children: ReactNode; last?: boolean; label?: string }) {
   const theme = useTheme();
+  // The app pages (Figma 7249:193530): plain white blocks, 16dp in, a hairline between them.
+  if (APP_PAGE_LAYOUT) {
+    return (
+      <View style={[styles.section, !last && [styles.appSectionRule, { borderBottomColor: theme.colors.background }]]}>
+        {label ? <SheetLabel label={label} /> : null}
+        {children}
+      </View>
+    );
+  }
   return (
     <View style={[styles.sectionWrap, last && styles.sectionLast]}>
       {label ? <SheetLabel label={label} /> : null}
@@ -156,7 +193,7 @@ export function SheetRow({ title, description, icon, role, selected = false, tra
   );
   return (
     <Fragment>
-      {first ? null : <View style={[styles.hairline, icon ? styles.hairlineInset : null, { backgroundColor: theme.colors.surfaceVariant }]} />}
+      {first ? null : <View style={[styles.hairline, icon ? styles.hairlineInset : null, { backgroundColor: theme.colors.background }]} />}
       {onPress ? (
         <TouchableRipple
           onPress={onPress}
@@ -186,6 +223,10 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   close: { margin: 0 },
+  appHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: PANEL_PADDING, borderBottomWidth: 1 },
+  appTitle: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 16 },
+  appClose: { width: 28, height: 28, borderRadius: Shape.small, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  appSectionRule: { borderBottomWidth: 1 },
   body: { flex: 1 },
   footer: { padding: PANEL_PADDING, gap: 12 },
   // PanelSection: a card 16dp in from the sheet's edges, 16dp below the one before.

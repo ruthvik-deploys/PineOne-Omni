@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { useSvgId } from '@/components/shared/hatch';
@@ -41,4 +42,9 @@ export function TerminalImage({ size = 48, inactive = false }: { size?: number; 
       <Rect x="16" y="89" width="36" height="3" rx="1.5" fill="#0f0f0c" />
     </Svg>
   );
+}
+
+/** The device's product photo (Figma Manage devices), cropped square; faded while the device is inactive. */
+export function TerminalPhoto({ size = 36, inactive = false }: { size?: number; inactive?: boolean }) {
+  return <Image source={require('../../../assets/images/devices/terminal-mini.png')} style={{ width: size, height: size, opacity: inactive ? 0.5 : 1 }} contentFit="cover" />;
 }

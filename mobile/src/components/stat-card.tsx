@@ -35,7 +35,7 @@ export function StatCard({ label, amount, caption, trend, linkLabel, onPressLink
     // white against a grey page background — separation comes from that color
     // contrast alone, not a shadow/tonal-elevation overlay.
     <Card mode="elevated" elevation={0} style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-      <View style={[styles.header, { borderBottomColor: theme.colors.outlineVariant }]}>
+      <View style={[styles.header, { borderBottomColor: theme.colors.background }]}>
         <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
           {label.toUpperCase()}
         </Text>
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 1,
   },
   label: {
     letterSpacing: 0.6,

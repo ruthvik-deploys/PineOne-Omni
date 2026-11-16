@@ -1,18 +1,20 @@
 import { Fragment, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Divider, Icon, RadioButton, Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Icon, RadioButton, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
+import { Divider } from '@/components/shared/divider';
 import { ChecklistSheet } from '@/components/shared/checklist-sheet';
 import { CollapsibleSection } from '@/components/shared/form-fields';
+import { DotStatusBadge, PILL_HEIGHT } from '@/components/shared/status';
 import { LIST_ROW_INNER_RADIUS } from '@/components/shared/listing';
 import { PANEL_INNER_RADIUS, PanelSection, PanelSheet } from '@/components/shared/panel-sheet';
+import { SheetBlock } from '@/components/shared/sheet-parts';
 import { Fonts } from '@/constants/theme';
 import { ALL_PERMISSIONS, type AccessScope, PERMISSION_GROUPS, type PermissionChannel } from '@/data/roles';
 import { STORE_IDENTITIES } from '@/data/terminal-devices';
 import type { ManagedRole } from '@/data/user-management';
 import type { UserStatus } from '@/data/user-roster';
 
-const PILL_HEIGHT = 24;
 const SUCCESS = '#10b981';
 
 /** One icon per permission group (web: GROUP_ICON). */
@@ -64,16 +66,10 @@ export function RoleBadge({ role, radius }: { role: string; radius?: number }) {
   );
 }
 
-/** Web: StatusBadge for roster entries. */
-export function UserStatusBadge({ status, radius }: { status: UserStatus; radius?: number }) {
-  const theme = useTheme();
-  const color = status === 'Active' ? SUCCESS : status === 'Invited' ? '#f59e0b' : status === 'Pending' ? '#0ea5e9' : theme.colors.outline;
-  return (
-    <Pill radius={radius} muted={status === 'Deactivated'}>
-      <Dot color={color} />
-      <Text variant="labelMedium">{status}</Text>
-    </Pill>
-  );
+/** Web: StatusBadge for roster entries — the same dot badge as settlements and refunds. */
+export function UserStatusBadge({ status }: { status: UserStatus }) {
+  const tone = status === 'Active' ? 'success' : status === 'Invited' ? 'warning' : status === 'Pending' ? 'info' : 'neutral';
+  return <DotStatusBadge label={status} tone={tone} />;
 }
 
 /** Which channels a role or user reaches (web: AccessScopeBadge). */
@@ -286,6 +282,79 @@ export function RolePermissionsPreview({ role }: { role: ManagedRole | undefined
   );
 }
 
+const PERMISSION_CHANNELS: { id: PermissionChannel; label: string }[] = [
+  { id: 'offline', label: 'In-store permissions' },
+  { id: 'online', label: 'Online permissions' },
+];
+
+/**
+ * What someone may do, per channel (Figma 7693:106999 / 7699:4396): a sheet
+ * block per channel, closed by default — "In-store permissions", "15/100
+ * allowed" and a caret; open, each group under its icon with a tick or a
+ * cross per permission.
+ */
+export function PermissionAccordions({ permissionKeys, last = false }: { permissionKeys: string[]; last?: boolean }) {
+  return (
+    <>
+      {PERMISSION_CHANNELS.map((channel, index) => (
+        <PermissionAccordion key={channel.id} channel={channel} permissionKeys={permissionKeys} last={last && index === PERMISSION_CHANNELS.length - 1} />
+      ))}
+    </>
+  );
+}
+
+function PermissionAccordion({ channel, permissionKeys, last }: { channel: (typeof PERMISSION_CHANNELS)[number]; permissionKeys: string[]; last: boolean }) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const muted = { color: theme.colors.onSurfaceVariant };
+  const channelPermissions = ALL_PERMISSIONS.filter((permission) => permission.channel === channel.id);
+  const granted = channelPermissions.filter((permission) => permissionKeys.includes(permission.key)).length;
+  const groups = PERMISSION_GROUPS.map((group) => ({ group, permissions: channelPermissions.filter((permission) => permission.group === group) })).filter(
+    (section) => section.permissions.length > 0
+  );
+  return (
+    <SheetBlock last={last} gap={12}>
+      <TouchableRipple
+        onPress={() => setOpen((current) => !current)}
+        accessibilityRole="button"
+        aria-expanded={open}
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={`${channel.label}, ${granted} of ${channelPermissions.length} allowed`}>
+        <View style={styles.accordionHeader}>
+          <Text style={[styles.accordionTitle, { color: theme.colors.onSurface }]}>{channel.label}</Text>
+          <View style={styles.accordionMeta}>
+            <Text style={[styles.accordionCount, muted]}>
+              {granted}/{channelPermissions.length} allowed
+            </Text>
+            <Icon source={open ? 'caret-up' : 'caret-down'} size={16} color={theme.colors.onSurface} />
+          </View>
+        </View>
+      </TouchableRipple>
+      {open
+        ? groups.map(({ group, permissions }) => (
+            <View key={group} style={styles.permissionGroup}>
+              <View style={styles.permissionGroupHeader}>
+                <Icon source={GROUP_ICON[group] ?? 'hard-drives'} size={20} color={theme.colors.onSurface} />
+                <Text style={[styles.permissionGroupTitle, { color: theme.colors.onSurface }]}>{group}</Text>
+              </View>
+              <View style={styles.permissionItems}>
+                {permissions.map((permission) => {
+                  const allowed = permissionKeys.includes(permission.key);
+                  return (
+                    <View key={permission.key} style={styles.permissionItem} accessibilityLabel={`${permission.label}, ${allowed ? 'allowed' : 'not allowed'}`}>
+                      <Icon source={allowed ? 'check' : 'x'} size={16} color={allowed ? SUCCESS : theme.colors.error} />
+                      <Text style={[styles.permissionLabel, muted]}>{permission.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ))
+        : null}
+    </SheetBlock>
+  );
+}
+
 /** Label/value rows in a card separated by hairlines (web: FieldRowGroup). */
 export function Rows({ children }: { children: React.ReactNode[] }) {
   return (
@@ -322,4 +391,14 @@ const styles = StyleSheet.create({
   previewList: { gap: 12 },
   previewCard: { borderWidth: 1, borderRadius: PANEL_INNER_RADIUS, padding: 12 },
   previewGroup: { gap: 6 },
+  accordionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  accordionTitle: { fontFamily: Fonts.semiBold, fontSize: 16, lineHeight: 24, flexShrink: 1 },
+  accordionMeta: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  accordionCount: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20 },
+  permissionGroup: { paddingVertical: 12, gap: 16 },
+  permissionGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  permissionGroupTitle: { fontFamily: Fonts.semiBold, fontSize: 14, lineHeight: 20 },
+  permissionItems: { gap: 12 },
+  permissionItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  permissionLabel: { fontFamily: Fonts.medium, fontSize: 14, lineHeight: 20, flexShrink: 1 },
 });

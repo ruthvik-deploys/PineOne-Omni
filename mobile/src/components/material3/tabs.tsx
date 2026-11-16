@@ -15,8 +15,11 @@ type TabsProps = {
   tabs: TabItem[];
   activeKey: string;
   onChange: (key: string) => void;
-  /** `primary`: top-level content views (indicator hugs the label). `secondary`: sub-views within one (full-width 2dp indicator). */
-  variant?: 'primary' | 'secondary';
+  /**
+   * `primary`: top-level content views (indicator hugs the label). `secondary`: sub-views within one (full-width 2dp indicator).
+   * `card`: tabs heading a white card (Figma 7693:86202): 14dp medium labels, the picked one and its 2dp rule in the brand green.
+   */
+  variant?: 'primary' | 'secondary' | 'card';
   /** Scrollable tabs for when labels don't fit at equal widths. */
   scrollable?: boolean;
   /** Defaults to `primary`; the app shell passes onSurface to match the Figma black underline. */
@@ -50,10 +53,11 @@ export function Tabs({
   const theme = useTheme();
   const [contentWidths, setContentWidths] = useState<Record<string, number>>({});
   const primary = variant === 'primary';
+  const card = variant === 'card';
 
   const row = tabs.map((tab) => {
     const active = tab.key === activeKey;
-    const color = active ? (primary ? theme.colors.primary : theme.colors.onSurface) : theme.colors.onSurfaceVariant;
+    const color = active ? (primary || card ? theme.colors.primary : theme.colors.onSurface) : theme.colors.onSurfaceVariant;
     const onContentLayout = (e: LayoutChangeEvent) => {
       const width = e.nativeEvent.layout.width;
       setContentWidths((prev) => (prev[tab.key] === width ? prev : { ...prev, [tab.key]: width }));
@@ -66,12 +70,12 @@ export function Tabs({
           accessibilityRole="tab"
           aria-selected={active}
           borderless
-          style={[styles.tab, { borderRadius: tabRadius, minHeight: primary ? (tab.icon ? 64 : 48) : 40 }]}>
+          style={[styles.tab, { borderRadius: tabRadius, minHeight: primary ? (tab.icon ? 64 : 48) : card ? 26 : 40 }]}>
           <View
             onLayout={onContentLayout}
-            style={[styles.tabContent, !primary && styles.secondaryContent, primary && tab.icon ? styles.stacked : styles.inline]}>
+            style={[styles.tabContent, !primary && (card ? styles.cardContent : styles.secondaryContent), primary && tab.icon ? styles.stacked : styles.inline]}>
             {tab.icon ? <Icon source={tab.icon} size={24} color={color} /> : null}
-            <Text variant={primary ? 'titleSmall' : 'titleMedium'} style={{ color }}>
+            <Text variant={primary || card ? 'titleSmall' : 'titleMedium'} style={[{ color }, card && styles.cardLabel]}>
               {tab.label}
             </Text>
             {tab.badge ? <Badge size={16}>{tab.badge}</Badge> : null}
@@ -93,7 +97,7 @@ export function Tabs({
 
   return (
     <View
-      style={[styles.bar, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.surfaceVariant }, style]}
+      style={[styles.bar, card && styles.cardBar, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.background }, style]}
       accessibilityRole="tablist">
       {scrollable ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8 }}>
@@ -107,13 +111,17 @@ export function Tabs({
 }
 
 const styles = StyleSheet.create({
-  bar: { borderBottomWidth: 1 },
+  // 8dp of white above every tab row, so it never sits tight against what's over it.
+  bar: { paddingTop: 8, borderBottomWidth: 1 },
   fixedRow: { flexDirection: 'row' },
   slot: { alignItems: 'center' },
   fixedSlot: { flex: 1 },
   tab: { paddingHorizontal: 16, alignSelf: 'stretch', justifyContent: 'center' },
   tabContent: { alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12 },
   secondaryContent: { paddingVertical: 8 },
+  cardBar: { paddingTop: 12 },
+  cardContent: { paddingTop: 0, paddingBottom: 12 },
+  cardLabel: { lineHeight: 14 },
   inline: { flexDirection: 'row', gap: 8 },
   stacked: { flexDirection: 'column', gap: 2, paddingVertical: 8 },
   primaryIndicator: { position: 'absolute', bottom: 0, height: PRIMARY_INDICATOR, borderRadius: PRIMARY_INDICATOR / 2 },

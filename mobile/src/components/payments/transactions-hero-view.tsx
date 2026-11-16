@@ -9,12 +9,13 @@ import { type RangeValue, rangePhrase, resolveRange } from '@/components/listing
 import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
 import { EmailReportSheet } from '@/components/shared/email-report-sheet';
 import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
-import { LIST_ROW_INNER_RADIUS, selectFilter } from '@/components/shared/listing';
+import { selectFilter } from '@/components/shared/listing';
 import type { MoreFilterSelection } from '@/components/shared/more-filters';
-import { StatusPill } from '@/components/shared/status';
+import { DotStatusBadge, STATUS_DOT_TONE } from '@/components/shared/status';
 import { useShellTabs } from '@/components/shell-tabs';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Shape } from '@/constants/shape';
-import { formatInr } from '@/data/common';
+import { formatCount, formatInr } from '@/data/common';
 import { parseDisplayDate, transactionRows } from '@/data/transactions';
 import { useBusiness } from '@/hooks/use-business';
 
@@ -46,7 +47,8 @@ export function TransactionsHeroView() {
   const { search: focusSearch, intent } = useLocalSearchParams<{ search?: string; intent?: string }>();
   const { specificChannel: channel } = useBusiness();
   const mode: ListingMode = channel === 'online' ? 'online' : 'in-store';
-  const [period, setPeriod] = useState<RangeValue>({ preset: 'today' });
+  // The app pages open on the month (Figma 7152:136293); the hero layout on today.
+  const [period, setPeriod] = useState<RangeValue>({ preset: APP_PAGE_LAYOUT ? '30d' : 'today' });
   const [onlineView, setOnlineView] = useState<OnlineView>('order');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -99,12 +101,10 @@ export function TransactionsHeroView() {
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const paymentModes = moreFilters['payment-modes'] ?? [];
     const transactionModes = moreFilters['transaction-modes'] ?? [];
     return periodRows.filter((row) => {
       if (statusFilter !== 'all' && toStatusFilterKey(row.status.label) !== statusFilter) return false;
       if (mode === 'in-store') {
-        if (paymentModes.length && !paymentModes.includes(row.paymentMode)) return false;
         if (transactionModes.length && !transactionModes.includes(row.transactionType.toLowerCase())) return false;
         if (paymentModeFilter !== 'all' && row.paymentMode !== paymentModeFilter) return false;
         if (providerFilter !== 'all' && row.provider !== providerFilter) return false;
@@ -128,7 +128,6 @@ export function TransactionsHeroView() {
 
   // The hero: the period's collection, however the list below is narrowed.
   const collected = periodRows.reduce((sum, row) => sum + row.amount, 0);
-  const failed = periodRows.filter((row) => toStatusFilterKey(row.status.label) === 'failed').length;
   const phrase = rangePhrase(period);
   const noun = { one: 'payment', other: 'payments' };
 
@@ -138,9 +137,13 @@ export function TransactionsHeroView() {
         views={[
           {
             key: 'collected',
-            label: 'Collected',
+            label: APP_PAGE_LAYOUT ? 'Total volume' : 'Collected',
+            icon: 'chart-bar',
+            // The app pages show the dates in the pill above, so the line just counts.
+            line: periodRows.length
+              ? `${formatCount(periodRows.length)} ${periodRows.length === 1 ? 'payment' : 'payments'} ${APP_PAGE_LAYOUT ? 'collected' : phrase}`
+              : `No payments ${phrase}`,
             amount: collected,
-            line: periodRows.length ? `${periodRows.length} ${periodRows.length === 1 ? 'payment' : 'payments'} ${phrase}` : `No payments ${phrase}`,
             time: {
               kind: 'range',
               subject: 'payments',
@@ -159,12 +162,6 @@ export function TransactionsHeroView() {
         style={styles.overHero}
         // The list follows the hero's period, so it says which.
         periodPhrase={phrase}
-        // What needs attention sits by the records it's about: one tap filters to it.
-        suggestions={
-          failed > 0 && statusFilter !== 'failed'
-            ? [{ key: 'failed', label: `${failed} failed`, icon: 'warning-circle', color: theme.colors.error, onPress: () => resetList(setStatusFilter)('failed') }]
-            : []
-        }
         notice={
           // Only while the list is still on successful payments; changing the status filter ends it.
           refundHint && statusFilter === 'success' ? (
@@ -187,7 +184,7 @@ export function TransactionsHeroView() {
         }
         search={search}
         onSearchChange={resetList(setSearch)}
-        searchPlaceholder={mode === 'in-store' ? 'Search by any ID' : 'Search by any value'}
+        searchPlaceholder={APP_PAGE_LAYOUT ? 'Search trxns' : mode === 'in-store' ? 'Search by any ID' : 'Search by any value'}
         focusSearch={focusSearch}
         filters={[
           selectFilter({ label: 'Status', options: STATUS_OPTIONS, value: statusFilter, onApply: resetList(setStatusFilter) }),
@@ -218,8 +215,9 @@ export function TransactionsHeroView() {
               key={row.transactionId}
               amount={formatInr(row.amount)}
               paymentMode={row.paymentMode}
-              paymentLabel={row.paymentLabel}
-              status={<StatusPill label={row.status.label} tone={row.status.tone} radius={LIST_ROW_INNER_RADIUS} />}
+              // The app pages lead with the time (Figma: "10:00 AM • Net banking").
+              paymentLabel={APP_PAGE_LAYOUT ? `${row.time} · ${row.paymentLabel}` : row.paymentLabel}
+              status={<DotStatusBadge label={row.status.label} tone={STATUS_DOT_TONE[row.status.tone]} />}
               onPress={() => router.push(`/payments/transactions/${row.transactionId}?channel=${mode}`)}
               accessibilityLabel={`${formatInr(row.amount)}, ${row.paymentLabel}, ${row.status.label}`}
             />

@@ -4,8 +4,10 @@ import { Button, Icon, Text, TouchableRipple, useTheme } from 'react-native-pape
 
 import { DateRangeFields, type DateRange, type DateRangeValue } from '@/components/shared/date-range-filter';
 import { PANEL_INNER_RADIUS, PANEL_PADDING, PanelSheet } from '@/components/shared/panel-sheet';
+import { OptionCard, SheetBlock, SheetButton } from '@/components/shared/sheet-parts';
 import { SelectionMark } from '@/components/shared/selection-mark';
 import { useAppColors } from '@/constants/app-colors';
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { Shape } from '@/constants/shape';
 import { Fonts } from '@/constants/theme';
 
@@ -97,7 +99,17 @@ export function TimeControl({ scope }: { scope: TimeScope }) {
 }
 
 /** The dates a total covers: always a visible button, opening the range sheet. */
-export function DateButton({ scope, compact = false }: { scope: RangeScope; /** 32dp, to sit in a row of chips. */ compact?: boolean }) {
+export function DateButton({
+  scope,
+  compact = false,
+  wide = false,
+}: {
+  scope: RangeScope;
+  /** 32dp, to sit in a row of chips. */
+  compact?: boolean;
+  /** The app pages' date pill (APP_PAGE_LAYOUT, Figma 7153:139359): the page's full width, 32dp, borderless white, centred. */
+  wide?: boolean;
+}) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const label = rangeLabel(scope.value);
@@ -108,13 +120,13 @@ export function DateButton({ scope, compact = false }: { scope: RangeScope; /** 
         borderless
         accessibilityRole="button"
         accessibilityLabel={`${scope.subject}: ${label}. Change dates`}
-        style={[styles.dateButton, compact && styles.compact, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
-        <View style={styles.dateButtonContent}>
+        style={[styles.dateButton, (compact || wide) && styles.compact, wide && styles.wide, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
+        <View style={[styles.dateButtonContent, wide && styles.wideContent]}>
           <Icon source="calendar-blank" size={16} color={theme.colors.onSurface} />
-          <Text numberOfLines={1} style={[styles.dateButtonLabel, { color: theme.colors.onSurface }]}>
+          <Text numberOfLines={1} style={[styles.dateButtonLabel, wide && styles.wideLabel, { color: theme.colors.onSurface }]}>
             {label}
           </Text>
-          <Icon source="caret-down" size={14} color={theme.colors.onSurfaceVariant} />
+          <Icon source="caret-down" size={16} color={wide ? theme.colors.onSurface : theme.colors.onSurfaceVariant} />
         </View>
       </TouchableRipple>
       <RangeSheet scope={scope} visible={open} onDismiss={() => setOpen(false)} />
@@ -150,6 +162,51 @@ function RangeSheet({ scope, visible, onDismiss }: { scope: RangeScope; visible:
   // DateRangeFields speaks the filters' DateRangeValue.
   const fieldsValue: DateRangeValue = { presetId: 'custom', range: draft.custom, startTime: '12:00 AM', endTime: '11:59 PM' };
 
+  // The app pages (Figma 7153:138901 / 7155:144097): "Choose date & time", the presets as bordered cards, Custom date opening the start and end fields, Apply.
+  if (APP_PAGE_LAYOUT) {
+    return (
+      <PanelSheet
+        visible={visible}
+        onDismiss={onDismiss}
+        title="Choose date & time"
+        height={draft.preset === 'custom' ? 600 : 130 + rows.length * 44 + (scope.note ? 56 : 0) + 64}
+        footer={
+          <SheetButton
+            label="Apply"
+            disabled={!!customError}
+            onPress={() => {
+              scope.onChange(draft);
+              onDismiss();
+            }}
+          />
+        }>
+        <SheetBlock last={draft.preset !== 'custom' && !scope.note}>
+          {rows.map((row) => (
+            <OptionCard
+              key={row.key}
+              title={row.key === 'custom' ? 'Custom date' : row.label}
+              selected={draft.preset === row.key}
+              onPress={() => setDraft((current) => ({ preset: row.key, custom: row.key === 'custom' ? current.custom : undefined }))}
+            />
+          ))}
+        </SheetBlock>
+        {draft.preset === 'custom' ? (
+          <SheetBlock last={!scope.note}>
+            <DateRangeFields value={fieldsValue} onChange={(next) => setDraft({ preset: 'custom', custom: next.range })} />
+            {customError ? <Text style={[styles.note, { color: theme.colors.error }]}>{customError}</Text> : null}
+          </SheetBlock>
+        ) : null}
+        {scope.note ? (
+          <SheetBlock last>
+            <View style={styles.noteRow}>
+              <Icon source="info" size={16} color={theme.colors.onSurfaceVariant} />
+              <Text style={[styles.note, styles.flex, { color: theme.colors.onSurfaceVariant }]}>{scope.note}</Text>
+            </View>
+          </SheetBlock>
+        ) : null}
+      </PanelSheet>
+    );
+  }
   return (
     <PanelSheet
       visible={visible}
@@ -176,7 +233,7 @@ function RangeSheet({ scope, visible, onDismiss }: { scope: RangeScope; visible:
             const checked = draft.preset === row.key;
             return (
               <View key={row.key}>
-                {index > 0 ? <View style={[styles.hairline, { backgroundColor: theme.colors.surfaceVariant }]} /> : null}
+                {index > 0 ? <View style={[styles.hairline, { backgroundColor: theme.colors.background }]} /> : null}
                 <TouchableRipple
                   onPress={() => setDraft((current) => ({ preset: row.key, custom: row.key === 'custom' ? current.custom : undefined }))}
                   accessibilityRole="radio"
@@ -213,6 +270,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   dateButton: { borderRadius: Shape.small, borderWidth: 1, height: TIME_CONTROL_HEIGHT, justifyContent: 'center' },
   compact: { height: 32 },
+  wide: { borderWidth: 0, borderRadius: Shape.small },
+  wideContent: { justifyContent: 'center' },
+  wideLabel: { fontSize: 14, lineHeight: 20 },
   dateButtonContent: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10 },
   dateButtonLabel: { fontFamily: Fonts.medium, fontSize: 13, lineHeight: 16 },
   sheetBody: { padding: PANEL_PADDING, gap: 12 },

@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Divider, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 
+import { APP_PAGE_LAYOUT, LISTING_SAMPLE_LAYOUT } from '@/constants/experiments';
 import { Fonts } from '@/constants/theme';
 import { formatInr } from '@/data/common';
 import { parseDisplayDate } from '@/data/transactions';
 
-import { ListCard } from './listing';
+import { ListCard, ListDivider } from './listing';
 
 export type DayGroup<T> = { day: string; label: string; rows: T[] };
 
@@ -77,6 +78,7 @@ export function DayGroupedList<T>({
   totals,
   noun = { one: 'record', other: 'records' },
   flat = false,
+  plain = false,
 }: {
   groups: DayGroup<T>[];
   renderRow: (row: T) => ReactNode;
@@ -91,8 +93,86 @@ export function DayGroupedList<T>({
    * separated by full-width dividers.
    */
   flat?: boolean;
+  /**
+   * Straight on a white sheet (e.g. the listing sample): each day's date and
+   * total as a plain heading, then its rows edge to edge between hairlines.
+   */
+  plain?: boolean;
 }) {
   const theme = useTheme();
+  // The listing sample's white sheet takes the plain list wherever a page asks for the flat one.
+  if (plain || (flat && LISTING_SAMPLE_LAYOUT)) {
+    if (groups.length === 0) {
+      return (
+        <Text variant="bodyMedium" style={[styles.flatEmpty, { color: theme.colors.onSurfaceVariant }]}>
+          {empty}
+        </Text>
+      );
+    }
+    return (
+      <View>
+        {groups.map((group) => (
+          <View key={group.day}>
+            {/* "Sun, 27 Sep 2026 · ₹3,66,000": the day, then its total (or count) quietly after it. */}
+            <Text variant="titleSmall" style={[styles.day, styles.plainHeading]} accessibilityRole="header">
+              {group.label}
+              <Text style={[styles.plainTotal, { color: theme.colors.onSurfaceVariant }]}>
+                {' · '}
+                {(() => {
+                  const total = totals?.get(group.day);
+                  const records = total?.count ?? group.rows.length;
+                  return total?.amount !== undefined ? dayAmount(total.amount) : `${records} ${records === 1 ? noun.one : noun.other}`;
+                })()}
+              </Text>
+            </Text>
+            {group.rows.map((row, index) => (
+              <View key={index}>
+                {index > 0 ? <View style={styles.plainDivider}><ListDivider /></View> : null}
+                {renderRow(row)}
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    );
+  }
+  if (flat && APP_PAGE_LAYOUT) {
+    if (groups.length === 0) {
+      return (
+        <Text variant="bodyMedium" style={[styles.flatEmpty, { color: theme.colors.onSurfaceVariant }]}>
+          {empty}
+        </Text>
+      );
+    }
+    // Figma 7153:139374: a 32dp grey band per day, its date and total small and muted at either end; rows between hairlines.
+    const muted = { color: theme.colors.onSurfaceVariant };
+    return (
+      <View>
+        {groups.map((group) => {
+          const total = totals?.get(group.day);
+          const records = total?.count ?? group.rows.length;
+          return (
+            <View key={group.day}>
+              <View style={[styles.band, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <Text style={[styles.bandText, styles.bandDay, muted]} numberOfLines={1} accessibilityRole="header">
+                  {group.label}
+                </Text>
+                <Text style={[styles.bandText, muted]} numberOfLines={1}>
+                  {total?.amount !== undefined ? formatInr(total.amount) : `${records} ${records === 1 ? noun.one : noun.other}`}
+                </Text>
+              </View>
+              {group.rows.map((row, index) => (
+                <View key={index}>
+                  {index > 0 ? <ListDivider /> : null}
+                  {renderRow(row)}
+                </View>
+              ))}
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
   if (flat) {
     if (groups.length === 0) {
       return (
@@ -105,7 +185,7 @@ export function DayGroupedList<T>({
       <View>
         {groups.map((group, groupIndex) => (
           <View key={group.day}>
-            {groupIndex > 0 ? <Divider /> : null}
+            {groupIndex > 0 ? <ListDivider /> : null}
             <View style={[styles.heading, styles.flatHeading, { backgroundColor: theme.colors.surfaceVariant }]}>
               <Text variant="labelLarge" style={styles.day} accessibilityRole="header">
                 {group.label}
@@ -114,7 +194,7 @@ export function DayGroupedList<T>({
             </View>
             {group.rows.map((row, index) => (
               <View key={index}>
-                <Divider />
+                <ListDivider />
                 {renderRow(row)}
               </View>
             ))}
@@ -160,7 +240,7 @@ function DaySummary({ total, count, noun }: { total?: { amount?: number; count: 
 }
 
 const styles = StyleSheet.create({
-  summary: { flexShrink: 1, textAlign: 'right', fontVariant: ['tabular-nums'] },
+  summary: { flexShrink: 1, textAlign: 'right', fontVariant: ['tabular-nums', 'stylistic-one'] },
   summaryAmount: { fontFamily: Fonts.medium },
   groups: { gap: 20 },
   group: { gap: 8 },
@@ -168,4 +248,11 @@ const styles = StyleSheet.create({
   day: { fontFamily: Fonts.semiBold },
   flatHeading: { paddingHorizontal: 16, paddingVertical: 8 },
   flatEmpty: { padding: 16 },
+  band: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, height: 32, paddingHorizontal: 12 },
+  bandText: { fontFamily: Fonts.regular, fontSize: 12, lineHeight: 16, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  bandDay: { flexShrink: 1 },
+  plainHeading: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 4 },
+  plainTotal: { fontFamily: Fonts.regular, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  // Inset to the row's text, past its icon tile.
+  plainDivider: { marginLeft: 16 + 40 + 12 },
 });

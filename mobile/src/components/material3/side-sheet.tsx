@@ -69,7 +69,7 @@ export function SideSheet({ visible, onDismiss, title, children, actions, width 
           <IconButton icon="x" onPress={onDismiss} accessibilityLabel="Close" />
         </View>
         <View style={styles.body}>{children}</View>
-        {actions ? <View style={[styles.actions, { borderTopColor: theme.colors.outlineVariant }]}>{actions}</View> : null}
+        {actions ? <View style={[styles.actions, { borderTopColor: theme.colors.background }]}>{actions}</View> : null}
       </Animated.View>
     </View>
   );
@@ -98,6 +98,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 24,
     paddingVertical: ACTIONS_GAP,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
   },
 });

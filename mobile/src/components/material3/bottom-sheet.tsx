@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import { TouchableRipple, useTheme } from 'react-native-paper';
 
+import { APP_PAGE_LAYOUT } from '@/constants/experiments';
 import { concentric, Shape } from '@/constants/shape';
 
 type BottomSheetProps = {
@@ -20,6 +21,8 @@ type BottomSheetProps = {
   radius?: number;
 };
 
+/** The modal sheet's top corners (Figma's rounded-2xl). */
+const MODAL_RADIUS = 18;
 const EMPHASIZED_DECELERATE = Easing.bezier(0.05, 0.7, 0.1, 1);
 const EMPHASIZED_ACCELERATE = Easing.bezier(0.3, 0, 0.8, 0.15);
 const DISMISS_VELOCITY = 1;
@@ -43,6 +46,7 @@ export function BottomSheet({
 }: BottomSheetProps) {
   const theme = useTheme();
   const modal = variant === 'modal';
+  const appSheet = APP_PAGE_LAYOUT && modal;
   // translateY: 0 = fully expanded; `height` = fully hidden.
   const restingHidden = modal ? height : height - collapsedHeight;
   const [translateY] = useState(() => new Animated.Value(restingHidden));
@@ -110,14 +114,16 @@ export function BottomSheet({
           styles.sheet,
           {
             height,
-            borderTopLeftRadius: radius,
-            borderTopRightRadius: radius,
+            // The app pages: edge to edge on the sides and bottom, only the top corners rounded, no drag handle.
+            borderTopLeftRadius: appSheet ? MODAL_RADIUS : radius,
+            borderTopRightRadius: appSheet ? MODAL_RADIUS : radius,
             // White like the app's cards, not M3's tinted surface (which reads green with our seed).
             backgroundColor: theme.colors.surface,
             transform: [{ translateY }],
           },
         ]}
         {...panResponder.panHandlers}>
+        {appSheet ? null : (
         <TouchableRipple
           onPress={modal ? undefined : () => setExpanded((prev) => !prev)}
           accessibilityRole={modal ? undefined : 'button'}
@@ -125,6 +131,7 @@ export function BottomSheet({
           style={[styles.handleArea, { borderRadius: concentric(radius, 0) }]}>
           <View style={[styles.handle, { backgroundColor: theme.colors.onSurfaceVariant }]} />
         </TouchableRipple>
+        )}
         <View style={styles.content}>{children}</View>
       </Animated.View>
     </View>

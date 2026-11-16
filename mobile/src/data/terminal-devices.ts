@@ -255,7 +255,8 @@ function buildGeneratedDevice(index: number): TerminalDeviceRow {
   const model = MODEL_CYCLE[(index * 3 + 1) % MODEL_CYCLE.length];
   const storeIndex = (index * 7 + 2) % STORE_IDENTITIES.length;
   const day = (index % 27) + 1;
-  const month = MONTHS[(index * 5 + 2) % MONTHS.length];
+  // The same month as the seed rows, so the listing's default Last 30 days has them all.
+  const month = 'Jun';
   const hour = (index * 4 + 8) % 24;
   const minute = (index * 13) % 60;
 
@@ -274,7 +275,72 @@ function buildGeneratedDevice(index: number): TerminalDeviceRow {
 
 let deviceRows: TerminalDeviceRow[] = [...SEED_DEVICES, ...Array.from({ length: 14 }, (_, i) => buildGeneratedDevice(i + 11))];
 
-let auditRows: DeviceAuditRow[] = [];
+/** Who changes device modes in the seed history (user-roster.ts names with in-store rights). */
+const AUDIT_ACTORS = [
+  { name: 'Tirth Trivedi', role: 'Admin' },
+  { name: 'Karan Joshi', role: 'Store Manager' },
+  { name: 'Rajesh Kumar', role: 'Owner' },
+  { name: 'Neha Verma', role: 'Admin' },
+];
+
+/**
+ * Seed history so the Audit log isn't empty on first open (web starts empty): [device index,
+ * days ago, hour, minute, actor]. Dated from today so the default Last 30 days always has
+ * entries; a device's newest entry ends on its current mode, and repeat devices flip back and forth.
+ */
+const AUDIT_SEED: [number, number, number, number, number][] = [
+  [1, 0, 10, 12, 0],
+  [7, 0, 9, 40, 1],
+  [3, 1, 18, 5, 1],
+  [1, 2, 15, 30, 2],
+  [12, 3, 11, 22, 3],
+  [5, 4, 16, 48, 0],
+  [9, 6, 12, 10, 1],
+  [3, 8, 10, 35, 2],
+  [15, 11, 14, 2, 0],
+  [2, 13, 17, 55, 3],
+  [8, 17, 9, 18, 1],
+  [12, 21, 13, 44, 2],
+  [6, 26, 11, 5, 0],
+  [18, 29, 15, 20, 3],
+  [4, 36, 10, 50, 2],
+  [10, 44, 12, 30, 1],
+];
+
+function buildSeedAudit(): DeviceAuditRow[] {
+  const flips = new Map<string, number>();
+  return AUDIT_SEED.flatMap(([deviceIndex, daysAgo, hour, minute, actorIndex], i) => {
+    const device = deviceRows[deviceIndex];
+    if (!device) return [];
+    // Newest first: the first entry for a device ends on its mode now, each older one a flip earlier.
+    const seen = flips.get(device.id) ?? 0;
+    flips.set(device.id, seen + 1);
+    const other: DeviceMode = device.mode === 'Integrated' ? 'Standalone' : 'Integrated';
+    const finalMode = seen % 2 === 0 ? device.mode : other;
+    const when = new Date();
+    when.setDate(when.getDate() - daysAgo);
+    when.setHours(hour, minute, 0, 0);
+    // Today's entries never sit in the future.
+    if (when > new Date()) when.setTime(Date.now() - (i + 1) * 7 * 60_000);
+    const actor = AUDIT_ACTORS[actorIndex];
+    return [
+      {
+        id: `audit-seed-${i}`,
+        hardwareId: device.hardwareId,
+        model: device.model,
+        changedBy: actor.name,
+        changedByRole: actor.role,
+        storeName: device.storeName,
+        previousMode: finalMode === 'Integrated' ? 'Standalone' : 'Integrated',
+        finalMode,
+        date: `${when.getDate()} ${MONTHS[when.getMonth()]} ${when.getFullYear()}`,
+        time: formatTime(when.getHours(), when.getMinutes()),
+      },
+    ];
+  });
+}
+
+let auditRows: DeviceAuditRow[] = buildSeedAudit();
 
 export function getDeviceRows() {
   return deviceRows;
@@ -282,6 +348,11 @@ export function getDeviceRows() {
 
 export function getAuditRows() {
   return auditRows;
+}
+
+/** The other devices at this device's store, as many as the sheet shows. */
+export function getLinkedDevices(device: TerminalDeviceRow) {
+  return deviceRows.filter((row) => row.storeId === device.storeId && row.id !== device.id).slice(0, 2);
 }
 
 export function findDeviceById(id: string) {
