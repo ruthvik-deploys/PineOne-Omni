@@ -203,7 +203,7 @@ export function SameDaySheet({ mode, onDismiss, onConfirm }: { mode: 'enable' | 
       visible={mode !== null}
       onDismiss={onDismiss}
       title="Same-Day settlement"
-      height={enabling ? 470 : 300}
+      fit
       footer={
         enabling ? (
           <SheetButton label="Enable Same-Day settlement" onPress={onConfirm} />

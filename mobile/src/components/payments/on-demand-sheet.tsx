@@ -37,7 +37,7 @@ export function OnDemandSheet({ visible, onDismiss }: { visible: boolean; onDism
       visible={visible}
       onDismiss={onDismiss}
       title="On-demand settlement"
-      height={640}
+      fit
       footer={
         <View style={styles.footer}>
           <View style={styles.footerButton}>

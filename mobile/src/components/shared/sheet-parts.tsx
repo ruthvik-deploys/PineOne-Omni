@@ -67,6 +67,7 @@ export function SheetField({
   error,
   prefix,
   keyboardType,
+  secure = false,
 }: {
   label?: string;
   value: string;
@@ -77,6 +78,8 @@ export function SheetField({
   /** "₹" for amounts, or an icon name. */
   prefix?: string;
   keyboardType?: 'default' | 'number-pad' | 'email-address';
+  /** Hide what's typed (e.g. re-entering an account number). */
+  secure?: boolean;
 }) {
   const theme = useTheme();
   return (
@@ -94,6 +97,7 @@ export function SheetField({
           placeholder={placeholder}
           placeholderTextColor={theme.colors.onSurfaceVariant}
           keyboardType={keyboardType}
+          secureTextEntry={secure}
           autoCapitalize={keyboardType === 'email-address' ? 'none' : undefined}
           accessibilityLabel={label ?? placeholder}
           style={[styles.inputText, styles.flex, { color: theme.colors.onSurface }]}
@@ -224,7 +228,21 @@ export function SheetRow({ label, value, tone, strong = false, info = false }: {
 }
 
 /** The sheet's one action, full width at its foot (Figma: 32dp, brand green). */
-export function SheetButton({ label, onPress, disabled = false, mode = 'primary', icon, destructive = false }: { label: string; onPress: () => void; disabled?: boolean; mode?: 'primary' | 'outline'; icon?: string; /** An outline button's icon and label in red. */ destructive?: boolean }) {
+export function SheetButton({
+  label,
+  onPress,
+  disabled = false,
+  mode = 'primary',
+  icon,
+  destructive = false,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  mode?: 'primary' | 'outline';
+  icon?: string;
+  /** An outline button's icon and label in red. */ destructive?: boolean;
+}) {
   const theme = useTheme();
   const primary = mode === 'primary';
   const foreground = primary ? theme.colors.onPrimary : destructive ? theme.colors.error : theme.colors.onSurface;
@@ -237,7 +255,9 @@ export function SheetButton({ label, onPress, disabled = false, mode = 'primary'
       accessibilityState={{ disabled }}
       style={[
         styles.button,
-        primary ? { backgroundColor: theme.colors.primary, opacity: disabled ? 0.5 : 1 } : { borderWidth: 1, borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface },
+        primary
+          ? { backgroundColor: theme.colors.primary, opacity: disabled ? 0.5 : 1 }
+          : { borderWidth: 1, borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface },
       ]}>
       <View style={styles.buttonContent}>
         {icon ? <Icon source={icon} size={16} color={foreground} /> : null}

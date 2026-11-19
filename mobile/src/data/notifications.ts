@@ -7,6 +7,7 @@ export type AppNotification = { id: string; title: string; detail: string; time:
 export const NOTIFICATIONS: AppNotification[] = [
   { id: 'n1', title: 'Settlement batch delayed', detail: 'One batch is delayed by 45 mins', time: '10 min ago', icon: 'bank', href: '/settlements' },
   { id: 'n2', title: 'High failure spike detected', detail: 'Online failure rate crossed 2.3%', time: '1 hr ago', icon: 'warning-circle', href: '/payments' },
+  { id: 'n4', title: 'More documents needed', detail: 'Instant cashback: re-upload the scheme acceptance form', time: '2 hr ago', icon: 'file-text', href: '/value-added-services?service=instant-cashback' },
   { id: 'n3', title: 'New product recommendation', detail: 'Pay Later can improve conversion on your checkout', time: 'Yesterday', icon: 'palette', href: '/checkout' },
 ];
 
