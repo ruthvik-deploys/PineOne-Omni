@@ -1,0 +1,19 @@
+{
+  "title": "Sign up, mobile first",
+  "description": "Create an account from a mobile number and OTP, then set a password and continue into the getting-started home.",
+  "tags": [
+    "pine-one",
+    "onboarding"
+  ],
+  "surface": "web",
+  "group": "Pine One onboarding",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:39:04.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-user-journey-v2.vercel.app/onboarding-demo",
+    "embed": "none",
+    "note": "Start from the first screen. Later steps depend on progress saved in your browser."
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Snapshot Agent",
+  "description": "Pine AI agent that sends a daily business snapshot and flags dips and spikes across stores.",
+  "tags": [
+    "osmosis",
+    "pine-ai",
+    "agents"
+  ],
+  "surface": "web",
+  "group": "Osmosis agents",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:38:40.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one.vercel.app/pine-ai/agents/daily_business_snapshot",
+    "embed": "none",
+    "note": "Sign in once on pine-one.vercel.app with any work email and password and pick a merchant. After that, this link opens the page directly.",
+    "seedLocalStorage": {
+      "osmosis.auth-flow.v1": "{\"isAuthenticated\":true,\"authMethod\":\"password\",\"pendingEmail\":\"\",\"selectedProfileId\":\"gd-electronics\"}"
+    }
+  }
+}

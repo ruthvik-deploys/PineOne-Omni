@@ -2,17 +2,27 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { BellRing, Download } from "lucide-react"
-
+import { BellRingingIcon, DownloadIcon } from "@phosphor-icons/react"
+import { useDateRangeFilter } from "@/components/shared/date-range-filter"
 import {
   ListingSummaryCards,
   ListingToolbar,
+  PAGE_HEADING_CLASSES,
   type ListingFilter,
 } from "@/components/shared/listing-page-primitives"
+import { useMoreFiltersPanel, type MoreFilterCategory } from "@/components/shared/more-filters-panel"
 import { StatusPill, type StatusTone } from "@/components/shared/status-pill"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableRowViewDetailsCell,
+} from "@/components/ui/table"
 
 const settlementRows = [
   {
@@ -51,11 +61,26 @@ function toSettlementTone(status: string): StatusTone {
   return status.toLowerCase().includes("settled") ? "success" : "processing"
 }
 
+const moreFilterCategories: MoreFilterCategory[] = [
+  {
+    id: "status",
+    label: "Status",
+    display: "badge",
+    selectionMode: "multi",
+    searchable: false,
+    options: [
+      { id: "processing", label: "Processing" },
+      { id: "settled", label: "Settled" },
+    ],
+  },
+]
+
 export function SettlementsContent() {
   const router = useRouter()
   const [search, setSearch] = useState("")
-  const [dateFilter, setDateFilter] = useState("7d")
   const [statusFilter, setStatusFilter] = useState("all")
+  const dateRangeFilter = useDateRangeFilter()
+  const moreFilters = useMoreFiltersPanel(moreFilterCategories)
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -68,18 +93,7 @@ export function SettlementsContent() {
   }, [search, statusFilter])
 
   const filters: ListingFilter[] = [
-    {
-      id: "date",
-      type: "select",
-      label: "Date",
-      value: dateFilter,
-      onValueChange: setDateFilter,
-      options: [
-        { label: "Today", value: "today" },
-        { label: "Last 7D", value: "7d" },
-        { label: "Last 30D", value: "30d" },
-      ],
-    },
+    dateRangeFilter.filter,
     {
       id: "status",
       type: "select",
@@ -92,13 +106,6 @@ export function SettlementsContent() {
         { label: "Settled", value: "settled" },
       ],
     },
-    {
-      id: "more",
-      type: "button",
-      label: "More filters",
-      value: "",
-      showCaret: true,
-    },
   ]
 
   return (
@@ -106,7 +113,7 @@ export function SettlementsContent() {
       <section>
         <div className="px-8 pt-8 pb-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <h1 className="text-[30px] font-semibold leading-none text-foreground">Settlements</h1>
+            <h1 className={PAGE_HEADING_CLASSES}>Settlements</h1>
             <Button variant="outline" className="rounded-[8px] border-border/70 bg-background">
               Change settlement preferences
             </Button>
@@ -115,7 +122,7 @@ export function SettlementsContent() {
           <div className="mt-6 rounded-[8px] border border-border/60 bg-[var(--olive-surface-main)] px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="flex items-center gap-2 text-sm text-foreground">
-                <BellRing className="h-4 w-4 text-primary" />₹20,00,000 upcoming settlement in xx9898, HDFC bank by 7 Aug 2026, 10:00 AM
+                <BellRingingIcon className="h-4 w-4 text-primary" />₹20,00,000 upcoming settlement in xx9898, HDFC bank by 7 Aug 2026, 10:00 AM
               </p>
               <Button variant="outline" className="rounded-[8px] border-border/70 bg-background">
                 Pause settlement
@@ -133,9 +140,10 @@ export function SettlementsContent() {
           onSearchChange={setSearch}
           searchPlaceholder="Search settlement"
           filters={filters}
+          {...moreFilters.toolbarProps}
           rightActions={
             <Button variant="outline" className="rounded-[8px] border-border/70 bg-background">
-              <Download className="h-4 w-4" />
+              <DownloadIcon className="h-4 w-4" />
               Download filtered
             </Button>
           }
@@ -170,7 +178,7 @@ export function SettlementsContent() {
                   {rows.map((row) => (
                     <TableRow
                       key={row.utr}
-                      className="h-[72px] cursor-pointer"
+                      className="group h-[72px] cursor-pointer"
                       onClick={() => router.push(`/settlements/${row.batchId}`)}
                     >
                       <TableCell className="px-4 text-sm text-foreground">{row.utr}</TableCell>
@@ -179,9 +187,12 @@ export function SettlementsContent() {
                       <TableCell className="px-4 text-sm text-foreground">{row.bankAccount}</TableCell>
                       <TableCell className="px-4 text-sm text-foreground">{row.settlementDate}</TableCell>
                       <TableCell className="px-4 text-sm text-foreground">{row.initiationDate}</TableCell>
-                      <TableCell className="px-4 text-sm text-foreground">
+                      <TableRowViewDetailsCell
+                        className="px-4 text-sm text-foreground"
+                        onViewDetails={() => router.push(`/settlements/${row.batchId}`)}
+                      >
                         <StatusPill label={row.status} tone={toSettlementTone(row.status)} />
-                      </TableCell>
+                      </TableRowViewDetailsCell>
                     </TableRow>
                   ))}
                 </TableBody>

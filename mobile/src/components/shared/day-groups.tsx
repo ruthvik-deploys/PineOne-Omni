@@ -1,0 +1,258 @@
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+
+import { APP_PAGE_LAYOUT, LISTING_SAMPLE_LAYOUT } from '@/constants/experiments';
+import { Fonts } from '@/constants/theme';
+import { formatInr } from '@/data/common';
+import { parseDisplayDate } from '@/data/transactions';
+
+import { ListCard, ListDivider } from './listing';
+
+export type DayGroup<T> = { day: string; label: string; rows: T[] };
+
+/** A day's total amount and record count, keyed by its display date. */
+export type DayTotals = Map<string, { amount?: number; count: number }>;
+
+/**
+ * Each day's total and count over every row the filters match — not just the
+ * rows loaded so far — so a day heading stays right while the list is still
+ * loading that day's records. Without `amount` (stores, users, tickets…) a
+ * day heading shows just its count.
+ */
+export function dayTotals<T>(rows: T[], day: (row: T) => string, amount?: (row: T) => number): DayTotals {
+  const totals: DayTotals = new Map();
+  for (const row of rows) {
+    const key = day(row);
+    const entry = totals.get(key) ?? { amount: amount ? 0 : undefined, count: 0 };
+    if (amount) entry.amount = (entry.amount ?? 0) + amount(row);
+    entry.count += 1;
+    totals.set(key, entry);
+  }
+  return totals;
+}
+
+/** "₹4,12,500" — paise only when there are some. */
+const dayAmount = (value: number) => formatInr(value).replace(/\.00$/, '');
+
+/** Timestamp of a "16 Aug 2026" + "10:10 PM" pair (unparseable dates sort last). */
+export function displayTimestamp(date: string, time: string) {
+  return parseDisplayDate(date, time)?.getTime() ?? -Infinity;
+}
+
+/** Newest first, keeping the source order for equal timestamps. */
+export function sortNewestFirst<T>(rows: T[], timestamp: (row: T) => number) {
+  return rows
+    .map((row, index) => ({ row, index, time: timestamp(row) }))
+    .sort((a, b) => b.time - a.time || a.index - b.index)
+    .map((entry) => entry.row);
+}
+
+/** "Sun, 16 Aug 2026" for a "16 Aug 2026" display date (keeps the data's own month spelling). */
+function dayLabel(day: string) {
+  const date = parseDisplayDate(day, '12:00 PM');
+  return date ? `${date.toLocaleDateString('en-GB', { weekday: 'short' })}, ${day}` : day;
+}
+
+/** Splits already-sorted rows into consecutive runs that share a day. */
+export function groupByDay<T>(rows: T[], day: (row: T) => string): DayGroup<T>[] {
+  const groups: DayGroup<T>[] = [];
+  for (const row of rows) {
+    const key = day(row);
+    const last = groups[groups.length - 1];
+    if (last && last.day === key) last.rows.push(row);
+    else groups.push({ day: key, label: dayLabel(key), rows: [row] });
+  }
+  return groups;
+}
+
+/**
+ * A listing grouped by day: each day's date as a heading, then that day's
+ * records in their own card, newest day first. Replaces a single ListCard for
+ * payments, refunds and settlements.
+ */
+export function DayGroupedList<T>({
+  groups,
+  renderRow,
+  empty,
+  totals,
+  noun = { one: 'record', other: 'records' },
+  flat = false,
+  plain = false,
+}: {
+  groups: DayGroup<T>[];
+  renderRow: (row: T) => ReactNode;
+  empty: string;
+  /** Each day's amount and count (see dayTotals), shown at the end of its heading. Without it, the loaded rows are counted. */
+  totals?: DayTotals;
+  /** What a row is, for the count: e.g. payment / payments. */
+  noun?: { one: string; other: string };
+  /**
+   * Inside a card that already frames the list (e.g. Settlement details →
+   * Transactions included): no card per day, just the day heading and rows
+   * separated by full-width dividers.
+   */
+  flat?: boolean;
+  /**
+   * Straight on a white sheet (e.g. the listing sample): each day's date and
+   * total as a plain heading, then its rows edge to edge between hairlines.
+   */
+  plain?: boolean;
+}) {
+  const theme = useTheme();
+  // The listing sample's white sheet takes the plain list wherever a page asks for the flat one.
+  if (plain || (flat && LISTING_SAMPLE_LAYOUT)) {
+    if (groups.length === 0) {
+      return (
+        <Text variant="bodyMedium" style={[styles.flatEmpty, { color: theme.colors.onSurfaceVariant }]}>
+          {empty}
+        </Text>
+      );
+    }
+    return (
+      <View>
+        {groups.map((group) => (
+          <View key={group.day}>
+            {/* "Sun, 27 Sep 2026 · ₹3,66,000": the day, then its total (or count) quietly after it. */}
+            <Text variant="titleSmall" style={[styles.day, styles.plainHeading]} accessibilityRole="header">
+              {group.label}
+              <Text style={[styles.plainTotal, { color: theme.colors.onSurfaceVariant }]}>
+                {' · '}
+                {(() => {
+                  const total = totals?.get(group.day);
+                  const records = total?.count ?? group.rows.length;
+                  return total?.amount !== undefined ? dayAmount(total.amount) : `${records} ${records === 1 ? noun.one : noun.other}`;
+                })()}
+              </Text>
+            </Text>
+            {group.rows.map((row, index) => (
+              <View key={index}>
+                {index > 0 ? <View style={styles.plainDivider}><ListDivider /></View> : null}
+                {renderRow(row)}
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    );
+  }
+  if (flat && APP_PAGE_LAYOUT) {
+    if (groups.length === 0) {
+      return (
+        <Text variant="bodyMedium" style={[styles.flatEmpty, { color: theme.colors.onSurfaceVariant }]}>
+          {empty}
+        </Text>
+      );
+    }
+    // Figma 7153:139374: a 32dp grey band per day, its date and total small and muted at either end; rows between hairlines.
+    const muted = { color: theme.colors.onSurfaceVariant };
+    return (
+      <View>
+        {groups.map((group) => {
+          const total = totals?.get(group.day);
+          const records = total?.count ?? group.rows.length;
+          return (
+            <View key={group.day}>
+              <View style={[styles.band, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <Text style={[styles.bandText, styles.bandDay, muted]} numberOfLines={1} accessibilityRole="header">
+                  {group.label}
+                </Text>
+                <Text style={[styles.bandText, muted]} numberOfLines={1}>
+                  {total?.amount !== undefined ? formatInr(total.amount) : `${records} ${records === 1 ? noun.one : noun.other}`}
+                </Text>
+              </View>
+              {group.rows.map((row, index) => (
+                <View key={index}>
+                  {index > 0 ? <ListDivider /> : null}
+                  {renderRow(row)}
+                </View>
+              ))}
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
+  if (flat) {
+    if (groups.length === 0) {
+      return (
+        <Text variant="bodyMedium" style={[styles.flatEmpty, { color: theme.colors.onSurfaceVariant }]}>
+          {empty}
+        </Text>
+      );
+    }
+    return (
+      <View>
+        {groups.map((group, groupIndex) => (
+          <View key={group.day}>
+            {groupIndex > 0 ? <ListDivider /> : null}
+            <View style={[styles.heading, styles.flatHeading, { backgroundColor: theme.colors.surfaceVariant }]}>
+              <Text variant="labelLarge" style={styles.day} accessibilityRole="header">
+                {group.label}
+              </Text>
+              <DaySummary total={totals?.get(group.day)} count={group.rows.length} noun={noun} />
+            </View>
+            {group.rows.map((row, index) => (
+              <View key={index}>
+                <ListDivider />
+                {renderRow(row)}
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    );
+  }
+  if (groups.length === 0) return <ListCard empty={empty}>{[]}</ListCard>;
+  return (
+    <View style={styles.groups}>
+      {groups.map((group) => (
+        <View key={group.day} style={styles.group}>
+          <View style={styles.heading}>
+            <Text variant="titleSmall" style={styles.day} accessibilityRole="header">
+              {group.label}
+            </Text>
+            <DaySummary total={totals?.get(group.day)} count={group.rows.length} noun={noun} />
+          </View>
+          <ListCard>{group.rows.map(renderRow)}</ListCard>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** The end of a day heading: the day's amount, then how many records it has. */
+function DaySummary({ total, count, noun }: { total?: { amount?: number; count: number }; count: number; noun: { one: string; other: string } }) {
+  const theme = useTheme();
+  const records = total?.count ?? count;
+  const countText = `${records} ${records === 1 ? noun.one : noun.other}`;
+  return (
+    <Text variant="bodySmall" numberOfLines={1} style={[styles.summary, { color: theme.colors.onSurfaceVariant }]}>
+      {total?.amount !== undefined ? (
+        <>
+          <Text style={[styles.summaryAmount, { color: theme.colors.onSurface }]}>{dayAmount(total.amount)}</Text>
+          {' · '}
+        </>
+      ) : null}
+      {countText}
+    </Text>
+  );
+}
+
+const styles = StyleSheet.create({
+  summary: { flexShrink: 1, textAlign: 'right', fontVariant: ['tabular-nums', 'stylistic-one'] },
+  summaryAmount: { fontFamily: Fonts.medium },
+  groups: { gap: 20 },
+  group: { gap: 8 },
+  heading: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingHorizontal: 4 },
+  day: { fontFamily: Fonts.semiBold },
+  flatHeading: { paddingHorizontal: 16, paddingVertical: 8 },
+  flatEmpty: { padding: 16 },
+  band: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, height: 32, paddingHorizontal: 12 },
+  bandText: { fontFamily: Fonts.regular, fontSize: 12, lineHeight: 16, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  bandDay: { flexShrink: 1 },
+  plainHeading: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 4 },
+  plainTotal: { fontFamily: Fonts.regular, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  // Inset to the row's text, past its icon tile.
+  plainDivider: { marginLeft: 16 + 40 + 12 },
+});

@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { Copy, Download, QrCode, Store } from "lucide-react"
-
-import { TransactionStyleListingPage, type ListingColumn } from "@/components/shared/transaction-style-listing-page"
-import { type ListingFilter } from "@/components/shared/listing-page-primitives"
+import { CopyIcon, DownloadIcon, QrCodeIcon, StorefrontIcon } from "@phosphor-icons/react"
 import { DetailSidepanelShell } from "@/components/shared/activity-timeline-sidepanel"
+import { useDateRangeFilter } from "@/components/shared/date-range-filter"
+import { type ListingFilter } from "@/components/shared/listing-page-primitives"
+import { useMoreFiltersPanel, type MoreFilterCategory } from "@/components/shared/more-filters-panel"
+import { TransactionStyleListingPage, type ListingColumn } from "@/components/shared/transaction-style-listing-page"
 import { Button } from "@/components/ui/button"
 
 type StoreQrRow = {
@@ -37,12 +38,24 @@ const STORE_ROWS: StoreQrRow[] = [
   },
 ]
 
+const moreFilterCategories: MoreFilterCategory[] = [
+  {
+    id: "status",
+    label: "Status",
+    display: "badge",
+    selectionMode: "multi",
+    searchable: false,
+    options: [{ id: "active", label: "Active" }],
+  },
+]
+
 export function StoreQrStickersListingContent() {
   const [search, setSearch] = useState("")
-  const [dateFilter, setDateFilter] = useState("7d")
   const [statusFilter, setStatusFilter] = useState("all")
   const [qrPanelOpen, setQrPanelOpen] = useState(false)
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+  const dateRangeFilter = useDateRangeFilter()
+  const moreFilters = useMoreFiltersPanel(moreFilterCategories)
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -54,18 +67,7 @@ export function StoreQrStickersListingContent() {
   }, [search, statusFilter])
 
   const filters: ListingFilter[] = [
-    {
-      id: "date",
-      type: "select",
-      label: "Date",
-      value: dateFilter,
-      onValueChange: setDateFilter,
-      options: [
-        { label: "Today", value: "today" },
-        { label: "Last 7D", value: "7d" },
-        { label: "All dates", value: "all" },
-      ],
-    },
+    dateRangeFilter.filter,
     {
       id: "status",
       type: "select",
@@ -77,7 +79,6 @@ export function StoreQrStickersListingContent() {
         { label: "Active", value: "active" },
       ],
     },
-    { id: "more", type: "button", label: "More filters", value: "", showCaret: true },
   ]
 
   const columns: Array<ListingColumn<StoreQrRow>> = [
@@ -134,14 +135,15 @@ export function StoreQrStickersListingContent() {
     <>
       <TransactionStyleListingPage
         title="Store QR stickers"
-        primaryAction={<Button className="rounded-[8px] border border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90">Create QR for a store</Button>}
+        primaryAction={<Button>Create QR for a store</Button>}
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search store"
         filters={filters}
+        {...moreFilters.toolbarProps}
         rightActions={
           <Button variant="outline" className="rounded-[8px] border-border/70 bg-background">
-            <Download className="h-4 w-4" />
+            <DownloadIcon className="h-4 w-4" />
             Download filtered
           </Button>
         }
@@ -160,7 +162,7 @@ export function StoreQrStickersListingContent() {
             <div className="flex-1 space-y-6 overflow-y-auto p-6">
               <section className="space-y-3">
                 <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted p-1.5">
-                  <Store className="h-6 w-6 text-primary" />
+                  <StorefrontIcon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="text-2xl font-semibold leading-tight text-foreground">{selectedStore.storeName}</p>
@@ -177,11 +179,11 @@ export function StoreQrStickersListingContent() {
                 <div className="flex flex-col items-center gap-4">
                   <p className="text-2xl font-semibold leading-none tracking-tight text-foreground">pine labs</p>
                   <div className="inline-flex h-40 w-40 items-center justify-center rounded-md border border-border/70 bg-background">
-                    <QrCode className="h-24 w-24 text-foreground" />
+                    <QrCodeIcon className="h-24 w-24 text-foreground" />
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <span>UPI ID: 6352699747@ptyes</span>
-                    <Copy className="h-3.5 w-3.5" />
+                    <CopyIcon className="h-3.5 w-3.5" />
                   </div>
                 </div>
               </section>

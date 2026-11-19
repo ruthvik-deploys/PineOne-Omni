@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { Headphones } from "lucide-react"
+import { HeadphonesIcon } from "@phosphor-icons/react"
 import { isDummyAuthenticated } from "@/lib/dummy-auth"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +21,6 @@ import { FloatingDemoFab } from "./floating-demo-fab"
 import { useDemoSettingsState } from "./use-demo-settings"
 import { V2ProductRail } from "./v2-product-rail"
 import { V2Sidebar, V2SidebarMobile } from "./v2-sidebar"
-import { V2SupportDrawer } from "./v2-support-drawer"
 import { V2Topbar } from "./v2-topbar"
 
 interface V2DashboardLayoutProps {
@@ -57,7 +56,6 @@ export function V2DashboardLayout({ children }: V2DashboardLayoutProps) {
   const centerMaxWidth = settings.maxWidth === "custom" ? settings.customMaxWidth : settings.maxWidth
   const [authReady, setAuthReady] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
-  const [supportOpen, setSupportOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [activeProduct, setActiveProduct] = useState<SidebarProduct>(() =>
     inferSidebarProductFromPathname(pathname)
@@ -144,10 +142,10 @@ export function V2DashboardLayout({ children }: V2DashboardLayoutProps) {
           isMobile ? "bottom-20" : "bottom-5",
           "w-10 justify-start p-0 gap-0 hover:w-40 hover:gap-3"
         )}
-        onClick={() => setSupportOpen(true)}
+        onClick={() => router.push("/support/chat")}
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center">
-          <Headphones className="h-4 w-4" />
+          <HeadphonesIcon className="h-4 w-4" />
         </span>
         <span
           className={cn(
@@ -163,7 +161,7 @@ export function V2DashboardLayout({ children }: V2DashboardLayoutProps) {
           side="left"
           a11yTitle="Navigation menu"
           a11yDescription="Main navigation links for the platform."
-          className="w-full border-t border-border/60 bg-sidebar p-0"
+          className="inset-y-0 left-0 h-full w-full rounded-none border-t border-border/60 bg-sidebar p-0"
         >
           <V2SidebarMobile product={activeProduct} onNavigate={() => setMobileNavOpen(false)} />
         </SheetContent>
@@ -173,7 +171,6 @@ export function V2DashboardLayout({ children }: V2DashboardLayoutProps) {
         onMenuClick={() => setMobileNavOpen(true)}
       />
       <FloatingDemoFab />
-      <V2SupportDrawer open={supportOpen} onOpenChange={setSupportOpen} pathname={pathname} />
     </div>
     </NavVisibilityProvider>
   )

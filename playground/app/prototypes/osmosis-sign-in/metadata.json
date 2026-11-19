@@ -1,0 +1,19 @@
+{
+  "title": "Sign in",
+  "description": "Log in with email and password or email OTP, sign up, SSO buttons, then pick a merchant profile.",
+  "tags": [
+    "osmosis",
+    "auth"
+  ],
+  "surface": "web",
+  "group": "Osmosis",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:38:47.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one.vercel.app/auth/login",
+    "embed": "none",
+    "note": "Already signed in? The link goes straight to Home. Use Sign out in the app's sidebar to see this flow again."
+  }
+}

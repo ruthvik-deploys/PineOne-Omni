@@ -1,0 +1,20 @@
+{
+  "title": "Home",
+  "description": "The Osmosis phone app: merchant switcher, Transactions and Settlements cards, bottom nav (Home, Payments, Agents, More) and the Guide button.",
+  "tags": [
+    "osmosis"
+  ],
+  "surface": "mobile",
+  "group": "Osmosis",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:39:07.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one.vercel.app/",
+    "embed": "phone",
+    "seedLocalStorage": {
+      "osmosis.auth-flow.v1": "{\"isAuthenticated\":true,\"authMethod\":\"password\",\"pendingEmail\":\"\",\"selectedProfileId\":\"gd-electronics\"}"
+    }
+  }
+}

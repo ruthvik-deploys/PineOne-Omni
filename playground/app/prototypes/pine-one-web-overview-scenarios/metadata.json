@@ -1,0 +1,17 @@
+{
+  "title": "Overview scenarios",
+  "description": "The Overview dashboard rendered for each role and data state (single store, multiple stores, empty, failures) on one page.",
+  "tags": [
+    "pine-one"
+  ],
+  "surface": "web",
+  "group": "Pine One",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:39:01.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-user-journey-v2.vercel.app/overview-scenarios",
+    "embed": "none"
+  }
+}

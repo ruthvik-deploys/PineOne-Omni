@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci",
+  "buildCommand": "npx expo export -p web",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/payments/transactions/:transactionId",
+      "destination": "/payments/transactions/%5BtransactionId%5D"
+    },
+    {
+      "source": "/settlements/:batchId",
+      "destination": "/settlements/%5BbatchId%5D"
+    },
+    {
+      "source": "/disputes/:disputeId",
+      "destination": "/disputes/%5BdisputeId%5D"
+    },
+    {
+      "source": "/stores/:storeId",
+      "destination": "/stores/%5BstoreId%5D"
+    },
+    {
+      "source": "/account-settings/:section",
+      "destination": "/account-settings/%5Bsection%5D"
+    }
+  ]
+}

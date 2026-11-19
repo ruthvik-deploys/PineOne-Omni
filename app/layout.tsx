@@ -1,6 +1,19 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import localFont from 'next/font/local'
 import './globals.css'
+
+const interDisplay = localFont({
+  src: [
+    { path: '../public/fonts/inter-display/InterDisplay-Light.woff2', weight: '300', style: 'normal' },
+    { path: '../public/fonts/inter-display/InterDisplay-Regular.woff2', weight: '400', style: 'normal' },
+    { path: '../public/fonts/inter-display/InterDisplay-Medium.woff2', weight: '500', style: 'normal' },
+    { path: '../public/fonts/inter-display/InterDisplay-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: '../public/fonts/inter-display/InterDisplay-Bold.woff2', weight: '700', style: 'normal' },
+  ],
+  variable: '--font-inter-display',
+  display: 'swap',
+})
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
@@ -35,11 +48,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="font-sans">
+    <html lang="en" suppressHydrationWarning className={`font-sans ${interDisplay.variable}`}>
       <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem={false}
           storageKey="pine-one-theme"
         >

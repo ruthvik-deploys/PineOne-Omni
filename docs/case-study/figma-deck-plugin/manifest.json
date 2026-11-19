@@ -1,0 +1,10 @@
+{
+  "name": "Pine One case study deck",
+  "id": "pineone-case-study-deck",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": [
+    "figma"
+  ],
+  "documentAccess": "dynamic-page"
+}

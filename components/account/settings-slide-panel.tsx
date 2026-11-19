@@ -2,44 +2,41 @@
 
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react"
 import {
-  AlertTriangle,
-  BarChart3,
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronsLeft,
-  ChevronsRight,
-  Copy,
-  CreditCard,
-  Eye,
-  Globe,
-  Handshake,
-  KeyRound,
-  LifeBuoy,
-  Link2,
-  LogOut,
-  Mail,
-  Megaphone,
-  MoreVertical,
-  Pencil,
-  Phone,
-  Plug,
-  RotateCcw,
-  Repeat,
-  Route,
-  Search,
-  Server,
-  Settings2,
-  Smartphone,
-  Store,
-  Trash2,
-  UserCircle2,
-  UserMinus,
-  UserPlus,
-  Users,
-  Wallet,
-  X,
-} from "lucide-react"
+  ArrowCounterClockwiseIcon,
+  CaretDoubleLeftIcon,
+  CaretDoubleRightIcon,
+  CaretDownIcon,
+  CaretLeftIcon,
+  ChartBarIcon,
+  CheckIcon,
+  CopyIcon,
+  CreditCardIcon,
+  DeviceMobileIcon,
+  DotsThreeVerticalIcon,
+  EnvelopeSimpleIcon,
+  GlobeIcon,
+  HandshakeIcon,
+  HardDrivesIcon,
+  KeyIcon,
+  LifebuoyIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  MegaphoneIcon,
+  PathIcon,
+  PencilSimpleIcon,
+  PhoneIcon,
+  PlugIcon,
+  RepeatIcon,
+  SlidersIcon,
+  StorefrontIcon,
+  TrashIcon,
+  UserCircleIcon,
+  UserPlusIcon,
+  UsersIcon,
+  WalletIcon,
+  WarningIcon,
+  XIcon,
+} from "@phosphor-icons/react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -59,6 +56,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -69,7 +73,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -79,12 +85,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PageHeader } from "@/components/ui/panels"
 import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -92,9 +96,18 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  LINE_TAB_TRIGGER_CLASSES,
+  LINE_TABS_LIST_CLASSES,
+  ListingToolbar,
+  PAGE_HEADING_CLASSES,
+  type ListingFilter,
+} from "@/components/shared/listing-page-primitives"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { SectionSummaryStrip } from "@/components/dashboard/section-summary-strip"
-import { TransactionStyleTable, type TransactionStyleColumn } from "@/components/shared/transaction-style-table"
+import { StoreMultiSelect } from "@/components/shared/store-multi-select"
 import { readDummyAuthSession } from "@/lib/dummy-auth"
+import { STORE_IDENTITIES } from "@/lib/store-identity"
 import { cn } from "@/lib/utils"
 import {
   MIGRATION_AUDIT_SEED,
@@ -116,109 +129,17 @@ import {
   type RoleCatalogEntry,
   type RoleCatalogSystem,
 } from "@/lib/role-permissions"
+import {
+  formatTime,
+  INITIAL_ROSTER,
+  MONTHS,
+  type RosterEntry,
+  type UserStatus,
+} from "@/lib/user-roster-data"
 
-export type SettingsModule = "personal-details" | "users" | "credentials" | "webhooks"
-
-export const SETTINGS_NAV_ITEMS: Array<{
-  key: SettingsModule
-  label: string
-  icon: ComponentType<{ className?: string }>
-  adminOnly?: boolean
-}> = [
-  { key: "personal-details", label: "Personal details", icon: UserCircle2 },
-  { key: "users", label: "Users", icon: Users, adminOnly: true },
-  { key: "credentials", label: "Credentials", icon: KeyRound },
-  { key: "webhooks", label: "Webhooks", icon: Globe },
-]
-
-/* ---------------------------------- Sidebar --------------------------------- */
-
-export function SettingsSidebarNav({
-  activeModule,
-  onSelect,
-  onBack,
-  onLogout,
-}: {
-  activeModule: SettingsModule
-  onSelect: (module: SettingsModule) => void
-  onBack: () => void
-  onLogout: () => void
-}) {
-  const [isAdmin, setIsAdmin] = useState(true)
-
-  useEffect(() => {
-    const session = readDummyAuthSession()
-    if (!session) return
-    setIsAdmin(session.role.toLowerCase() === "admin")
-  }, [])
-
-  const visibleItems = SETTINGS_NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin)
-
-  return (
-    <div className="flex h-full w-64 flex-col bg-sidebar">
-      <div className="flex h-16 shrink-0 items-center bg-sidebar px-2">
-        <span className="px-4 text-[36px] font-semibold leading-none tracking-[-0.02em] text-foreground">ONE</span>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto bg-sidebar px-2 py-2">
-        <div>
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm leading-none text-sidebar-foreground/90 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
-            <span>Back</span>
-          </button>
-
-          <div className="mt-2 space-y-1">
-            {visibleItems.map((item) => {
-              const Icon = item.icon
-              const active = item.key === activeModule
-
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => onSelect(item.key)}
-                  className={cn(
-                    "flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm leading-none transition-colors",
-                    active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onLogout}
-          className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm leading-none text-destructive transition-colors hover:bg-destructive/10"
-        >
-          <LogOut className="h-3.5 w-3.5 shrink-0" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </div>
-  )
-}
+export type AccountSettingsTab = "personal-details" | "credentials" | "webhooks" | "refunds"
 
 /* --------------------------------- Shared bits ------------------------------- */
-
-function SettingsScreenHeader({ title, action }: { title: string; action?: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-8 py-6">
-      <h1 className="text-[28px] font-bold leading-none tracking-[-0.01em] text-foreground">{title}</h1>
-      {action}
-    </div>
-  )
-}
 
 function FieldRow({
   icon: Icon,
@@ -245,11 +166,22 @@ function FieldRow({
   )
 }
 
-function SectionIntro({ title, description }: { title: string; description: string }) {
+function SectionIntro({
+  title,
+  description,
+  action,
+}: {
+  title: string
+  description: string
+  action?: ReactNode
+}) {
   return (
-    <div>
-      <p className="text-base font-semibold text-foreground">{title}</p>
-      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-base font-semibold text-foreground">{title}</p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   )
 }
@@ -275,44 +207,39 @@ function PersonalDetailsSection() {
   }, [])
 
   return (
-    <div className="flex h-full flex-col">
-      <SettingsScreenHeader title="Personal details" action={<Button size="sm">Change password</Button>} />
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="grid w-full max-w-[1360px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <SectionIntro title="Basic details" description="All your personal details related to your login" />
-          <div className="space-y-3">
-            <FieldRow
-              icon={UserCircle2}
-              label="Name"
-              value={name}
-              action={
-                <Button variant="outline" size="sm">
-                  Update
-                </Button>
-              }
-            />
-            <FieldRow
-              icon={Phone}
-              label="Registered number"
-              value="+91 98765 43210"
-              action={
-                <Button variant="outline" size="sm">
-                  Update
-                </Button>
-              }
-            />
-            <FieldRow
-              icon={Mail}
-              label="Registered email"
-              value={email}
-              action={
-                <Button variant="outline" size="sm">
-                  Update
-                </Button>
-              }
-            />
-          </div>
-        </div>
+    <div className="grid w-full max-w-[1360px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <SectionIntro title="Basic details" description="All your personal details related to your login" />
+      <div className="space-y-3">
+        <FieldRow
+          icon={UserCircleIcon}
+          label="Name"
+          value={name}
+          action={
+            <Button variant="outline" size="sm">
+              Update
+            </Button>
+          }
+        />
+        <FieldRow
+          icon={PhoneIcon}
+          label="Registered number"
+          value="+91 98765 43210"
+          action={
+            <Button variant="outline" size="sm">
+              Update
+            </Button>
+          }
+        />
+        <FieldRow
+          icon={EnvelopeSimpleIcon}
+          label="Registered email"
+          value={email}
+          action={
+            <Button variant="outline" size="sm">
+              Update
+            </Button>
+          }
+        />
       </div>
     </div>
   )
@@ -326,47 +253,42 @@ function CredentialsSection() {
   const secretKey = "sk_live_9F72xLp84QzTn5W1yRVdKt"
 
   return (
-    <div className="flex h-full flex-col">
-      <SettingsScreenHeader title="Credentials" />
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="grid w-full max-w-[1360px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <SectionIntro title="Production credentials" description="You can use this credentials for live product" />
-          <div className="space-y-3">
-            <FieldRow
-              icon={Server}
-              label="Merchant ID"
-              value={merchantId}
-              action={
-                <Button variant="outline" size="sm" onClick={() => copyToClipboard(merchantId, "Merchant ID")}>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </Button>
-              }
-            />
-            <FieldRow
-              icon={Server}
-              label="Client ID"
-              value={clientId}
-              action={
-                <Button variant="outline" size="sm" onClick={() => copyToClipboard(clientId, "Client ID")}>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </Button>
-              }
-            />
-            <FieldRow
-              icon={KeyRound}
-              label="Secret key"
-              value={"*".repeat(28)}
-              action={
-                <Button variant="outline" size="sm" onClick={() => copyToClipboard(secretKey, "Secret key")}>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </Button>
-              }
-            />
-          </div>
-        </div>
+    <div className="grid w-full max-w-[1360px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <SectionIntro title="Production credentials" description="You can use this credentials for live product" />
+      <div className="space-y-3">
+        <FieldRow
+          icon={HardDrivesIcon}
+          label="Merchant ID"
+          value={merchantId}
+          action={
+            <Button variant="outline" size="sm" onClick={() => copyToClipboard(merchantId, "Merchant ID")}>
+              <CopyIcon className="h-3.5 w-3.5" />
+              Copy
+            </Button>
+          }
+        />
+        <FieldRow
+          icon={HardDrivesIcon}
+          label="Client ID"
+          value={clientId}
+          action={
+            <Button variant="outline" size="sm" onClick={() => copyToClipboard(clientId, "Client ID")}>
+              <CopyIcon className="h-3.5 w-3.5" />
+              Copy
+            </Button>
+          }
+        />
+        <FieldRow
+          icon={KeyIcon}
+          label="Secret key"
+          value={"*".repeat(28)}
+          action={
+            <Button variant="outline" size="sm" onClick={() => copyToClipboard(secretKey, "Secret key")}>
+              <CopyIcon className="h-3.5 w-3.5" />
+              Copy
+            </Button>
+          }
+        />
       </div>
     </div>
   )
@@ -378,51 +300,417 @@ function WebhooksSection() {
   const [url] = useState("https://www.pinelabs.com/updates")
 
   return (
-    <div className="flex h-full flex-col">
-      <SettingsScreenHeader title="Webhook" />
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="grid w-full max-w-[1360px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="grid w-full max-w-[1360px] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <SectionIntro
+        title="Webhook URL"
+        description="Your transaction status and other information will be provided on this URL"
+      />
+      <div className="space-y-3">
+        <FieldRow
+          icon={GlobeIcon}
+          label="Added URL"
+          value={url}
+          action={
+            <Button variant="outline" size="sm" onClick={() => toast.success("URL added successfully")}>
+              Update
+            </Button>
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
+/* ---------------------------------- Refunds ------------------------------------ */
+
+/** Lets an admin grant refund access to individual Store Managers and Accountants —
+ *  Owners and Admins always have refund access, so this dialog only manages the two
+ *  roles whose access is opt-in. Selections are staged in `draft` until Apply. */
+function RefundAccessDialog({
+  open,
+  onOpenChange,
+  storeManagers,
+  accountants,
+  selectedIds,
+  onApply,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  storeManagers: RosterEntry[]
+  accountants: RosterEntry[]
+  selectedIds: string[]
+  onApply: (ids: string[]) => void
+}) {
+  const [group, setGroup] = useState<"store-managers" | "accountants">("store-managers")
+  const [search, setSearch] = useState("")
+  const [storeFilter, setStoreFilter] = useState("all")
+  const [draft, setDraft] = useState<string[]>(selectedIds)
+
+  useEffect(() => {
+    if (!open) return
+    setDraft(selectedIds)
+    setSearch("")
+    setStoreFilter("all")
+    setGroup("store-managers")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  const groupUsers = group === "store-managers" ? storeManagers : accountants
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return groupUsers.filter((user) => {
+      if (storeFilter !== "all" && !user.storeIds?.includes(storeFilter)) return false
+      if (!query) return true
+      return `${user.name} ${user.email}`.toLowerCase().includes(query)
+    })
+  }, [groupUsers, search, storeFilter])
+
+  const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every((user) => draft.includes(user.id))
+  const selectedInGroupCount = groupUsers.filter((user) => draft.includes(user.id)).length
+
+  function toggleUser(id: string) {
+    setDraft((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
+  }
+
+  function toggleAllFiltered(checked: boolean) {
+    const ids = filteredUsers.map((user) => user.id)
+    setDraft((current) => {
+      if (checked) return Array.from(new Set([...current, ...ids]))
+      const idSet = new Set(ids)
+      return current.filter((item) => !idSet.has(item))
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg gap-0 p-0">
+        <DialogHeader className="border-b border-border/70 px-5 py-4">
+          <DialogTitle>Select users</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 px-5 py-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search users"
+                className="h-9 pl-8 text-sm"
+              />
+            </div>
+            <Select value={storeFilter} onValueChange={setStoreFilter}>
+              <SelectTrigger className="h-9 w-full text-xs sm:w-44">
+                <SelectValue placeholder="Filter by store" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stores</SelectItem>
+                {STORE_IDENTITIES.map((store) => (
+                  <SelectItem key={store.storeId} value={store.storeId}>
+                    {store.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={group === "store-managers" ? "default" : "outline"}
+              size="sm"
+              className="h-7 rounded-full text-xs"
+              onClick={() => setGroup("store-managers")}
+            >
+              Store Managers ({storeManagers.length})
+            </Button>
+            <Button
+              type="button"
+              variant={group === "accountants" ? "default" : "outline"}
+              size="sm"
+              className="h-7 rounded-full text-xs"
+              onClick={() => setGroup("accountants")}
+            >
+              Accountants ({accountants.length})
+            </Button>
+          </div>
+
+          <p className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            List also contains store managers managing more than 1 store
+          </p>
+
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Checkbox checked={allFilteredSelected} onCheckedChange={(checked) => toggleAllFiltered(checked === true)} />
+              Select all
+            </label>
+            <span className="text-xs text-muted-foreground">
+              {selectedInGroupCount}/{groupUsers.length} users selected
+            </span>
+          </div>
+
+          <div className="max-h-64 overflow-y-auto rounded-md border border-border/70">
+            {filteredUsers.length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-muted-foreground">No users found.</p>
+            ) : (
+              <div className="divide-y divide-border/60">
+                {filteredUsers.map((user) => (
+                  <label
+                    key={user.id}
+                    className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2.5 text-sm text-foreground"
+                  >
+                    <span className="min-w-0 truncate">{user.name}</span>
+                    <Checkbox checked={draft.includes(user.id)} onCheckedChange={() => toggleUser(user.id)} />
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="border-t border-border/70 px-5 py-4 sm:justify-end">
+          <Button variant="outline" onClick={() => setDraft(selectedIds)}>
+            Reset
+          </Button>
+          <Button
+            onClick={() => {
+              onApply(draft)
+              onOpenChange(false)
+              toast.success("Refund access updated")
+            }}
+          >
+            Apply
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function RefundsSettingsSection() {
+  const [refundsEnabled, setRefundsEnabled] = useState(false)
+  const [adminApprovalRequired, setAdminApprovalRequired] = useState(true)
+  const [adminApprovalEditable, setAdminApprovalEditable] = useState(false)
+  const [otpRequired, setOtpRequired] = useState(false)
+  const [partialRefundAllowed, setPartialRefundAllowed] = useState<"yes" | "no">("no")
+  const [paymentModes, setPaymentModes] = useState({ upi: true, card: true, smsPay: true })
+  const [refundLimit, setRefundLimit] = useState("1")
+  const [accessUserIds, setAccessUserIds] = useState<string[]>([])
+  const [editUsersOpen, setEditUsersOpen] = useState(false)
+
+  const storeManagerUsers = useMemo(
+    () => INITIAL_ROSTER.filter((user) => user.status !== "Deactivated" && user.role === "Store Manager"),
+    []
+  )
+  const accountantUsers = useMemo(
+    () => INITIAL_ROSTER.filter((user) => user.status !== "Deactivated" && user.role === "Accountant"),
+    []
+  )
+  const ownerCount = useMemo(
+    () => INITIAL_ROSTER.filter((user) => user.status !== "Deactivated" && user.role === "Owner").length,
+    []
+  )
+  const adminCount = useMemo(
+    () => INITIAL_ROSTER.filter((user) => user.status !== "Deactivated" && user.role === "Admin").length,
+    []
+  )
+  const selectedStoreManagerCount = storeManagerUsers.filter((user) => accessUserIds.includes(user.id)).length
+  const selectedAccountantCount = accountantUsers.filter((user) => accessUserIds.includes(user.id)).length
+  const totalAccessCount = ownerCount + adminCount + selectedStoreManagerCount + selectedAccountantCount
+  const allPaymentModesChecked = paymentModes.upi && paymentModes.card && paymentModes.smsPay
+
+  return (
+    <div className="w-full max-w-[1360px] space-y-8">
+      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <SectionIntro
+          title="Refunds via Pine Labs One"
+          description="Enable refunds to start offering them for different transactions."
+        />
+        <div className="space-y-3">
+          <FieldRow
+            icon={ArrowCounterClockwiseIcon}
+            label="Enable refunds"
+            value={refundsEnabled ? "Enabled" : "Disabled"}
+            action={<Switch checked={refundsEnabled} onCheckedChange={setRefundsEnabled} />}
+          />
+        </div>
+      </div>
+
+      <div className={cn("space-y-8", !refundsEnabled && "pointer-events-none opacity-50")}>
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <SectionIntro
-            title="Webhook URL"
-            description="Your transaction status and other information will be provided on this URL"
+            title="User access"
+            description="Owners and admins always have refund access. Grant it to store managers and accountants here."
           />
           <div className="space-y-3">
             <FieldRow
-              icon={Globe}
-              label="Added URL"
-              value={url}
+              icon={UsersIcon}
+              label={`${totalAccessCount} users have access`}
+              value={`${ownerCount} Owner · ${adminCount} Admins · ${selectedStoreManagerCount} Store Managers · ${selectedAccountantCount} Accountant`}
               action={
-                <Button variant="outline" size="sm" onClick={() => toast.success("URL added successfully")}>
-                  Update
+                <Button variant="outline" size="sm" onClick={() => setEditUsersOpen(true)}>
+                  Edit users
                 </Button>
               }
             />
           </div>
         </div>
+
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <SectionIntro title="Security controls" description="Add extra checks before a refund is processed." />
+          <div className="space-y-3">
+            <FieldRow
+              icon={KeyIcon}
+              label="Admin approval required"
+              value="Requires an admin to approve refunds initiated by store managers or accountants"
+              action={
+                <div className="flex items-center gap-3">
+                  {!adminApprovalEditable ? (
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-primary hover:underline"
+                      onClick={() => setAdminApprovalEditable(true)}
+                    >
+                      Edit
+                    </button>
+                  ) : null}
+                  <Switch
+                    checked={adminApprovalRequired}
+                    disabled={!adminApprovalEditable}
+                    onCheckedChange={setAdminApprovalRequired}
+                  />
+                </div>
+              }
+            />
+            <FieldRow
+              icon={DeviceMobileIcon}
+              label="OTP based authentication"
+              value="Send an OTP to the customer before processing their refund"
+              action={<Switch checked={otpRequired} onCheckedChange={setOtpRequired} />}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <SectionIntro title="Refund type" description="Choose whether store staff can issue partial refunds." />
+          <div className="space-y-3">
+            <FieldRow
+              icon={RepeatIcon}
+              label="Partial refund"
+              value="Allow refunding less than the full transaction amount"
+              action={
+                <RadioGroup
+                  value={partialRefundAllowed}
+                  onValueChange={(value) => setPartialRefundAllowed(value as "yes" | "no")}
+                  className="flex w-auto items-center gap-4"
+                >
+                  <label className="flex items-center gap-1.5 text-sm text-foreground">
+                    <RadioGroupItem value="yes" /> Yes
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm text-foreground">
+                    <RadioGroupItem value="no" /> No
+                  </label>
+                </RadioGroup>
+              }
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <SectionIntro title="Payment modes" description="Choose which payment modes support refunds." />
+          <div className="space-y-3">
+            <FieldRow
+              icon={WalletIcon}
+              label="All payment modes"
+              value="Enable refunds across every supported payment mode"
+              action={
+                <Checkbox
+                  checked={allPaymentModesChecked}
+                  onCheckedChange={(checked) =>
+                    setPaymentModes({ upi: checked === true, card: checked === true, smsPay: checked === true })
+                  }
+                />
+              }
+            />
+            <FieldRow
+              icon={LinkIcon}
+              label="UPI"
+              value="Refunds for transactions paid via UPI"
+              action={
+                <Checkbox
+                  checked={paymentModes.upi}
+                  onCheckedChange={(checked) => setPaymentModes((current) => ({ ...current, upi: checked === true }))}
+                />
+              }
+            />
+            <FieldRow
+              icon={CreditCardIcon}
+              label="Card"
+              value="Refunds for transactions paid via card"
+              action={
+                <Checkbox
+                  checked={paymentModes.card}
+                  onCheckedChange={(checked) => setPaymentModes((current) => ({ ...current, card: checked === true }))}
+                />
+              }
+            />
+            <FieldRow
+              icon={PhoneIcon}
+              label="SMS Pay"
+              value="Refunds for transactions paid via SMS Pay"
+              action={
+                <Checkbox
+                  checked={paymentModes.smsPay}
+                  onCheckedChange={(checked) => setPaymentModes((current) => ({ ...current, smsPay: checked === true }))}
+                />
+              }
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <SectionIntro
+            title="Refund limit"
+            description="Refunds above this amount always require admin approval."
+          />
+          <div className="space-y-3">
+            <FieldRow
+              icon={HardDrivesIcon}
+              label="Limit processed without approval"
+              value={`₹${refundLimit || 0}`}
+              action={
+                <InputGroup className="h-9 w-32">
+                  <InputGroupAddon>
+                    <InputGroupText>₹</InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    value={refundLimit}
+                    onChange={(event) => setRefundLimit(event.target.value.replace(/[^0-9]/g, ""))}
+                    inputMode="numeric"
+                  />
+                </InputGroup>
+              }
+            />
+          </div>
+        </div>
       </div>
+
+      <RefundAccessDialog
+        open={editUsersOpen}
+        onOpenChange={setEditUsersOpen}
+        storeManagers={storeManagerUsers}
+        accountants={accountantUsers}
+        selectedIds={accessUserIds}
+        onApply={setAccessUserIds}
+      />
     </div>
   )
 }
 
 /* ------------------------------- Manage users data ------------------------------ */
 
-/** Invited: pending until the user accepts. Active: accepted and has access.
- *  Removed: access revoked by an admin — kept in the list (not deleted) so it
- *  can be reactivated later. */
-type UserStatus = "Active" | "Invited" | "Removed"
-
-/** A row in the Users table — always a person. Role definitions live separately
- *  in the role catalog (`ManagedRole`) and are shown in the Roles tab. */
-type RosterEntry = {
-  id: string
-  name: string
-  email: string
-  addedOnDate: string
-  addedOnTime: string
-  scope: string
-  role: string
-  status: UserStatus
-}
+/** Roster type/data now live in lib/user-roster-data.ts, shared with Manage stores'
+ *  store-detail Users tab and stores-data.ts's live "Users invited" count. */
 
 /** The live, editable role catalog used across Roles/Users/Invite — seeded from the
  *  real predefined roles (lib/role-permissions.ts) and grown with custom roles. */
@@ -444,46 +732,6 @@ const INITIAL_ROLE_CATALOG: ManagedRole[] = DEFAULT_ROLE_CATALOG.map((entry) => 
   permissionKeys: entry.permissionKeys,
 }))
 
-const FIRST_NAMES = [
-  "Karan", "Rajesh", "Siddharth", "Maya", "Priya", "Neha", "Aditi", "Tirth", "Vinay", "Ananya",
-  "Rohan", "Kavita", "Arjun", "Sneha", "Vikram", "Pooja", "Manish", "Divya", "Suresh", "Meera",
-  "Rahul", "Isha", "Nikhil", "Shreya", "Amit", "Ritu", "Sanjay", "Pallavi", "Gaurav", "Swati",
-]
-const LAST_NAMES = [
-  "Joshi", "Kumar", "Mehta", "Patel", "Singh", "Verma", "Sharma", "Trivedi", "Bansal", "Iyer",
-  "Nair", "Reddy", "Gupta", "Chawla", "Malhotra", "Kapoor", "Rao", "Desai", "Pillai", "Chopra",
-]
-const EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"]
-/** Mix of offline and online predefined role names — must match INITIAL_ROLE_CATALOG entries exactly. */
-const ROLE_CYCLE = [
-  "Admin", "Store Manager", "Owner", "User Admin", "Accountant", "Store Cashier", "Operations", "Finance", "Support",
-]
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-function scopeForRoleName(roleName: string): string {
-  const entry = INITIAL_ROLE_CATALOG.find((role) => role.name === roleName)
-  return entry ? computeAccessScope(entry.permissionKeys) : "In-store"
-}
-
-const SEED_ROSTER: RosterEntry[] = [
-  { id: "role-0", name: "Admin", email: "tirthtrivedi17@gmail.com", addedOnDate: "19 Jun 2026", addedOnTime: "10:12 PM", scope: scopeForRoleName("Admin"), role: "Admin", status: "Active" },
-  { id: "role-1", name: "Karan Joshi", email: "karanjoshi77@gmail.com", addedOnDate: "23 Jun 2026", addedOnTime: "01:20 PM", scope: scopeForRoleName("Store Manager"), role: "Store Manager", status: "Active" },
-  { id: "role-2", name: "Rajesh Kumar", email: "rajeshkumar84@yahoo.com", addedOnDate: "22 Jun 2026", addedOnTime: "09:45 AM", scope: scopeForRoleName("Owner"), role: "Owner", status: "Active" },
-  { id: "role-3", name: "Siddharth Mehta", email: "siddharthmehta01@gmail.com", addedOnDate: "26 Jun 2026", addedOnTime: "12:00 PM", scope: scopeForRoleName("User Admin"), role: "User Admin", status: "Active" },
-  { id: "role-4", name: "Maya Patel", email: "mayapatel92@gmail.com", addedOnDate: "24 Jun 2026", addedOnTime: "03:50 PM", scope: scopeForRoleName("Accountant"), role: "Accountant", status: "Active" },
-  { id: "role-5", name: "Priya Singh", email: "priyasingh65@yahoo.com", addedOnDate: "21 Jun 2026", addedOnTime: "02:30 PM", scope: scopeForRoleName("Store Cashier"), role: "Store Cashier", status: "Active" },
-  { id: "role-6", name: "Neha Verma", email: "nehaverma88@outlook.com", addedOnDate: "27 Jun 2026", addedOnTime: "04:30 PM", scope: scopeForRoleName("Admin"), role: "Admin", status: "Active" },
-  { id: "role-7", name: "Aditi Sharma", email: "aditisharma99@hotmail.com", addedOnDate: "20 Jun 2026", addedOnTime: "11:15 AM", scope: "In-store", role: "Admin", status: "Invited" },
-  { id: "role-8", name: "Tirth Trivedi", email: "tirthtrivedi17@gmail.com", addedOnDate: "25 Jun 2026", addedOnTime: "08:00 AM", scope: "In-store", role: "Admin", status: "Active" },
-  { id: "role-9", name: "Vinay Bansal", email: "vinaybansal44@hotmail.com", addedOnDate: "28 Jun 2026", addedOnTime: "05:55 PM", scope: "In-store", role: "Admin", status: "Active" },
-]
-
-function formatTime(hour24: number, minute: number) {
-  const period = hour24 >= 12 ? "PM" : "AM"
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
-  return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${period}`
-}
-
 function formatNow() {
   const now = new Date()
   return {
@@ -491,34 +739,6 @@ function formatNow() {
     timeStr: formatTime(now.getHours(), now.getMinutes()),
   }
 }
-
-function buildGeneratedRosterEntry(index: number): RosterEntry {
-  const first = FIRST_NAMES[index % FIRST_NAMES.length]
-  const last = LAST_NAMES[(index * 3 + 7) % LAST_NAMES.length]
-  const domain = EMAIL_DOMAINS[(index * 2 + 1) % EMAIL_DOMAINS.length]
-  const role = ROLE_CYCLE[(index * 5 + 2) % ROLE_CYCLE.length]
-  const scope = scopeForRoleName(role)
-  const day = (index % 27) + 1
-  const month = MONTHS[(index * 7 + 3) % MONTHS.length]
-  const hour = (index * 3 + 6) % 24
-  const minute = (index * 11) % 60
-
-  return {
-    id: `role-${index}`,
-    name: `${first} ${last}`,
-    email: `${first.toLowerCase()}${last.toLowerCase()}${index}@${domain}`,
-    addedOnDate: `${day} ${month} 2026`,
-    addedOnTime: formatTime(hour, minute),
-    scope,
-    role,
-    status: index % 13 === 0 ? "Removed" : index % 7 === 0 ? "Invited" : "Active",
-  }
-}
-
-const INITIAL_ROSTER: RosterEntry[] = [
-  ...SEED_ROSTER,
-  ...Array.from({ length: 90 }, (_, i) => buildGeneratedRosterEntry(i + 10)),
-]
 
 function roleDotClass(role: string) {
   if (role === "Admin") return "bg-amber-500"
@@ -538,6 +758,7 @@ function RoleBadge({ role }: { role: string }) {
 function statusDotClass(status: UserStatus) {
   if (status === "Active") return "bg-emerald-500"
   if (status === "Invited") return "bg-amber-500"
+  if (status === "Pending") return "bg-sky-500"
   return "bg-muted-foreground/50"
 }
 
@@ -546,7 +767,7 @@ function StatusBadge({ status }: { status: UserStatus }) {
     <span
       className={cn(
         "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium",
-        status === "Removed" ? "border-border/60 text-muted-foreground" : "border-border bg-background text-foreground"
+        status === "Deactivated" ? "border-border/60 text-muted-foreground" : "border-border bg-background text-foreground"
       )}
     >
       <span className={cn("h-1.5 w-1.5 rounded-full", statusDotClass(status))} />
@@ -559,16 +780,25 @@ function StatusBadge({ status }: { status: UserStatus }) {
  *  the table wants to know at a glance, not how many permission rows make it up.
  *  Reuses the Store/Online iconography from the permissions sheets so the same
  *  channel reads the same way everywhere in this file. */
-function AccessScopeBadge({ scope }: { scope: AccessScope }) {
+export function AccessScopeBadge({ scope }: { scope: AccessScope }) {
   const showStore = scope !== "Online"
   const showGlobe = scope !== "In-store"
 
   return (
-    <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-foreground">
-      {showStore ? <Store className="h-3 w-3 text-muted-foreground" /> : null}
-      {showGlobe ? <Globe className="h-3 w-3 text-muted-foreground" /> : null}
-      {scope === "In-store and Online" ? "In-store & Online" : scope}
-    </span>
+    <div className="flex flex-wrap items-center gap-1.5">
+      {showStore ? (
+        <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-foreground">
+          <StorefrontIcon className="h-3 w-3 text-muted-foreground" />
+          In-store
+        </span>
+      ) : null}
+      {showGlobe ? (
+        <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border bg-background px-2.5 text-xs font-medium text-foreground">
+          <GlobeIcon className="h-3 w-3 text-muted-foreground" />
+          Online
+        </span>
+      ) : null}
+    </div>
   )
 }
 
@@ -592,7 +822,7 @@ function CapabilityChips({ permissionKeys, max = 3 }: { permissionKeys: string[]
   return (
     <div className="flex flex-wrap items-center gap-1">
       {visible.map((group) => {
-        const GroupIcon = GROUP_ICON[group] ?? Server
+        const GroupIcon = GROUP_ICON[group] ?? HardDrivesIcon
         return (
           <span
             key={group}
@@ -609,78 +839,10 @@ function CapabilityChips({ permissionKeys, max = 3 }: { permissionKeys: string[]
   )
 }
 
-/** Left side of a wizard step's accordion trigger: a numbered (or checked-off) circle,
- *  the step title, and — only while collapsed — a one-line summary of what was filled
- *  in, so a closed step still tells you what it holds without reopening it. */
-function StepHeading({
-  number,
-  title,
-  done,
-  open,
-  summary,
-}: {
-  number: number
-  title: string
-  done: boolean
-  open: boolean
-  summary?: string
-}) {
-  return (
-    <div className="flex flex-1 items-center gap-3">
-      <span
-        className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-          done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
-        )}
-      >
-        {done ? <Check className="h-3.5 w-3.5" /> : number}
-      </span>
-      <div className="min-w-0 text-left">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        {!open && summary ? <p className="truncate text-xs text-muted-foreground">{summary}</p> : null}
-      </div>
-    </div>
-  )
-}
-
 /* --------------------------------- Generic table -------------------------------- */
 
-/** Icon-only by default; the label only appears on hover/focus via tooltip, so a row
- *  of actions stays compact but is never a mystery. */
-function IconActionButton({
-  label,
-  icon: Icon,
-  onClick,
-  destructive,
-}: {
-  label: string
-  icon: ComponentType<{ className?: string }>
-  onClick: () => void
-  destructive?: boolean
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={label}
-          className={cn("h-8 w-8 rounded-md", destructive && "text-destructive hover:text-destructive")}
-          onClick={(event) => {
-            event.stopPropagation()
-            onClick()
-          }}
-        >
-          <Icon className="h-4 w-4" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  )
-}
-
 /** Actions available depend on status: pending invites can be resent or cancelled,
- *  active users can be edited or have access removed, removed users can only be
+ *  active users can be edited or deactivated, deactivated users can only be
  *  reactivated. Status itself is never editable directly — it only changes as a
  *  side effect of these actions. */
 function UserRowActions({
@@ -699,22 +861,49 @@ function UserRowActions({
   onResendInvite: () => void
 }) {
   return (
-    <div className="flex items-center justify-end gap-1">
-      {entry.status === "Invited" ? (
-        <>
-          <IconActionButton label="Resend invite" icon={Mail} onClick={onResendInvite} />
-          <IconActionButton label="Edit" icon={Pencil} onClick={onEdit} />
-          <IconActionButton label="Cancel invite" icon={Trash2} onClick={onCancelInvite} destructive />
-        </>
-      ) : entry.status === "Active" ? (
-        <>
-          <IconActionButton label="Edit" icon={Pencil} onClick={onEdit} />
-          <IconActionButton label="Remove user" icon={UserMinus} onClick={onRemove} destructive />
-        </>
-      ) : (
-        <IconActionButton label="Reactivate" icon={RotateCcw} onClick={onReactivate} />
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon-sm" aria-label="User actions" className="h-8 w-8 rounded-md">
+          <DotsThreeVerticalIcon className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        {entry.status === "Invited" ? (
+          <>
+            <DropdownMenuItem onSelect={onResendInvite}>
+              <EnvelopeSimpleIcon className="h-4 w-4" />
+              Send reminder mail
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onEdit}>
+              <PencilSimpleIcon className="h-4 w-4" />
+              Edit users details
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={onCancelInvite}>
+              <TrashIcon className="h-4 w-4" />
+              Cancel invite
+            </DropdownMenuItem>
+          </>
+        ) : entry.status === "Active" ? (
+          <>
+            <DropdownMenuItem onSelect={onEdit}>
+              <PencilSimpleIcon className="h-4 w-4" />
+              Edit users details
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={onRemove}>
+              <TrashIcon className="h-4 w-4" />
+              Deactivate user
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <DropdownMenuItem onSelect={onReactivate}>
+            <ArrowCounterClockwiseIcon className="h-4 w-4" />
+            Reactivate user
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -722,25 +911,55 @@ function UserRowActions({
  *  only needs an action to open that view, plus a quick destructive Delete for custom roles. */
 function RoleRowActions({
   role,
-  onView,
+  onClone,
+  onEdit,
   onDelete,
 }: {
   role: ManagedRole
-  onView: () => void
+  onClone: () => void
+  onEdit: () => void
   onDelete: () => void
 }) {
   const isCustom = role.roleType === "custom"
 
   return (
-    <div className="flex items-center justify-end gap-1">
-      <IconActionButton label="View permissions" icon={Eye} onClick={onView} />
-      {isCustom ? <IconActionButton label="Delete" icon={Trash2} onClick={onDelete} destructive /> : null}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label="Role actions"
+          className="h-8 w-8 rounded-md"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <DotsThreeVerticalIcon className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onSelect={onClone}>
+          <CopyIcon className="h-4 w-4" />
+          Create role from this
+        </DropdownMenuItem>
+        {isCustom ? (
+          <>
+            <DropdownMenuItem onSelect={onEdit}>
+              <PencilSimpleIcon className="h-4 w-4" />
+              Edit role details
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+              <TrashIcon className="h-4 w-4" />
+              Delete role
+            </DropdownMenuItem>
+          </>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
 function roleTypeChipLabel(roleType: ManagedRole["roleType"]) {
-  return roleType === "custom" ? "Custom" : "Predefined"
+  return roleType === "custom" ? "Custom role" : "Default role"
 }
 
 function RoleTypeChip({ roleType }: { roleType: ManagedRole["roleType"] }) {
@@ -764,113 +983,87 @@ function RolesTable({
   roles,
   roster,
   onView,
+  onClone,
+  onEdit,
   onDelete,
 }: {
   roles: ManagedRole[]
   roster: RosterEntry[]
   onView: (role: ManagedRole) => void
+  onClone: (role: ManagedRole) => void
+  onEdit: (role: ManagedRole) => void
   onDelete: (role: ManagedRole) => void
 }) {
   const [search, setSearch] = useState("")
-  const [typeFilter, setTypeFilter] = useState<"all" | "system_default" | "custom">("all")
 
-  const normalizedSearch = search.trim().toLowerCase()
   const filteredRoles = useMemo(() => {
-    return roles.filter((role) => {
-      if (typeFilter !== "all" && role.roleType !== typeFilter) return false
-      if (!normalizedSearch) return true
-      return `${role.name} ${role.description}`.toLowerCase().includes(normalizedSearch)
-    })
-  }, [roles, typeFilter, normalizedSearch])
-
-  const columns: TransactionStyleColumn<ManagedRole>[] = [
-    {
-      key: "role",
-      header: "Role",
-      render: (row) => (
-        <div>
-          <p className="text-sm font-semibold text-foreground">{row.name}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">{row.description}</p>
-        </div>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      render: (row) => <RoleTypeChip roleType={row.roleType} />,
-    },
-    {
-      key: "access",
-      header: "Access",
-      render: (row) => <AccessScopeBadge scope={computeAccessScope(row.permissionKeys)} />,
-    },
-    {
-      key: "capabilities",
-      header: "Capabilities",
-      headerClassName: "h-10 min-w-[220px] px-3 text-sm font-medium text-muted-foreground",
-      render: (row) => <CapabilityChips permissionKeys={row.permissionKeys} />,
-    },
-    {
-      key: "usersAssigned",
-      header: "Users assigned",
-      render: (row) => (
-        <span className="text-sm text-foreground">
-          {roster.filter((entry) => entry.role === row.name && entry.status !== "Removed").length}
-        </span>
-      ),
-    },
-    {
-      key: "action",
-      header: "Actions",
-      cellClassName: "px-3 text-right",
-      render: (row) => <RoleRowActions role={row} onView={() => onView(row)} onDelete={() => onDelete(row)} />,
-    },
-  ]
+    const query = search.trim().toLowerCase()
+    if (!query) return roles
+    return roles.filter((role) => `${role.name} ${role.description}`.toLowerCase().includes(query))
+  }, [roles, search])
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={typeFilter === "all" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setTypeFilter("all")}
-          >
-            All
-          </Button>
-          <Button
-            variant={typeFilter === "system_default" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setTypeFilter("system_default")}
-          >
-            Predefined
-          </Button>
-          <Button
-            variant={typeFilter === "custom" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setTypeFilter("custom")}
-          >
-            Custom
-          </Button>
-        </div>
-        <div className="relative w-[260px]">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search roles by name or description"
-            className="h-8 rounded-md border-input pl-8 pr-3 text-sm"
-          />
+    <div className="space-y-6">
+      <ListingToolbar
+        className="px-0 py-0"
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by role name or description"
+        filters={[]}
+      />
+
+      <div className="overflow-hidden rounded-[8px] border border-border bg-background">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[1000px]">
+            <TableHeader>
+              <TableRow className="h-10 [&>th:first-child]:rounded-tl-[8px] [&>th:last-child]:rounded-tr-[8px]">
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Role details</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Role type</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Access scope</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">User assigned</TableHead>
+                <TableHead className="px-3 text-right text-sm font-medium text-muted-foreground">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRoles.length === 0 ? (
+                <TableRow className="h-[72px] hover:bg-transparent">
+                  <TableCell colSpan={5} className="px-3 text-sm text-muted-foreground">
+                    No roles match your search.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRoles.map((role) => (
+                  <TableRow
+                    key={role.id}
+                    className="h-[72px] cursor-pointer"
+                    onClick={(event) => {
+                      if ((event.target as HTMLElement).closest("button")) return
+                      onView(role)
+                    }}
+                  >
+                    <TableCell className="px-3">
+                      <p className="text-sm font-medium text-foreground">{role.name}</p>
+                      <p className="text-sm text-muted-foreground">{role.description}</p>
+                    </TableCell>
+                    <TableCell className="px-3">
+                      <RoleTypeChip roleType={role.roleType} />
+                    </TableCell>
+                    <TableCell className="px-3">
+                      <AccessScopeBadge scope={computeAccessScope(role.permissionKeys)} />
+                    </TableCell>
+                    <TableCell className="px-3 text-sm text-foreground">
+                      {roster.filter((entry) => entry.role === role.name && entry.status !== "Deactivated").length}
+                    </TableCell>
+                    <TableCell className="px-3 text-right">
+                      <RoleRowActions role={role} onClone={() => onClone(role)} onEdit={() => onEdit(role)} onDelete={() => onDelete(role)} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
-      <TransactionStyleTable
-        rows={filteredRoles}
-        rowKey={(row) => row.id}
-        columns={columns}
-        minWidthClassName="min-w-[1160px]"
-        showSelection={false}
-        emptyText="No roles match your search or filters."
-      />
     </div>
   )
 }
@@ -893,7 +1086,7 @@ function UsersTable({
   onResendInvite: (row: RosterEntry) => void
 }) {
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | UserStatus>("all")
+  const [statusFilter, setStatusFilter] = useState("all")
   const [roleFilter, setRoleFilter] = useState("all")
 
   const roleFilterOptions = useMemo(
@@ -901,153 +1094,113 @@ function UsersTable({
     [rows]
   )
 
-  const normalizedSearch = search.trim().toLowerCase()
   const filteredRows = useMemo(() => {
+    const query = search.trim().toLowerCase()
     return rows.filter((row) => {
       if (statusFilter !== "all" && row.status !== statusFilter) return false
       if (roleFilter !== "all" && row.role !== roleFilter) return false
-      if (!normalizedSearch) return true
-      return `${row.name} ${row.email}`.toLowerCase().includes(normalizedSearch)
+      if (query && !`${row.name} ${row.email}`.toLowerCase().includes(query)) return false
+      return true
     })
-  }, [rows, statusFilter, roleFilter, normalizedSearch])
+  }, [rows, search, statusFilter, roleFilter])
 
-  const columns: TransactionStyleColumn<RosterEntry>[] = [
+  const filters: ListingFilter[] = [
     {
-      key: "user",
-      header: "User",
-      render: (row) => (
-        <div className={cn(row.status === "Removed" && "opacity-60")}>
-          <p className="text-sm font-semibold text-foreground">{row.name}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">{row.email}</p>
-        </div>
-      ),
+      id: "status",
+      type: "select",
+      label: "Status",
+      value: statusFilter,
+      onValueChange: setStatusFilter,
+      options: [
+        { label: "All status", value: "all" },
+        { label: "Active", value: "Active" },
+        { label: "Invited", value: "Invited" },
+        { label: "Deactivated", value: "Deactivated" },
+      ],
     },
     {
-      key: "role",
-      header: "Role",
-      render: (row) => (
-        <div className={cn(row.status === "Removed" && "opacity-60")}>
-          <RoleBadge role={row.role} />
-        </div>
-      ),
-    },
-    {
-      key: "access",
-      header: "Access",
-      render: (row) => {
-        const permissionKeys = roleCatalog.find((role) => role.name === row.role)?.permissionKeys ?? []
-        return (
-          <div className={cn(row.status === "Removed" && "opacity-60")}>
-            <AccessScopeBadge scope={computeAccessScope(permissionKeys)} />
-          </div>
-        )
-      },
-    },
-    {
-      key: "capabilities",
-      header: "Capabilities",
-      headerClassName: "h-10 min-w-[220px] px-3 text-sm font-medium text-muted-foreground",
-      render: (row) => {
-        const permissionKeys = roleCatalog.find((role) => role.name === row.role)?.permissionKeys ?? []
-        return (
-          <div className={cn(row.status === "Removed" && "opacity-60")}>
-            <CapabilityChips permissionKeys={permissionKeys} max={2} />
-          </div>
-        )
-      },
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
-    },
-    {
-      key: "action",
-      header: "Actions",
-      cellClassName: "px-3 text-right",
-      render: (row) => (
-        <UserRowActions
-          entry={row}
-          onEdit={() => onEdit(row)}
-          onRemove={() => onRemove(row)}
-          onReactivate={() => onReactivate(row)}
-          onCancelInvite={() => onCancelInvite(row)}
-          onResendInvite={() => onResendInvite(row)}
-        />
-      ),
+      id: "role",
+      type: "select",
+      label: "Role",
+      value: roleFilter,
+      onValueChange: setRoleFilter,
+      options: [
+        { label: "All roles", value: "all" },
+        ...roleFilterOptions.map((role) => ({ label: role, value: role })),
+      ],
     },
   ]
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={statusFilter === "all" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setStatusFilter("all")}
-          >
-            All
-          </Button>
-          <Button
-            variant={statusFilter === "Active" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setStatusFilter("Active")}
-          >
-            Active
-          </Button>
-          <Button
-            variant={statusFilter === "Invited" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setStatusFilter("Invited")}
-          >
-            Invited
-          </Button>
-          <Button
-            variant={statusFilter === "Removed" ? "default" : "outline"}
-            className="h-8 rounded-md px-2.5 text-sm"
-            onClick={() => setStatusFilter("Removed")}
-          >
-            Removed
-          </Button>
-          <div className="h-6 w-px bg-border" />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-md px-2.5 text-sm">
-                {roleFilter === "all" ? "All roles" : roleFilter}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              <DropdownMenuRadioGroup value={roleFilter} onValueChange={setRoleFilter}>
-                <DropdownMenuRadioItem value="all">All roles</DropdownMenuRadioItem>
-                {roleFilterOptions.map((role) => (
-                  <DropdownMenuRadioItem key={role} value={role}>
-                    {role}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="relative w-[260px]">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by name or email"
-            className="h-8 rounded-md border-input pl-8 pr-3 text-sm"
-          />
+    <div className="space-y-6">
+      <ListingToolbar
+        className="px-0 py-0"
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name or email ID"
+        filters={filters}
+      />
+
+      <div className="overflow-hidden rounded-[8px] border border-border bg-background">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[1200px]">
+            <TableHeader>
+              <TableRow className="h-10 [&>th:first-child]:rounded-tl-[8px] [&>th:last-child]:rounded-tr-[8px]">
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">User details</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Role</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Access scope</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="px-3 text-sm font-medium text-muted-foreground">Invited on</TableHead>
+                <TableHead className="px-3 text-right text-sm font-medium text-muted-foreground">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRows.length === 0 ? (
+                <TableRow className="h-[72px] hover:bg-transparent">
+                  <TableCell colSpan={6} className="px-3 text-sm text-muted-foreground">
+                    No users match your search or filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRows.map((row) => {
+                  const permissionKeys = roleCatalog.find((role) => role.name === row.role)?.permissionKeys ?? []
+                  return (
+                    <TableRow key={row.id} className="h-[72px]">
+                      <TableCell className={cn("px-3", row.status === "Deactivated" && "opacity-60")}>
+                        <p className="text-sm font-medium text-foreground">{row.name}</p>
+                        <p className="text-sm text-muted-foreground">{row.email}</p>
+                      </TableCell>
+                      <TableCell className={cn("px-3", row.status === "Deactivated" && "opacity-60")}>
+                        <RoleBadge role={row.role} />
+                      </TableCell>
+                      <TableCell className={cn("px-3", row.status === "Deactivated" && "opacity-60")}>
+                        <AccessScopeBadge scope={computeAccessScope(permissionKeys)} />
+                      </TableCell>
+                      <TableCell className="px-3">
+                        <StatusBadge status={row.status} />
+                      </TableCell>
+                      <TableCell className="px-3">
+                        <p className="text-sm text-foreground">{row.addedOnDate}</p>
+                        <p className="text-sm text-muted-foreground">{row.addedOnTime}</p>
+                      </TableCell>
+                      <TableCell className="px-3 text-right">
+                        <UserRowActions
+                          entry={row}
+                          onEdit={() => onEdit(row)}
+                          onRemove={() => onRemove(row)}
+                          onReactivate={() => onReactivate(row)}
+                          onCancelInvite={() => onCancelInvite(row)}
+                          onResendInvite={() => onResendInvite(row)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
-      <TransactionStyleTable
-        rows={filteredRows}
-        rowKey={(row) => row.id}
-        columns={columns}
-        minWidthClassName="min-w-[1260px]"
-        showSelection={false}
-        emptyText="No users match your search or filters."
-      />
     </div>
   )
 }
@@ -1243,7 +1396,7 @@ function MigrationAuditSection({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" className="h-7 w-7 rounded-md">
-                <MoreVertical className="h-4 w-4" />
+                <DotsThreeVerticalIcon className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -1264,16 +1417,18 @@ function MigrationAuditSection({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-border/70 px-8 py-6">
+      <div className="flex flex-wrap items-center gap-3 px-8 pt-8 pb-8">
         <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={onBack} aria-label="Back to Manage users">
-          <ChevronLeft className="h-4 w-4" />
+          <CaretLeftIcon className="h-4 w-4" />
         </Button>
-        <h1 className="text-[28px] font-bold leading-none tracking-[-0.01em] text-foreground">Migration review</h1>
+        <h1 className={PAGE_HEADING_CLASSES}>Migration review</h1>
       </div>
+
+      <Separator />
 
       <div className="flex-1 space-y-5 overflow-y-auto px-8 py-6">
         <Alert>
-          <AlertTriangle className="h-4 w-4" />
+          <WarningIcon className="h-4 w-4" />
           <AlertTitle>Review before committing</AlertTitle>
           <AlertDescription>
             This is a one-time mapping, not an ongoing sync. Approve or override each row, then commit — legacy Online
@@ -1326,24 +1481,24 @@ function permissionSetsEqual(a: string[], b: string[]) {
  *  distinct topics instead of one undifferentiated wall of switches. */
 const GROUP_ICON: Record<string, ComponentType<{ className?: string }>> = {
   // Shared across both channels
-  "Transactions & Settlements": Repeat,
-  Refunds: RotateCcw,
-  Reports: BarChart3,
-  "User & Role Management": Users,
-  "Merchant Settings & Configuration": Settings2,
-  Account: UserCircle2,
+  "Transactions & Settlements": RepeatIcon,
+  Refunds: ArrowCounterClockwiseIcon,
+  Reports: ChartBarIcon,
+  "User & Role Management": UsersIcon,
+  "Merchant Settings & Configuration": SlidersIcon,
+  Account: UserCircleIcon,
   // In-store only
-  "Service Requests": LifeBuoy,
-  "Campaigns & Offers": Megaphone,
-  "EMI World": CreditCard,
+  "Service Requests": LifebuoyIcon,
+  "Campaigns & Offers": MegaphoneIcon,
+  "EMI World": CreditCardIcon,
   // Online only
-  "Gateway Management": Plug,
-  "Routing Logic": Route,
-  "Payment Links": Link2,
-  "Payouts & Beneficiaries": Wallet,
-  IMEI: Smartphone,
-  "Partner Management": Handshake,
-  Credentials: KeyRound,
+  "Gateway Management": PlugIcon,
+  "Routing Logic": PathIcon,
+  "Payment Links": LinkIcon,
+  "Payouts & Beneficiaries": WalletIcon,
+  IMEI: DeviceMobileIcon,
+  "Partner Management": HandshakeIcon,
+  Credentials: KeyIcon,
 }
 
 function CreateRolePage({
@@ -1367,42 +1522,9 @@ function CreateRolePage({
 }) {
   const [roleName, setRoleName] = useState(initial?.name ?? "")
   const [description, setDescription] = useState(initial?.description ?? "")
-  const [search, setSearch] = useState("")
   const [selectedKeys, setSelectedKeys] = useState<string[]>(initial?.permissionKeys ?? [])
-
-  /** The form is a strict wizard, one step visible at a time — filling a step and
-   *  hitting Continue is what opens the next one. */
-  const [activeStep, setActiveStep] = useState<"details" | "permissions">("details")
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
-  /** Starting from another role is opt-in and only offered when creating new —
-   *  editing an existing custom role never gets this switch, since applying a
-   *  template mid-edit would silently blow away whatever the role already has. */
-  const [startFromRole, setStartFromRole] = useState(false)
-
-  const normalizedSearch = search.trim().toLowerCase()
-  const filteredPermissions = useMemo(() => {
-    if (!normalizedSearch) return ALL_PERMISSIONS
-    return ALL_PERMISSIONS.filter((permission) =>
-      `${permission.label} ${permission.key} ${permission.group} ${permission.channel}`
-        .toLowerCase()
-        .includes(normalizedSearch)
-    )
-  }, [normalizedSearch])
-
-  /** One card per group (not per channel) — a group with permissions on both sides,
-   *  like Refunds, shows up once with an In-store subsection and an Online one, instead
-   *  of as two separate same-named cards far apart on the page. */
-  /** Channel first, like the legacy dashboards — In-store and Online are genuinely
-   *  different systems with different owners, so keeping them as separate sections
-   *  reads more like "the two systems this merges" than one flattened catalog. */
-  const channelGroupSections = useMemo(() => {
-    const build = (channel: PermissionChannel) =>
-      PERMISSION_GROUPS.map((group) => ({
-        group,
-        permissions: filteredPermissions.filter((permission) => permission.group === group && permission.channel === channel),
-      })).filter((section) => section.permissions.length > 0)
-    return { offline: build("offline"), online: build("online") }
-  }, [filteredPermissions])
+  const [offlineSearch, setOfflineSearch] = useState("")
+  const [onlineSearch, setOnlineSearch] = useState("")
 
   const channelCatalog = useMemo(
     () => ({
@@ -1427,60 +1549,29 @@ function CreateRolePage({
     })
   }
 
+  function buildGroupSections(channel: PermissionChannel, search: string) {
+    const query = search.trim().toLowerCase()
+    const channelPermissions = channelCatalog[channel]
+    const filtered = query
+      ? channelPermissions.filter((permission) => `${permission.label} ${permission.group}`.toLowerCase().includes(query))
+      : channelPermissions
+    return PERMISSION_GROUPS.map((group) => ({
+      group,
+      permissions: filtered.filter((permission) => permission.group === group),
+    })).filter((section) => section.permissions.length > 0)
+  }
+
   function renderPermissionRow(permission: Permission) {
     const checked = selectedKeys.includes(permission.key)
     return (
-      <label
-        key={permission.key}
-        className={cn(
-          "flex cursor-pointer items-center gap-2.5 rounded-md border px-2.5 py-1.5 transition-colors",
-          checked ? "border-emerald-500/30 bg-emerald-500/10" : "border-transparent hover:bg-muted/50"
-        )}
-      >
+      <label key={permission.key} className="flex cursor-pointer items-center gap-2.5 px-1 py-1">
         <Checkbox checked={checked} onCheckedChange={(next) => togglePermission(permission.key, next === true)} />
-        <span
-          className={cn("min-w-0 truncate text-sm", checked ? "font-medium text-foreground" : "text-foreground/90")}
-          title={permission.label}
-        >
+        <span className="min-w-0 truncate text-sm text-foreground" title={permission.label}>
           {permission.label}
         </span>
       </label>
     )
   }
-
-  /** Templates come from two places: the fixed predefined catalog, and whatever custom
-   *  roles this account has already built — a new role is often "that one but with
-   *  Refunds Approve added", not a rebuild from scratch. */
-  const customRoleTemplates = roleCatalog.filter(
-    (role) => role.roleType === "custom" && role.id !== excludeRoleId
-  )
-
-  /** Prefills permissions (and the name, if still blank) from the chosen role so most
-   *  custom roles start as a tweak of something real instead of a blank slate. */
-  function applyTemplate(id: string, name: string, permissionKeys: string[]) {
-    setSelectedTemplateId(id)
-    setSelectedKeys(permissionKeys)
-    if (!roleName.trim()) setRoleName(`${name} (Custom)`)
-  }
-
-  function clearTemplate() {
-    setSelectedTemplateId(null)
-    setSelectedKeys([])
-  }
-
-  function handleToggleStartFromRole(checked: boolean) {
-    setStartFromRole(checked)
-    if (!checked) clearTemplate()
-  }
-
-  const appliedTemplate = selectedTemplateId
-    ? DEFAULT_ROLE_CATALOG.find((entry) => entry.id === selectedTemplateId) ??
-      customRoleTemplates.find((role) => role.id === selectedTemplateId)
-    : null
-
-  const selectedPermissions = ALL_PERMISSIONS.filter((permission) => selectedKeys.includes(permission.key))
-  const selectedOffline = selectedPermissions.filter((permission) => permission.channel === "offline")
-  const selectedOnline = selectedPermissions.filter((permission) => permission.channel === "online")
 
   const trimmedName = roleName.trim()
   const duplicateNameRole = trimmedName
@@ -1507,316 +1598,127 @@ function CreateRolePage({
     onSave({ name: trimmedName, description: description.trim(), permissionKeys: selectedKeys })
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      <PageHeader
-        title={isEditingExisting ? "Edit custom role" : "Create new role"}
-        onBack={onBack}
-        backLabel="Back to Manage users"
-        actions={
-          <>
-            <Button variant="outline" onClick={onBack}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={!canSave}>
-              {isEditingExisting ? "Save changes" : "Create role"}
-            </Button>
-          </>
-        }
-      />
+  function renderChannelAccordion(
+    channel: PermissionChannel,
+    label: string,
+    search: string,
+    setSearch: (value: string) => void
+  ) {
+    const channelAll = channelCatalog[channel]
+    const selectedInChannel = channelAll.filter((permission) => selectedKeys.includes(permission.key)).length
+    const allChannelSelected = channelAll.length > 0 && selectedInChannel === channelAll.length
+    const groups = buildGroupSections(channel, search)
+    const ChannelIcon = channel === "offline" ? StorefrontIcon : GlobeIcon
 
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div
-          className="mx-auto grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
-          style={{ maxWidth: "var(--dashboard-center-max-width, 1440px)" }}
-        >
-          <div className="min-w-0 space-y-5">
-            <Accordion
-              type="single"
-              value={activeStep}
-              onValueChange={(value) => {
-                if (value) setActiveStep(value as typeof activeStep)
-              }}
-              className="rounded-lg border border-border/70 px-4"
-            >
-              <AccordionItem value="details">
-                <AccordionTrigger>
-                  <StepHeading
-                    number={1}
-                    title="Role details"
-                    done={Boolean(trimmedName) && !nameError}
-                    open={activeStep === "details"}
-                    summary={trimmedName || undefined}
-                  />
-                </AccordionTrigger>
-                <AccordionPrimitive.Content className="pb-2.5">
-                  <div className="space-y-4 pb-2">
-                    {!isEditingExisting ? (
-                      <div className="space-y-3 rounded-lg border border-border/70 p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Start from an existing role</p>
-                            <p className="text-xs text-muted-foreground">
-                              Copies that role's permissions in — you can still change anything before saving.
-                            </p>
-                          </div>
-                          <Switch checked={startFromRole} onCheckedChange={handleToggleStartFromRole} />
-                        </div>
-                        {startFromRole ? (
-                          <div className="space-y-2">
-                            <Select
-                              value={selectedTemplateId ?? undefined}
-                              onValueChange={(id) => {
-                                const entry =
-                                  DEFAULT_ROLE_CATALOG.find((candidate) => candidate.id === id) ??
-                                  customRoleTemplates.find((role) => role.id === id)
-                                if (entry) applyTemplate(entry.id, entry.name, entry.permissionKeys)
-                              }}
-                            >
-                              <SelectTrigger className="h-9 text-xs">
-                                <SelectValue placeholder="Pick a role to start with" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {customRoleTemplates.length > 0 ? (
-                                  <SelectGroup>
-                                    <SelectLabel>Your custom roles</SelectLabel>
-                                    {customRoleTemplates.map((role) => (
-                                      <SelectItem key={role.id} value={role.id}>
-                                        {role.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectGroup>
-                                ) : null}
-                                <SelectGroup>
-                                  <SelectLabel>Predefined · In-store</SelectLabel>
-                                  {DEFAULT_ROLE_CATALOG.filter((entry) => entry.system === "offline").map((entry) => (
-                                    <SelectItem key={entry.id} value={entry.id}>
-                                      {entry.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                                <SelectGroup>
-                                  <SelectLabel>Predefined · Online</SelectLabel>
-                                  {DEFAULT_ROLE_CATALOG.filter((entry) => entry.system === "online").map((entry) => (
-                                    <SelectItem key={entry.id} value={entry.id}>
-                                      {entry.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                            {appliedTemplate ? (
-                              <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2 text-xs">
-                                <span className="text-foreground">
-                                  Using <span className="font-medium">{appliedTemplate.name}</span> — {selectedKeys.length}{" "}
-                                  permission(s) applied
-                                </span>
-                                <button
-                                  type="button"
-                                  className="font-medium text-muted-foreground hover:text-foreground"
-                                  onClick={clearTemplate}
-                                >
-                                  Clear
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="custom-role-name">Role name</Label>
-                        <Input
-                          id="custom-role-name"
-                          value={roleName}
-                          onChange={(event) => setRoleName(event.target.value)}
-                          placeholder="e.g. Regional Ops Lead"
-                          aria-invalid={Boolean(nameError)}
-                          className={cn(nameError && "border-destructive focus-visible:ring-destructive/40")}
-                        />
-                        {nameError ? <p className="text-xs text-destructive">{nameError}</p> : null}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="custom-role-description">Role description</Label>
-                        <Input
-                          id="custom-role-description"
-                          value={description}
-                          onChange={(event) => setDescription(event.target.value)}
-                          placeholder="What is this role for?"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        size="sm"
-                        onClick={() => setActiveStep("permissions")}
-                        disabled={!trimmedName || Boolean(nameError)}
-                      >
-                        Continue
-                      </Button>
-                    </div>
-                  </div>
-                </AccordionPrimitive.Content>
-              </AccordionItem>
-
-              <AccordionItem value="permissions">
-                <AccordionTrigger>
-                  <StepHeading
-                    number={2}
-                    title="Permissions"
-                    done={selectedKeys.length > 0}
-                    open={activeStep === "permissions"}
-                    summary={`${selectedKeys.length} of ${ALL_PERMISSIONS.length} selected`}
-                  />
-                </AccordionTrigger>
-                <AccordionPrimitive.Content className="pb-2.5">
-                  <div className="space-y-4 pb-2">
-                    {permissionsError ? <p className="text-xs text-destructive">{permissionsError}</p> : null}
-
-                    <div className="relative">
-                      <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search permission or channel"
-                        className="h-9 rounded-md border-border/70 pl-8 text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-5">
-                      {(["offline", "online"] as const).map((channel) => {
-                        const groups = channelGroupSections[channel]
-                        if (normalizedSearch && groups.length === 0) return null
-
-                        const channelAll = channelCatalog[channel]
-                        const selectedInChannel = channelAll.filter((permission) => selectedKeys.includes(permission.key)).length
-                        const allChannelSelected = channelAll.length > 0 && selectedInChannel === channelAll.length
-                        const ChannelIcon = channel === "offline" ? Store : Globe
-                        const title = channel === "offline" ? "In-store payments" : "Online payments"
-
-                        return (
-                          <div key={channel}>
-                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <ChannelIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <p className="text-sm font-semibold text-foreground">{title}</p>
-                                <span
-                                  className={cn(
-                                    "text-xs font-medium",
-                                    selectedInChannel > 0 ? "text-foreground" : "text-muted-foreground"
-                                  )}
-                                >
-                                  {selectedInChannel} of {channelAll.length} selected
-                                </span>
-                              </div>
-                              <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Checkbox
-                                  checked={allChannelSelected}
-                                  onCheckedChange={(checked) => toggleMany(channelAll, checked === true)}
-                                />
-                                Select all
-                              </label>
-                            </div>
-
-                            {groups.length === 0 ? (
-                              <p className="text-xs text-muted-foreground">No permissions match this search.</p>
-                            ) : (
-                              <div className="columns-1 gap-3 lg:columns-2">
-                                {groups.map(({ group, permissions }) => {
-                                  const GroupIcon = GROUP_ICON[group] ?? Server
-                                  const selectedCount = permissions.filter((permission) => selectedKeys.includes(permission.key)).length
-                                  const allSelected = selectedCount === permissions.length
-
-                                  return (
-                                    <div key={group} className="mb-3 break-inside-avoid rounded-lg border border-border/70 p-3">
-                                      <div className="flex items-center gap-2">
-                                        <Checkbox
-                                          checked={allSelected}
-                                          onCheckedChange={(checked) => toggleMany(permissions, checked === true)}
-                                          aria-label={`Select all permissions in ${group}`}
-                                        />
-                                        <GroupIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                                        <span className="text-sm font-semibold text-foreground">{group}</span>
-                                        <span
-                                          className={cn(
-                                            "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-                                            selectedCount > 0
-                                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                              : "bg-muted text-muted-foreground"
-                                          )}
-                                        >
-                                          {selectedCount}/{permissions.length}
-                                        </span>
-                                      </div>
-                                      <div className="mt-1.5 space-y-0.5 pl-7">{permissions.map(renderPermissionRow)}</div>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </AccordionPrimitive.Content>
-              </AccordionItem>
-            </Accordion>
+    return (
+      <AccordionItem value={channel} className="rounded-lg border border-border/70 px-4">
+        <AccordionTrigger>
+          <div className="flex flex-1 items-center justify-between gap-3">
+            <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <ChannelIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              {label}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {selectedInChannel}/{channelAll.length} selected
+            </span>
           </div>
+        </AccordionTrigger>
+        <AccordionPrimitive.Content className="pb-3">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search permission"
+                  className="h-9 rounded-md border-border/70 pl-8 text-xs"
+                />
+              </div>
+              <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={allChannelSelected}
+                  onCheckedChange={(checked) => toggleMany(channelAll, checked === true)}
+                />
+                Select all
+              </label>
+            </div>
 
-          <aside className="space-y-4 rounded-lg border border-border/70 p-4 lg:sticky lg:top-0">
-            <div>
-              <p className="text-sm font-semibold text-foreground">{trimmedName || "Untitled role"}</p>
-              <p className="text-xs text-muted-foreground">
-                {description.trim() || "No description yet"}
-              </p>
-            </div>
-            <Separator />
-            <div>
-              <p className="text-sm font-medium text-foreground">Permissions granted</p>
-              <p className="text-xs text-muted-foreground">{selectedPermissions.length} permission(s)</p>
-            </div>
-            {selectedPermissions.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Nothing selected yet.</p>
+            {groups.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No permissions match this search.</p>
             ) : (
-              <div className="max-h-[calc(100vh-360px)] space-y-4 overflow-y-auto">
-                {([
-                  { label: "In-store", icon: Store, items: selectedOffline },
-                  { label: "Online", icon: Globe, items: selectedOnline },
-                ] as const).map(({ label, icon: ChannelIcon, items }) =>
-                  items.length > 0 ? (
-                    <div key={label}>
-                      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                        <ChannelIcon className="h-3.5 w-3.5" />
-                        {label}
-                      </p>
-                      <div className="space-y-0.5">
-                        {items.map((permission) => (
-                          <div
-                            key={permission.key}
-                            className="flex items-center justify-between gap-1.5 rounded-md px-1.5 py-1 text-xs text-foreground"
-                          >
-                            <span className="min-w-0 truncate" title={permission.label}>
-                              {permission.label}
-                            </span>
-                            <button
-                              type="button"
-                              aria-label={`Remove ${permission.label}`}
-                              className="shrink-0 text-muted-foreground hover:text-foreground"
-                              onClick={() => togglePermission(permission.key, false)}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
+              <div className="columns-1 gap-3 lg:columns-2">
+                {groups.map(({ group, permissions }) => {
+                  const GroupIcon = GROUP_ICON[group] ?? HardDrivesIcon
+                  return (
+                    <div key={group} className="mb-3 break-inside-avoid rounded-lg bg-muted/40 p-3">
+                      <div className="flex items-center gap-2">
+                        <GroupIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="text-sm font-semibold text-foreground">{group}</span>
                       </div>
+                      <div className="mt-1">{permissions.map(renderPermissionRow)}</div>
                     </div>
-                  ) : null
-                )}
+                  )
+                })}
               </div>
             )}
-          </aside>
+          </div>
+        </AccordionPrimitive.Content>
+      </AccordionItem>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-8 pt-6">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <CaretLeftIcon className="h-4 w-4" />
+          Back
+        </button>
+        <Button onClick={handleSave} disabled={!canSave}>
+          {isEditingExisting ? "Save changes" : "Save role and permission"}
+        </Button>
+      </div>
+      <div className="border-b border-border/70 px-8 pb-5 pt-3">
+        <h1 className={PAGE_HEADING_CLASSES}>{isEditingExisting ? "Edit custom role" : "Create new role"}</h1>
+      </div>
+
+      <div className="px-8 py-6">
+        <div className="mx-auto w-full space-y-5" style={{ maxWidth: "var(--dashboard-center-max-width, 1440px)" }}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="custom-role-name">Role name</Label>
+              <Input
+                id="custom-role-name"
+                value={roleName}
+                onChange={(event) => setRoleName(event.target.value)}
+                placeholder="Enter role name"
+                aria-invalid={Boolean(nameError)}
+                className={cn(nameError && "border-destructive focus-visible:ring-destructive/40")}
+              />
+              {nameError ? <p className="text-xs text-destructive">{nameError}</p> : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="custom-role-description">Role description</Label>
+              <Input
+                id="custom-role-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Enter role description"
+              />
+            </div>
+          </div>
+
+          {permissionsError ? <p className="text-xs text-destructive">{permissionsError}</p> : null}
+
+          <Accordion type="multiple" defaultValue={["offline", "online"]} className="space-y-3">
+            {renderChannelAccordion("offline", "In-store permissions", offlineSearch, setOfflineSearch)}
+            {renderChannelAccordion("online", "Online permissions", onlineSearch, setOnlineSearch)}
+          </Accordion>
         </div>
       </div>
     </div>
@@ -1854,11 +1756,8 @@ function ViewRolePermissionsSheet({
         a11yTitle={role ? role.name : "Role permissions"}
         a11yDescription="Permissions granted by this role."
       >
-        <SheetHeader className="border-b border-border/70 px-6 pb-4">
+        <SheetHeader>
           <SheetTitle>{role?.name}</SheetTitle>
-          <SheetDescription>
-            {role?.description || `${permissions.length} permission(s)`}
-          </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-4 overflow-y-auto px-6 py-5">
@@ -1869,13 +1768,13 @@ function ViewRolePermissionsSheet({
               {offline.length > 0 ? (
                 <div>
                   <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    <Store className="h-3.5 w-3.5" />
+                    <StorefrontIcon className="h-3.5 w-3.5" />
                     In-store
                   </p>
                   <div className="space-y-0.5">
                     {offline.map((permission) => (
                       <div key={permission.key} className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm text-foreground">
-                        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        <CheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                         <span className="truncate">{permission.label}</span>
                       </div>
                     ))}
@@ -1885,13 +1784,13 @@ function ViewRolePermissionsSheet({
               {online.length > 0 ? (
                 <div>
                   <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    <Globe className="h-3.5 w-3.5" />
+                    <GlobeIcon className="h-3.5 w-3.5" />
                     Online
                   </p>
                   <div className="space-y-0.5">
                     {online.map((permission) => (
                       <div key={permission.key} className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm text-foreground">
-                        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        <CheckIcon className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                         <span className="truncate">{permission.label}</span>
                       </div>
                     ))}
@@ -1904,12 +1803,12 @@ function ViewRolePermissionsSheet({
 
         <SheetFooter className="border-t border-border/70 px-6 py-4 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={() => role && onClone(role)}>
-            <Copy className="h-3.5 w-3.5" />
+            <CopyIcon className="h-3.5 w-3.5" />
             Create new role from this
           </Button>
           {isCustom && role ? (
             <Button onClick={() => onEdit(role)}>
-              <Pencil className="h-3.5 w-3.5" />
+              <PencilSimpleIcon className="h-3.5 w-3.5" />
               Edit this role
             </Button>
           ) : null}
@@ -1935,7 +1834,10 @@ function ReassignAndDeleteDialog({
   const [replacement, setReplacement] = useState("")
 
   useEffect(() => {
-    if (target) setReplacement(roleOptions.find((option) => option.id !== target.role.id)?.name ?? "")
+    if (!target) return
+    const options = roleOptions.filter((option) => option.id !== target.role.id)
+    const defaultReplacement = options.find((option) => option.name === "Viewer") ?? options[0]
+    setReplacement(defaultReplacement?.name ?? "")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
 
@@ -1983,6 +1885,7 @@ function groupRolesBySystem(roleCatalog: ManagedRole[]) {
   return {
     offline: roleCatalog.filter((role) => role.system === "offline"),
     online: roleCatalog.filter((role) => role.system === "online"),
+    both: roleCatalog.filter((role) => role.system === "both"),
     custom: roleCatalog.filter((role) => role.roleType === "custom"),
   }
 }
@@ -2014,7 +1917,7 @@ function RoleSelectField({
 
   return (
     <div className="space-y-2">
-      <Label>Role</Label>
+      <Label>User role</Label>
       <Select value={roleName} onValueChange={onChange}>
         <SelectTrigger className="w-full">
           <SelectValue>{selected?.name}</SelectValue>
@@ -2032,6 +1935,12 @@ function RoleSelectField({
               {grouped.online.map(renderRoleItem)}
             </SelectGroup>
           ) : null}
+          {grouped.both.length > 0 ? (
+            <SelectGroup>
+              <SelectLabel>Offline &amp; online</SelectLabel>
+              {grouped.both.map(renderRoleItem)}
+            </SelectGroup>
+          ) : null}
           {grouped.custom.length > 0 ? (
             <SelectGroup>
               <SelectLabel>Custom roles</SelectLabel>
@@ -2045,66 +1954,85 @@ function RoleSelectField({
 }
 
 /** Read-only preview of what a role grants — shown while inviting or reassigning a
- *  user so the admin can see the access they're about to hand out before confirming. */
-/** Always-visible section (no accordion) so an admin sees the full grant up front
- *  while inviting or reassigning a user, rather than having to expand to find it. */
-function RolePermissionsPreview({ role }: { role: ManagedRole | undefined }) {
-  if (!role) return null
+ *  user so the admin can see the access they're about to hand out before confirming.
+ *  Lists every permission in the role's channel(s) (not just the granted ones) with a
+ *  check or cross, grouped and collapsible per channel — same shape as the permissions
+ *  step on the create-role page, so the two feel like the same feature. Only shows the
+ *  channel(s) the role actually touches (an in-store-only role has no Online section). */
+function RolePermissionsPreview({ role: maybeRole }: { role: ManagedRole | undefined }) {
+  if (!maybeRole) return null
+  const role = maybeRole
 
-  const permissions = ALL_PERMISSIONS.filter((permission) => role.permissionKeys.includes(permission.key))
-  const offline = permissions.filter((permission) => permission.channel === "offline")
-  const online = permissions.filter((permission) => permission.channel === "online")
+  const channels: Array<{ id: PermissionChannel; label: string; icon: ComponentType<{ className?: string }> }> = [
+    { id: "offline", label: "In-store permissions", icon: StorefrontIcon },
+    { id: "online", label: "Online permissions", icon: GlobeIcon },
+  ].filter((channel) => role.permissionKeys.some((key) => key.startsWith(`${channel.id}:`))) as Array<{
+    id: PermissionChannel
+    label: string
+    icon: ComponentType<{ className?: string }>
+  }>
+
+  if (channels.length === 0) return null
 
   return (
-    <div className="space-y-4">
-      <Separator className="-mx-6 w-auto" />
-      <div>
-        <p className="text-sm font-medium text-foreground">Permissions this role grants</p>
-        <p className="text-xs text-muted-foreground">{permissions.length} permission(s)</p>
-      </div>
-      {permissions.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No permissions.</p>
-      ) : (
-        <div className="space-y-4">
-          {offline.length > 0 ? (
-            <div>
-              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                <Store className="h-3.5 w-3.5" />
-                In-store
-              </p>
-              <div className="space-y-0.5">
-                {offline.map((permission) => (
-                  <div key={permission.key} className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-foreground">
-                    <Check className="h-3 w-3 shrink-0 text-emerald-500" />
-                    <span className="truncate" title={permission.label}>
-                      {permission.label}
-                    </span>
-                  </div>
-                ))}
+    <Accordion type="multiple" defaultValue={channels.map((channel) => channel.id)} className="space-y-3">
+      {channels.map((channel) => {
+        const channelPermissions = ALL_PERMISSIONS.filter((permission) => permission.channel === channel.id)
+        const grantedInChannel = channelPermissions.filter((permission) => role.permissionKeys.includes(permission.key)).length
+        const groups = PERMISSION_GROUPS.map((group) => ({
+          group,
+          permissions: channelPermissions.filter((permission) => permission.group === group),
+        })).filter((section) => section.permissions.length > 0)
+
+        return (
+          <AccordionItem key={channel.id} value={channel.id} className="rounded-lg border border-border/70 px-4">
+            <AccordionTrigger>
+              <div className="flex flex-1 items-center justify-between gap-3">
+                <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <channel.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  {channel.label}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {grantedInChannel}/{channelPermissions.length} allowed
+                </span>
               </div>
-            </div>
-          ) : null}
-          {online.length > 0 ? (
-            <div>
-              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                <Globe className="h-3.5 w-3.5" />
-                Online
-              </p>
-              <div className="space-y-0.5">
-                {online.map((permission) => (
-                  <div key={permission.key} className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-foreground">
-                    <Check className="h-3 w-3 shrink-0 text-emerald-500" />
-                    <span className="truncate" title={permission.label}>
-                      {permission.label}
-                    </span>
-                  </div>
-                ))}
+            </AccordionTrigger>
+            <AccordionPrimitive.Content className="pb-3">
+              <div className="max-h-72 space-y-4 overflow-y-auto pr-1">
+                {groups.map(({ group, permissions }) => {
+                  const GroupIcon = GROUP_ICON[group] ?? HardDrivesIcon
+                  return (
+                    <div key={group}>
+                      <p className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <GroupIcon className="h-4 w-4 text-foreground" />
+                        {group}
+                      </p>
+                      <div className="space-y-1.5">
+                        {permissions.map((permission) => {
+                          const granted = role.permissionKeys.includes(permission.key)
+                          return (
+                            <div key={permission.key} className="flex items-center gap-2 text-sm text-muted-foreground">
+                              {granted ? (
+                                <CheckIcon className="h-4 w-4 shrink-0 text-emerald-500" />
+                              ) : (
+                                <XIcon className="h-4 w-4 shrink-0 text-destructive" />
+                              )}
+                              <span className="truncate" title={permission.label}>
+                                {permission.label}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            </div>
-          ) : null}
-        </div>
-      )}
-    </div>
+            </AccordionPrimitive.Content>
+          </AccordionItem>
+        )
+      })}
+    </Accordion>
   )
 }
 
@@ -2122,23 +2050,28 @@ function EditAssignmentSheet({
   roleCatalog: ManagedRole[]
   /** Used to catch renaming this user's email to one already used by someone else. */
   roster: RosterEntry[]
-  onSave: (id: string, patch: { name: string; email: string; role: string; scope: string }) => void
+  onSave: (id: string, patch: { name: string; email: string; phone: string; role: string; scope: string; storeIds: string[] }) => void
 }) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [roleName, setRoleName] = useState("")
+  const [storeIds, setStoreIds] = useState<string[]>([])
 
   useEffect(() => {
     if (!open || !entry) return
     setName(entry.name)
     setEmail(entry.email)
+    setPhone(entry.phone ?? "")
     setRoleName(entry.role)
+    setStoreIds(entry.storeIds ?? [])
   }, [open, entry])
 
   const nameValid = name.trim().length > 0
   const normalizedEmail = email.trim().toLowerCase()
   const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
   const selectedRole = roleCatalog.find((role) => role.name === roleName)
+  const needsStoreAccess = roleNeedsStoreAccess(selectedRole)
 
   const collidingEntry = emailFormatValid
     ? roster.find((row) => row.id !== entry?.id && row.email.trim().toLowerCase() === normalizedEmail)
@@ -2150,7 +2083,14 @@ function EditAssignmentSheet({
   function handleSave() {
     if (!entry || !canSave) return
     const scope = selectedRole ? computeAccessScope(selectedRole.permissionKeys) : entry.scope
-    onSave(entry.id, { name: name.trim(), email: email.trim(), role: roleName, scope })
+    onSave(entry.id, {
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      role: roleName,
+      scope,
+      storeIds: needsStoreAccess ? storeIds : [],
+    })
     onOpenChange(false)
   }
 
@@ -2162,15 +2102,11 @@ function EditAssignmentSheet({
         a11yTitle="Edit user"
         a11yDescription="Change this user's name, email, and role."
       >
-        <SheetHeader className="border-b border-border/70 px-6 pb-4">
+        <SheetHeader>
           <SheetTitle>Edit user</SheetTitle>
-          <SheetDescription className="flex flex-wrap items-center gap-2">
-            <span>Update this user's details.</span>
-            {entry ? <StatusBadge status={entry.status} /> : null}
-          </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-5 px-6 py-5">
+        <div className="space-y-5 overflow-y-auto px-6 py-5">
           <div className="space-y-2">
             <Label htmlFor="edit-user-name">Full name</Label>
             <Input id="edit-user-name" value={name} onChange={(event) => setName(event.target.value)} />
@@ -2189,7 +2125,27 @@ function EditAssignmentSheet({
             {emailError ? <p className="text-xs text-destructive">{emailError}</p> : null}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="edit-user-phone">Phone number</Label>
+            <Input
+              id="edit-user-phone"
+              type="tel"
+              inputMode="numeric"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="9876543210"
+            />
+          </div>
+
           <RoleSelectField roleName={roleName} onChange={setRoleName} roleCatalog={roleCatalog} />
+
+          {needsStoreAccess ? (
+            <div className="space-y-2">
+              <Label>Store access</Label>
+              <StoreMultiSelect stores={STORE_IDENTITIES} selectedStoreIds={storeIds} onChange={setStoreIds} />
+            </div>
+          ) : null}
+
           <RolePermissionsPreview role={selectedRole} />
         </div>
 
@@ -2208,6 +2164,12 @@ function EditAssignmentSheet({
 
 /* ------------------------------ Invite user sheet -------------------------------- */
 
+/** A role grants store-scoped access whenever any of its permission keys are offline
+ *  ones — online-only roles have no store concept, so the field never applies to them. */
+function roleNeedsStoreAccess(role: ManagedRole | undefined) {
+  return Boolean(role?.permissionKeys.some((key) => key.startsWith("offline:")))
+}
+
 function InviteUserSheet({
   open,
   onOpenChange,
@@ -2218,25 +2180,32 @@ function InviteUserSheet({
   open: boolean
   onOpenChange: (open: boolean) => void
   roleCatalog: ManagedRole[]
-  /** Used to catch inviting an email that's already active, pending, or removed. */
+  /** Used to catch inviting an email that's already active, pending, or deactivated. */
   roster: RosterEntry[]
-  onInvite: (invite: { name: string; email: string; role: string }) => void
+  onInvite: (invite: { name: string; email: string; phone: string; role: string; storeIds: string[] }) => void
 }) {
-  const [name, setName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [roleName, setRoleName] = useState(roleCatalog[0]?.name ?? "")
+  const [storeIds, setStoreIds] = useState<string[]>([])
 
   useEffect(() => {
     if (!open) return
-    setName("")
+    setFirstName("")
+    setLastName("")
     setEmail("")
+    setPhone("")
     setRoleName(roleCatalog[0]?.name ?? "")
+    setStoreIds([])
   }, [open, roleCatalog])
 
-  const nameValid = name.trim().length > 0
+  const nameValid = firstName.trim().length > 0 && lastName.trim().length > 0
   const normalizedEmail = email.trim().toLowerCase()
   const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
   const selectedRole = roleCatalog.find((role) => role.name === roleName)
+  const needsStoreAccess = roleNeedsStoreAccess(selectedRole)
 
   const existingEntry = emailFormatValid
     ? roster.find((entry) => entry.email.trim().toLowerCase() === normalizedEmail)
@@ -2247,13 +2216,21 @@ function InviteUserSheet({
       ? "This email already belongs to an active user."
       : existingEntry.status === "Invited"
         ? "An invite is already pending for this email."
-        : "This user was previously removed — reactivate them from the Users list instead of inviting again."
+        : existingEntry.status === "Pending"
+          ? "This person already has a pending access request."
+          : "This user was previously deactivated — reactivate them from the Users list instead of inviting again."
 
   const canInvite = nameValid && emailFormatValid && Boolean(roleName) && !emailError
 
   function handleInvite() {
     if (!canInvite) return
-    onInvite({ name: name.trim(), email: email.trim(), role: roleName })
+    onInvite({
+      name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      role: roleName,
+      storeIds: needsStoreAccess ? storeIds : [],
+    })
     onOpenChange(false)
   }
 
@@ -2265,24 +2242,34 @@ function InviteUserSheet({
         a11yTitle="Invite user"
         a11yDescription="Invite a teammate and assign them a role."
       >
-        <SheetHeader className="border-b border-border/70 px-6 pb-4">
-          <SheetTitle>Invite user</SheetTitle>
-          <SheetDescription>They'll show up as Invited — pending until they accept.</SheetDescription>
+        <SheetHeader>
+          <SheetTitle>Invite users</SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-5 px-6 py-5">
-          <div className="space-y-2">
-            <Label htmlFor="invite-name">Full name</Label>
-            <Input
-              id="invite-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Priya Singh"
-            />
+        <div className="space-y-5 overflow-y-auto px-6 py-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="invite-first-name">First name</Label>
+              <Input
+                id="invite-first-name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                placeholder="Priya"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-last-name">Last name</Label>
+              <Input
+                id="invite-last-name"
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+                placeholder="Singh"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="invite-email">Email</Label>
+            <Label htmlFor="invite-email">User email</Label>
             <Input
               id="invite-email"
               type="email"
@@ -2295,7 +2282,27 @@ function InviteUserSheet({
             {emailError ? <p className="text-xs text-destructive">{emailError}</p> : null}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="invite-phone">Phone number</Label>
+            <Input
+              id="invite-phone"
+              type="tel"
+              inputMode="numeric"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="9876543210"
+            />
+          </div>
+
           <RoleSelectField roleName={roleName} onChange={setRoleName} roleCatalog={roleCatalog} />
+
+          {needsStoreAccess ? (
+            <div className="space-y-2">
+              <Label>Store access</Label>
+              <StoreMultiSelect stores={STORE_IDENTITIES} selectedStoreIds={storeIds} onChange={setStoreIds} />
+            </div>
+          ) : null}
+
           <RolePermissionsPreview role={selectedRole} />
         </div>
 
@@ -2304,7 +2311,7 @@ function InviteUserSheet({
             Cancel
           </Button>
           <Button onClick={handleInvite} disabled={!canInvite}>
-            <UserPlus className="h-3.5 w-3.5" />
+            <UserPlusIcon className="h-3.5 w-3.5" />
             Send invite
           </Button>
         </SheetFooter>
@@ -2353,10 +2360,129 @@ function ConfirmDeleteDialog({
   )
 }
 
+/* ------------------------------- Pending approvals ------------------------------- */
+
+/** Requests raised when someone tries to access a store/the platform during onboarding
+ *  before an admin has invited them — distinct from an admin-initiated invite. An admin
+ *  reviews each one here and approves (→ Active, keeps the requested role/stores) or
+ *  rejects (→ removed from the roster entirely) it. */
+function PendingApprovalsPage({
+  rows,
+  roleCatalog,
+  onApprove,
+  onReject,
+  onBack,
+}: {
+  rows: RosterEntry[]
+  roleCatalog: ManagedRole[]
+  onApprove: (row: RosterEntry) => void
+  onReject: (row: RosterEntry) => void
+  onBack: () => void
+}) {
+  return (
+    <div>
+      <div className="px-8 pt-6">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <CaretLeftIcon className="h-4 w-4" />
+          Back
+        </button>
+      </div>
+      <div className="border-b border-border/70 px-8 pb-5 pt-3">
+        <h1 className={PAGE_HEADING_CLASSES}>Pending access requests</h1>
+      </div>
+
+      <div className="px-8 py-6">
+        <div className="overflow-hidden rounded-[8px] border border-border bg-background">
+          <div className="overflow-x-auto">
+            <Table className="min-w-[900px]">
+              <TableHeader>
+                <TableRow className="h-10 [&>th:first-child]:rounded-tl-[8px] [&>th:last-child]:rounded-tr-[8px]">
+                  <TableHead className="px-3 text-sm font-medium text-muted-foreground">User details</TableHead>
+                  <TableHead className="px-3 text-sm font-medium text-muted-foreground">Role</TableHead>
+                  <TableHead className="px-3 text-sm font-medium text-muted-foreground">Access scope</TableHead>
+                  <TableHead className="px-3 text-sm font-medium text-muted-foreground">Requested on</TableHead>
+                  <TableHead className="px-3 text-right text-sm font-medium text-muted-foreground">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.length === 0 ? (
+                  <TableRow className="h-[72px] hover:bg-transparent">
+                    <TableCell colSpan={5} className="px-3 text-sm text-muted-foreground">
+                      No pending access requests.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rows.map((row) => {
+                    const permissionKeys = roleCatalog.find((role) => role.name === row.role)?.permissionKeys ?? []
+                    return (
+                      <TableRow key={row.id} className="h-[72px]">
+                        <TableCell className="px-3">
+                          <p className="text-sm font-medium text-foreground">{row.name}</p>
+                          <p className="text-sm text-muted-foreground">{row.email}</p>
+                        </TableCell>
+                        <TableCell className="px-3">
+                          <RoleBadge role={row.role} />
+                        </TableCell>
+                        <TableCell className="px-3">
+                          <AccessScopeBadge scope={computeAccessScope(permissionKeys)} />
+                        </TableCell>
+                        <TableCell className="px-3">
+                          <p className="text-sm text-foreground">{row.addedOnDate}</p>
+                          <p className="text-sm text-muted-foreground">{row.addedOnTime}</p>
+                        </TableCell>
+                        <TableCell className="px-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label="Reject"
+                                  className="h-8 w-8 rounded-md text-destructive hover:text-destructive"
+                                  onClick={() => onReject(row)}
+                                >
+                                  <XIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Reject</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label="Approve"
+                                  className="h-8 w-8 rounded-md text-emerald-600 hover:text-emerald-600"
+                                  onClick={() => onApprove(row)}
+                                >
+                                  <CheckIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Approve</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ------------------------------- Manage users shell ----------------------------- */
 
-function ManageUsersSection() {
-  const [screen, setScreen] = useState<"list" | "migration" | "role-form">("list")
+export function ManageUsersSection() {
+  const [screen, setScreen] = useState<"list" | "migration" | "role-form" | "pending-approvals">("list")
   const [tab, setTab] = useState<"users" | "roles">("users")
 
   const [roster, setRoster] = useState<RosterEntry[]>(INITIAL_ROSTER)
@@ -2387,6 +2513,7 @@ function ManageUsersSection() {
         : null
 
   const pendingMigrationCount = migrationRows.filter((row) => row.status === "pending").length
+  const pendingAccessCount = roster.filter((entry) => entry.status === "Pending").length
 
   function openCreateRole() {
     setRoleSheetTarget(null)
@@ -2462,12 +2589,27 @@ function ManageUsersSection() {
     setScreen("list")
   }
 
-  function handleSaveAssignment(id: string, patch: { name: string; email: string; role: string; scope: string }) {
+  function handleSaveAssignment(
+    id: string,
+    patch: { name: string; email: string; phone: string; role: string; scope: string; storeIds: string[] }
+  ) {
     setRoster((current) => current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)))
     toast.success("User updated")
   }
 
-  function handleInvite({ name, email, role }: { name: string; email: string; role: string }) {
+  function handleInvite({
+    name,
+    email,
+    phone,
+    role,
+    storeIds,
+  }: {
+    name: string
+    email: string
+    phone: string
+    role: string
+    storeIds: string[]
+  }) {
     const normalizedEmail = email.trim().toLowerCase()
     if (roster.some((entry) => entry.email.trim().toLowerCase() === normalizedEmail)) {
       toast.error(`${email} is already invited or added`)
@@ -2480,17 +2622,19 @@ function ManageUsersSection() {
       id: `invite-${Date.now()}`,
       name,
       email,
+      phone: phone || undefined,
       addedOnDate: dateStr,
       addedOnTime: timeStr,
       scope,
       role,
       status: "Invited",
+      storeIds: storeIds.length > 0 ? storeIds : undefined,
     }
     setRoster((current) => [newEntry, ...current])
     toast.success(`Invite sent to ${email}`)
   }
 
-  /** Active users lose access but stay in the list (status → Removed) so they can be
+  /** Active users lose access but stay in the list (status → Deactivated) so they can be
    *  reactivated. Pending invites have no access to revoke, so cancelling removes the row. */
   function requestRemoveUser(row: RosterEntry) {
     setRemoveUserTarget(row)
@@ -2509,10 +2653,22 @@ function ManageUsersSection() {
     toast.success(`Invite resent to ${row.email}`)
   }
 
+  /** Approving keeps the requester's requested role/stores as-is and simply flips them
+   *  to Active; rejecting drops the request from the roster entirely. */
+  function handleApproveUser(row: RosterEntry) {
+    setRoster((current) => current.map((entry) => (entry.id === row.id ? { ...entry, status: "Active" } : entry)))
+    toast.success(`${row.name} approved — access granted`)
+  }
+
+  function handleRejectUser(row: RosterEntry) {
+    setRoster((current) => current.filter((entry) => entry.id !== row.id))
+    toast.success(`${row.name}'s access request rejected`)
+  }
+
   /** Custom-role deletes get routed through a reassign-first flow when active/invited users
-   *  are still on that role — removed users don't block the delete since they've lost access. */
+   *  are still on that role — deactivated users don't block the delete since they've lost access. */
   function requestDeleteRole(role: ManagedRole) {
-    const assignedCount = roster.filter((entry) => entry.role === role.name && entry.status !== "Removed").length
+    const assignedCount = roster.filter((entry) => entry.role === role.name && entry.status !== "Deactivated").length
     if (assignedCount > 0) {
       setReassignTarget({ role, assignedCount })
       return
@@ -2534,9 +2690,9 @@ function ManageUsersSection() {
       toast.success(`Role "${deleteTarget.role.name}" deleted`)
     } else if (deleteTarget.type === "removeUser") {
       setRoster((current) =>
-        current.map((entry) => (entry.id === deleteTarget.entry.id ? { ...entry, status: "Removed" } : entry))
+        current.map((entry) => (entry.id === deleteTarget.entry.id ? { ...entry, status: "Deactivated" } : entry))
       )
-      toast.success(`${deleteTarget.entry.name} removed — access revoked`)
+      toast.success(`${deleteTarget.entry.name} deactivated — access revoked`)
     } else {
       setRoster((current) => current.filter((entry) => entry.id !== deleteTarget.entry.id))
       toast.success(`Invite to ${deleteTarget.entry.email} cancelled`)
@@ -2597,6 +2753,18 @@ function ManageUsersSection() {
     setScreen("list")
   }
 
+  if (screen === "pending-approvals") {
+    return (
+      <PendingApprovalsPage
+        rows={roster.filter((entry) => entry.status === "Pending")}
+        roleCatalog={roleCatalog}
+        onApprove={handleApproveUser}
+        onReject={handleRejectUser}
+        onBack={() => setScreen("list")}
+      />
+    )
+  }
+
   if (screen === "migration") {
     return (
       <MigrationAuditSection
@@ -2633,52 +2801,57 @@ function ManageUsersSection() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <Tabs value={tab} onValueChange={(value) => setTab(value as "users" | "roles")} className="flex h-full flex-col gap-0">
-        <div className="border-b border-border/70 px-8 pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-5">
-            <h1 className="text-[28px] font-bold leading-none tracking-[-0.01em] text-foreground">Manage users</h1>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={openCreateRole}>
-                Add custom role
+    <div>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as "users" | "roles")}>
+        <div className="px-8 pt-8 pb-0">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className={PAGE_HEADING_CLASSES}>Manage users &amp; roles</h1>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={openCreateRole}>
+                Add new roles
               </Button>
-              <Button size="sm" onClick={() => setInviteOpen(true)}>
-                <UserPlus className="h-3.5 w-3.5" />
-                Invite user
+              <Button onClick={() => setInviteOpen(true)}>
+                <UserPlusIcon className="h-3.5 w-3.5" />
+                Invite new users
               </Button>
             </div>
           </div>
-          <TabsList variant="line" className="h-9 w-fit gap-6 p-0">
-            <TabsTrigger value="users" className="flex-none px-1 text-sm data-active:font-semibold after:bg-primary">
+        </div>
+
+        <div className="px-8 pt-8 pb-0">
+          <TabsList variant="line" className={LINE_TABS_LIST_CLASSES}>
+            <TabsTrigger value="users" className={LINE_TAB_TRIGGER_CLASSES}>
               Users
             </TabsTrigger>
-            <TabsTrigger value="roles" className="flex-none px-1 text-sm data-active:font-semibold after:bg-primary">
+            <TabsTrigger value="roles" className={LINE_TAB_TRIGGER_CLASSES}>
               Roles
             </TabsTrigger>
           </TabsList>
         </div>
 
-        {pendingMigrationCount > 0 ? (
+        <Separator />
+
+        {tab === "users" && pendingAccessCount > 0 ? (
           <div className="px-8 pt-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <WarningIcon className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 <p className="text-sm text-foreground">
-                  <span className="font-medium">{pendingMigrationCount} user(s)</span> need migration review before Omni
-                  permissions are finalized.
+                  <span className="font-medium">{pendingAccessCount}</span> Users are asking for approval to access the
+                  platform
                 </p>
               </div>
-              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setScreen("migration")}>
-                Review migration
+              <Button variant="outline" onClick={() => setScreen("pending-approvals")}>
+                View users
               </Button>
             </div>
           </div>
         ) : null}
 
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="px-8 py-6">
           <TabsContent value="users">
             <UsersTable
-              rows={roster}
+              rows={roster.filter((entry) => entry.status !== "Pending")}
               roleCatalog={roleCatalog}
               onEdit={openEditRow}
               onRemove={requestRemoveUser}
@@ -2688,7 +2861,14 @@ function ManageUsersSection() {
             />
           </TabsContent>
           <TabsContent value="roles">
-            <RolesTable roles={roleCatalog} roster={roster} onView={openViewRole} onDelete={requestDeleteRole} />
+            <RolesTable
+              roles={roleCatalog}
+              roster={roster}
+              onView={openViewRole}
+              onClone={openCloneRole}
+              onEdit={openEditRole}
+              onDelete={requestDeleteRole}
+            />
           </TabsContent>
         </div>
       </Tabs>
@@ -2729,7 +2909,7 @@ function ManageUsersSection() {
           deleteTarget?.type === "role"
             ? `Delete "${deleteTarget.role.name}" role?`
             : deleteTarget?.type === "removeUser"
-              ? `Remove ${deleteTarget.entry.name}?`
+              ? `Deactivate ${deleteTarget.entry.name}?`
               : deleteTarget?.type === "cancelInvite"
                 ? `Cancel invite to ${deleteTarget.entry.name}?`
                 : ""
@@ -2738,11 +2918,11 @@ function ManageUsersSection() {
           deleteTarget?.type === "role"
             ? "This role definition will be removed. No users are currently assigned to it."
             : deleteTarget?.type === "removeUser"
-              ? "This user's access will be revoked immediately. You can reactivate them later from the Users list."
+              ? "This user's access will be deactivated immediately. You can reactivate them later from the Users list."
               : "The pending invite will be cancelled and removed from the list."
         }
         confirmLabel={
-          deleteTarget?.type === "role" ? "Delete" : deleteTarget?.type === "removeUser" ? "Remove user" : "Cancel invite"
+          deleteTarget?.type === "role" ? "Delete" : deleteTarget?.type === "removeUser" ? "Deactivate user" : "Cancel invite"
         }
         onConfirm={handleDeleteConfirm}
       />
@@ -2759,19 +2939,51 @@ function ManageUsersSection() {
   )
 }
 
-/* ---------------------------------- Dispatcher ---------------------------------- */
+/* ------------------------------- Account settings ----------------------------- */
 
-export function SettingsPanelContent({ module }: { module: SettingsModule }) {
-  switch (module) {
-    case "personal-details":
-      return <PersonalDetailsSection />
-    case "users":
-      return <ManageUsersSection />
-    case "credentials":
-      return <CredentialsSection />
-    case "webhooks":
-      return <WebhooksSection />
-    default:
-      return null
-  }
+export function AccountSettingsContent() {
+  const [tab, setTab] = useState<AccountSettingsTab>("personal-details")
+
+  return (
+    <div className="w-full">
+      <section>
+        <div className="px-8 pt-8 pb-0">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className={PAGE_HEADING_CLASSES}>Account settings</h1>
+            <div className="flex items-center gap-3">
+              <Button>Change password</Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-8 pt-8 pb-0">
+          <Tabs value={tab} onValueChange={(value) => setTab(value as AccountSettingsTab)}>
+            <TabsList variant="line" className={LINE_TABS_LIST_CLASSES}>
+              <TabsTrigger value="personal-details" className={LINE_TAB_TRIGGER_CLASSES}>
+                Personal details
+              </TabsTrigger>
+              <TabsTrigger value="credentials" className={LINE_TAB_TRIGGER_CLASSES}>
+                Credentials
+              </TabsTrigger>
+              <TabsTrigger value="webhooks" className={LINE_TAB_TRIGGER_CLASSES}>
+                Webhooks
+              </TabsTrigger>
+              <TabsTrigger value="refunds" className={LINE_TAB_TRIGGER_CLASSES}>
+                Refunds
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <Separator />
+      </section>
+
+      <div className="px-8 pt-8 pb-8">
+        {tab === "personal-details" ? <PersonalDetailsSection /> : null}
+        {tab === "credentials" ? <CredentialsSection /> : null}
+        {tab === "webhooks" ? <WebhooksSection /> : null}
+        {tab === "refunds" ? <RefundsSettingsSection /> : null}
+      </div>
+    </div>
+  )
 }

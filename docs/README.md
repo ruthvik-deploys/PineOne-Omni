@@ -1,11 +1,29 @@
 # Pine One User Journey Documentation
 
-Last updated: 2026-04-17
+Last updated: 2026-10-05
 
 This folder documents product and UX decisions captured during iterative demo development.
 
 ## Documentation Map
 
+- `docs/design/pine-one-design-document-index.md`
+  - Complete platform and module design suite, ownership boundaries and links to all 15 module documents.
+- `docs/design/pine-one-platform-design-strategy.md`
+  - Platform design strategy: goals, shared decisions, information principles, and web/app behaviour.
+- `docs/design/pine-one-user-personas-and-behaviours.md`
+  - Canonical WIP reference for role-based personas, task lenses, shared behaviours, evidence gaps and research planning.
+- `docs/design/pine-one-login-identity-design-document.md`
+  - Unified identity, conditional authentication, business selection and account-mapping design.
+- `docs/design/pine-one-roles-permissions-design-document.md`
+  - Target access model, custom roles, migration behaviour and web/app administration boundaries.
+- `docs/design/pine-one-settlements-design-document.md`
+  - Worked module proposal connecting payout clarity and self-service to platform goals, with web/app journeys and validation.
+- `docs/design/pine-one-refunds-design-document.md`
+  - Refund visibility, initiation, approval, bulk processing, configuration and validation.
+- `docs/design/pine-one-module-design-template.md`
+  - Module document structure aligned with the supplied design references and parent strategy.
+- `docs/flows/pine-one-cross-platform-discovery.md`
+  - Consolidated web/mobile discovery findings, prototype-derived answers, capability split, and unresolved cross-platform decisions.
 - `docs/architecture/information-architecture.md`
   - IA model, route taxonomy, and page hierarchy across dashboard and auth/onboarding.
 - `docs/architecture/v3-information-architecture.md`
@@ -20,6 +38,8 @@ This folder documents product and UX decisions captured during iterative demo de
   - Login, create-account, OTP, and account onboarding/KYC flow behavior.
 - `docs/flows/settlements-v3.md`
   - V3 settlement UX behavior and data model (summary, toggles, batches, detail page).
+- `docs/flows/merchant-homepage.md`
+  - Merchant homepage decision document: needs-attention taxonomy, business snapshot, and related structural decisions (in progress).
 - `docs/decisions/decision-log.md`
   - Consolidated decision log with rationale and implementation impact.
 - `docs/implementation/periodic-progress-log.md`

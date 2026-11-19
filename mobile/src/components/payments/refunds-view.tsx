@@ -1,0 +1,116 @@
+import { useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Icon, Text, useTheme } from 'react-native-paper';
+
+import { DayGroupedList, dayTotals, displayTimestamp, groupByDay, sortNewestFirst } from '@/components/shared/day-groups';
+import { getDefaultDateRangePresets, makeDateRangeValue } from '@/components/shared/date-range-filter';
+import { ListRow, ListRowLine, ListingToolbar, selectFilter } from '@/components/shared/listing';
+import { type MoreFilterSelection } from '@/components/shared/more-filters';
+import { LazyListFooter, useLazyList } from '@/components/shared/lazy-list';
+import { DotStatusBadge } from '@/components/shared/status';
+import { SummaryCards } from '@/components/shared/summary-cards';
+import { Fonts } from '@/constants/theme';
+import { parseInr } from '@/data/common';
+import { REFUND_AMOUNT_TYPES, REFUND_STATUSES, REFUND_SUMMARY, type RefundStatus, refundRows, refundStatusTone } from '@/data/refunds';
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All statuses' },
+  ...REFUND_STATUSES.map((status) => ({ value: status, label: status })),
+] as const;
+
+/**
+ * Payments → Refunds (web: RefundsContent): Bulk refunds and
+ * upload history, the Refunds pending / Refunded amount summary, search, date
+ * and status filters, the Amount type filter, and the paginated refunds. As on
+ * web, the channel toggle doesn't change the (shared) list.
+ */
+export function RefundsView() {
+  const theme = useTheme();
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<'all' | RefundStatus>('all');
+  const [moreFilters, setMoreFilters] = useState<MoreFilterSelection>({});
+  const presets = useMemo(() => getDefaultDateRangePresets(), []);
+  const [dateRange, setDateRange] = useState(() => makeDateRangeValue(presets, 'today'));
+  const lazy = useLazyList();
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return refundRows.filter((row) => {
+      if (status !== 'all' && row.status !== status) return false;
+      if (!query) return true;
+      return `${row.transactionId} ${row.refundId} ${row.storeName}`.toLowerCase().includes(query);
+    });
+  }, [search, status]);
+  const loaded = sortNewestFirst(filtered, (row) => displayTimestamp(row.datePrimary, row.dateSecondary)).slice(0, lazy.count);
+  const resetList = <T,>(setter: (value: T) => void) => (value: T) => {
+    setter(value);
+    lazy.reset();
+  };
+  const muted = { color: theme.colors.onSurfaceVariant };
+
+  return (
+    <View style={styles.container}>
+      <ListingToolbar
+        search={search}
+        onSearchChange={resetList(setSearch)}
+        searchPlaceholder="Search by any ID"
+        filters={[
+          { type: 'date', presets, value: dateRange, onApply: setDateRange, initialPresetId: 'today' },
+          selectFilter({ label: 'Status', options: STATUS_OPTIONS, value: status, onApply: resetList(setStatus) }),
+          {
+            type: 'more',
+            categories: [{ id: 'amount-type', label: 'Amount type', display: 'badge', searchable: false, options: REFUND_AMOUNT_TYPES }],
+            applied: moreFilters,
+            onApply: setMoreFilters,
+          },
+        ]}
+        actions={[
+          { label: 'Bulk refunds', icon: 'upload-simple' },
+          { label: 'Bulk upload history', icon: 'clock-counter-clockwise' },
+          { label: 'Email filtered', icon: 'envelope-simple' },
+          { label: 'Download filtered', icon: 'download-simple' },
+        ]}
+      />
+
+      <SummaryCards cards={REFUND_SUMMARY} carousel />
+
+
+      <DayGroupedList
+        groups={groupByDay(loaded, (row) => row.datePrimary)}
+        totals={dayTotals(filtered, (row) => row.datePrimary, (row) => parseInr(row.amount))}
+        noun={{ one: 'refund', other: 'refunds' }}
+        empty="No refunds found."
+        renderRow={(row) => (
+            <ListRow key={row.id} accessibilityLabel={`Refund ${row.refundId}, ${row.amount}, ${row.status}`}>
+              {/* Amount with the refund ID below on the left, status on the right (user decision). */}
+              <ListRowLine
+                left={
+                  <>
+                    <Text variant="titleMedium" style={styles.amount}>
+                      {row.amount}
+                    </Text>
+                    <View style={styles.idRow}>
+                      <Icon source="arrow-u-up-left" size={16} color={theme.colors.onSurfaceVariant} />
+                      <Text variant="bodySmall" numberOfLines={1} style={muted}>
+                        Refund ID {row.refundId}
+                      </Text>
+                    </View>
+                  </>
+                }
+                right={<DotStatusBadge label={row.status} tone={refundStatusTone(row.status)} />}
+                centered
+              />
+            </ListRow>
+        )}
+      />
+
+      <LazyListFooter lazy={lazy} total={filtered.length} noun="refunds" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { gap: 16 },
+  amount: { fontFamily: Fonts.semiBold, fontVariant: ['tabular-nums', 'stylistic-one'] },
+  idRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+});
