@@ -5,7 +5,7 @@ Three projects live in this repo. Each one installs and runs on its own.
 | Folder | What | Stack | Package manager | Live |
 |---|---|---|---|---|
 | `/` (root) | **Web portal**: Pine One Omni merchant dashboard | Next.js 16, React 19, Tailwind, shadcn/ui | pnpm | pine-one-user-journey-v2.vercel.app |
-| `mobile/` | **Mobile app**: Pine One merchant app | Expo 57 (React Native), Expo Router | npm | pineone-mobile.vercel.app (web build) |
+| `mobile/` | **Mobile app**: Pine One merchant app | Expo 57 (React Native), Expo Router | npm | pine-one-app.vercel.app (web build) |
 | `playground/` | **Prototype playground**: gallery of small prototypes | Next.js 16, shadcn/ui | npm | pine-one-playground.vercel.app (password) |
 
 Product and design docs are in `docs/` (start at `docs/README.md`).

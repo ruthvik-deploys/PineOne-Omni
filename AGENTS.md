@@ -11,7 +11,7 @@ Three independent projects. Each has its own dependencies, lockfile and package 
 | Folder | What | Package manager | Run | Deployed to (Vercel project) |
 |---|---|---|---|---|
 | `/` (root) | **Pine One web portal**: merchant dashboard, onboarding, sign-up | **pnpm** (`packageManager: pnpm@9`) | `pnpm install && pnpm dev` → :3000 | pine-one-user-journey-v2.vercel.app (`pine-one-user-journey-v2`) |
-| `mobile/` | **Pine One mobile app** (Expo / React Native) | **npm** (`.npmrc`: legacy-peer-deps) | `cd mobile && npm install && npx expo start` | pineone-mobile.vercel.app (`pineone-mobile`, static web build) |
+| `mobile/` | **Pine One mobile app** (Expo / React Native) | **npm** (`.npmrc`: legacy-peer-deps) | `cd mobile && npm install && npx expo start` | pine-one-app.vercel.app (`pine-one-app`, static web build; see `playground/app/prototypes/pine-one-mobile/HOW_IT_WORKS.md` for the deploy command) |
 | `playground/` | **Prototype playground**: gallery of prototypes and links to other apps | **npm** | `cd playground && npm install && npm run dev -- -p 3001` | pine-one-playground.vercel.app (`pine-one-playground`, password) |
 
 Other folders: `docs/` holds product and design docs (start at `docs/README.md`; module specs in `docs/design/`, flows in `docs/flows/`, decisions in `docs/decisions/decision-log.md`). `tests/` holds the web unit tests. `.storybook/` is the web Storybook.
@@ -101,6 +101,6 @@ Branch, make the change, run the checks, screenshot, and open a PR. If the chang
 
 ## 5. Where things are deployed and how to update them
 
-- Web: `vercel deploy --prod` from the root. Mobile: `vercel deploy --prod` from `mobile/` (it runs `expo export -p web`). Playground: `vercel deploy --prod` from `playground/` (it needs `PLAYGROUND_PASSWORD`, already set in Vercel).
+- Web: `vercel deploy --prod` from the root. Mobile: from `mobile/`, run the deploy command in `playground/app/prototypes/pine-one-mobile/HOW_IT_WORKS.md`. It targets `pine-one-app`; the folder's own `.vercel` link points at the older `pineone-mobile` project on another team. Vercel runs `expo export -p web` itself. Playground: `vercel deploy --prod` from `playground/` (it needs `PLAYGROUND_PASSWORD`, already set in Vercel).
 - Without `--prod` you get a **preview URL**. Use previews for experiments, and put the preview URL in the playground entry.
 - If the repo is connected to Vercel's Git integration, every pushed branch gets a preview automatically. Use that URL instead of running `vercel deploy`.
