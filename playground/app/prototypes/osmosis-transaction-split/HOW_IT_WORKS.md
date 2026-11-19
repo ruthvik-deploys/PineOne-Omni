@@ -1,4 +1,4 @@
-# Osmosis: Transaction split options
+# Osmosis web: Transaction split options
 
 ## What It Does
 Design options for the home Transactions card: Pine Labs vs partner bank split, shown side by side. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/transaction-split`.

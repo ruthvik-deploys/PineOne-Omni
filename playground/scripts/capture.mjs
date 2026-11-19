@@ -96,14 +96,14 @@ async function captureThumbnails(browser, proto) {
     const viewport = { width, height: width * (400 / 640) };
     const context = await newContext(browser, mode, { viewport, deviceScaleFactor: 640 / width });
     const seed = proto.meta.external?.seedLocalStorage;
-    if (external && seed) {
-      // Only on the external app's own origin, before its scripts run.
+    if (seed && proto.meta.external.url) {
+      // Only on the external app's own origin (also inside a PhoneFrame iframe), before its scripts run.
       await context.addInitScript(
         ({ origin, entries }) => {
           if (location.origin !== origin) return;
           for (const [k, v] of Object.entries(entries)) localStorage.setItem(k, v);
         },
-        { origin: new URL(url).origin, entries: seed }
+        { origin: new URL(proto.meta.external.url).origin, entries: seed }
       );
     }
     const page = await context.newPage();

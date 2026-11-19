@@ -1,4 +1,4 @@
-# Osmosis: Settlements
+# Osmosis web: Settlements
 
 ## What It Does
 Settlement batches and a settlement detail page with credits and deductions. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/settlements`.

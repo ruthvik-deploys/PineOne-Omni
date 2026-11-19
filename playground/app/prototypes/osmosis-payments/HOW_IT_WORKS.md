@@ -1,4 +1,4 @@
-# Osmosis: Payments
+# Osmosis web: Payments
 
 ## What It Does
 Transaction list with filters and payment details. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/payments`.

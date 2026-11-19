@@ -1,4 +1,4 @@
-# Osmosis: Home
+# Osmosis web: Home
 
 ## What It Does
 Merchant home: today's transactions and settlements, refunds, pinned reports and the Ask Guide panel. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/`.

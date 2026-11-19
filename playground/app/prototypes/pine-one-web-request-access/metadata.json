@@ -1,0 +1,18 @@
+{
+  "title": "Pine One web: Request access (existing merchant)",
+  "description": "Conversational, chat-style flow for an existing Pine Labs merchant to find their business and request access.",
+  "tags": [
+    "pine-one",
+    "web",
+    "onboarding",
+    "experiment"
+  ],
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:39:02.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-user-journey-v2.vercel.app/onboarding/request-access-existing-merchant",
+    "embed": "none"
+  }
+}

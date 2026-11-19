@@ -1,4 +1,4 @@
-# Osmosis: Sign in
+# Osmosis web: Sign in
 
 ## What It Does
 Log in with email and password or email OTP, sign up, SSO buttons, then pick a merchant profile. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/auth/login`.

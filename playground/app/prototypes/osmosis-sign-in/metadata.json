@@ -1,12 +1,13 @@
 {
-  "title": "Osmosis: Sign in",
+  "title": "Osmosis web: Sign in",
   "description": "Log in with email and password or email OTP, sign up, SSO buttons, then pick a merchant profile.",
   "tags": [
     "osmosis",
+    "web",
     "auth"
   ],
   "createdAt": "2026-11-19",
-  "updatedAt": "2026-11-19T09:24:50.000Z",
+  "updatedAt": "2026-11-19T09:38:47.000Z",
   "hidden": false,
   "public": false,
   "external": {

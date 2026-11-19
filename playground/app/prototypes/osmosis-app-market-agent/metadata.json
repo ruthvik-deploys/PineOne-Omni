@@ -1,0 +1,21 @@
+{
+  "title": "Osmosis app: Market Agent",
+  "description": "Phone-first agent marketplace page and setup for Google Ads campaigns: what the agent does, stats, Start setup and View campaigns.",
+  "tags": [
+    "osmosis",
+    "mobile",
+    "pine-ai",
+    "agents"
+  ],
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:39:06.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one.vercel.app/pine-ai/agents/local-ads",
+    "embed": "phone",
+    "seedLocalStorage": {
+      "osmosis.auth-flow.v1": "{\"isAuthenticated\":true,\"authMethod\":\"password\",\"pendingEmail\":\"\",\"selectedProfileId\":\"gd-electronics\"}"
+    }
+  }
+}

@@ -1,13 +1,14 @@
 {
-  "title": "Osmosis: Campaign Analyzer",
+  "title": "Osmosis web: Campaign Analyzer",
   "description": "Pine AI agent that analyses ad campaign performance.",
   "tags": [
     "osmosis",
+    "web",
     "pine-ai",
     "agents"
   ],
   "createdAt": "2026-11-19",
-  "updatedAt": "2026-11-19T09:24:42.000Z",
+  "updatedAt": "2026-11-19T09:38:39.000Z",
   "hidden": false,
   "public": false,
   "external": {

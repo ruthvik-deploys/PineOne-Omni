@@ -1,4 +1,4 @@
-# Osmosis: Support
+# Osmosis web: Support
 
 ## What It Does
 Help home with tickets, topics and tutorial videos, plus search, issues and support chat. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/support`.

@@ -212,4 +212,6 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 - **Turbopack root is pinned** to `playground/` because the repo has other lockfiles. Don't remove `turbopack.root`.
 - **Desktop apps need a wide capture.** External desktop apps are captured at 1440px; at 1280px the Pine One web app cropped its right edge.
 - **External apps with a client-side mock login** redirect every deep link to their login screen in a fresh browser, so thumbnails all looked the same. `external.seedLocalStorage` fixes the captures, and `external.note` tells people to sign in once.
+- **Phone-frame iframes get their own storage.** Browsers partition third-party storage, so an app embedded with `"embed": "phone"` doesn't see a sign-in made in its own tab. People sign in once inside the frame. The thumbnail script seeds `seedLocalStorage` inside the iframe too.
+- **Name entries by product and surface** (`Osmosis web: …`, `Osmosis app: …`, `Pine One web: …`, `Pine One app`) and tag `web` or `mobile`, so the gallery separates web portals from mobile apps.
 - **OG URLs must be absolute.** Next resolves `og:image` against `metadataBase` but not `og:video`, so the video URL is built with `SITE_URL` in `app/p/[slug]/page.tsx`.
