@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Prototype } from "@/lib/prototypes";
 import { Thumbnail } from "./thumbnail";
 
-export function PrototypeCard({ prototype }: { prototype: Prototype }) {
+export function PrototypeCard({ prototype, variantOfTitle }: { prototype: Prototype; variantOfTitle?: string }) {
   const { meta } = prototype;
   return (
     <Link
@@ -17,6 +17,7 @@ export function PrototypeCard({ prototype }: { prototype: Prototype }) {
           {meta.public && <Badge variant="outline">Public</Badge>}
           {meta.hidden && <Badge variant="outline">Hidden</Badge>}
         </div>
+        {variantOfTitle && <p className="text-sm text-muted-foreground">Variant of {variantOfTitle}</p>}
         <p className="line-clamp-2 text-sm text-muted-foreground">{meta.description}</p>
       </div>
     </Link>

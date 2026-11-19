@@ -67,6 +67,31 @@ The source stays where it is, so updates to their deployment show up automatical
 
 Whichever path: all the normal rules apply. That means metadata (`createdAt` = today, not the original project's date), private by default, thumbnails, `npm run check`, and a PR with the preview link.
 
+## Making a version or experiment
+
+A variant is a **new prototype** that points at the one it varies. Never edit the original to try an idea; the point is to compare them.
+
+**Variant of a playground prototype**
+1. `git switch -c exp/<slug>-<idea>`.
+2. Copy the folder: `cp -R app/prototypes/<slug> app/prototypes/<slug>-<idea>`. Name it after the idea (`-swipe`, `-one-step`, `-v2` only if there's no better word).
+3. In the copy's `metadata.json`:
+   - `"variantOf": "<slug>"`;
+   - the same `surface` and `group`;
+   - a title that says what's different;
+   - fresh `createdAt` and `updatedAt`.
+   The registry fails if `variantOf` doesn't match an existing slug.
+4. Rename the storage namespace (`data.ts` / `useControls("<new-slug>", …)`) so the two don't share saved settings.
+5. Change only what the idea needs. Put the hypothesis (what's different and why) at the top of its `HOW_IT_WORKS.md`.
+6. Thumbnails, `npm run check`, PR, preview link. The card shows "Variant of <original>".
+
+**Variant of the web portal or mobile app.** Build it in that project, following "Make a version or experiment" in the repo root `AGENTS.md`:
+- Web: a parallel route.
+- Mobile: a switch in `mobile/src/constants/experiments.ts`.
+
+Deploy a **preview**, then add an `external` entry here with `variantOf` set to the entry it varies (e.g. `pine-one-mobile`, `pine-one-web-kyc`) and `url` set to the preview URL.
+
+**Deciding:** when the owner picks a winner, either merge it into the original (bump `updatedAt`, recapture thumbnails) or keep the variant. Set `"hidden": true` on the loser. Don't delete it unless asked; hidden entries stay reachable with the Hidden toggle.
+
 ## Rules for every prototype
 
 ### Metadata
@@ -83,6 +108,7 @@ Every prototype has `metadata.json`:
 }
 ```
 - Optional gallery placement: `"surface": "web" | "mobile"` puts the card under the **Web** or **Mobile app** section (omit it for standalone prototypes, which go under **Prototypes**). `"group": "<Product>"` groups cards inside the section, e.g. `"Pine One"`, `"Pine One onboarding"`, `"Osmosis agents"`. Groups sort alphabetically, so name a product's sub-groups `<Product> <thing>` to keep them together. Titles shouldn't repeat the group or surface ("Payments", not "Osmosis web: Payments"); the prototype page shows them as a label.
+- Optional `"variantOf": "<slug>"` marks a version or experiment of another prototype (see "Making a version or experiment").
 - Tags shared by two or more prototypes become filter chips; one-off tags are search-only. Don't add a tag nobody else uses.
 - Bump `updatedAt` (full ISO timestamp) on **every** edit, so the gallery stays sorted and thumbnail caches refresh.
 - Optional `"external": { "url": "...", "embed": "phone" | "none" }` is for prototypes that are separately deployed apps (see `pine-one-mobile`, `pine-one-web`). With `"embed": "none"` the thumbnail script captures the external URL directly.

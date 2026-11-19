@@ -22,6 +22,7 @@ export function Gallery({ prototypes }: { prototypes: Prototype[] }) {
     [prototypes, query, tag, showHidden, surface]
   );
   const sections = useMemo(() => groupPrototypes(visible), [visible]);
+  const titles = useMemo(() => new Map(prototypes.map((p) => [p.slug, p.meta.title])), [prototypes]);
   const hiddenCount = prototypes.filter((p) => p.meta.hidden).length;
 
   return (
@@ -90,7 +91,11 @@ export function Gallery({ prototypes }: { prototypes: Prototype[] }) {
                   {group.title && <h3 className="text-sm text-muted-foreground">{group.title}</h3>}
                   <div className="grid gap-4 sm:grid-cols-2">
                     {group.items.map((p) => (
-                      <PrototypeCard key={p.slug} prototype={p} />
+                      <PrototypeCard
+                        key={p.slug}
+                        prototype={p}
+                        variantOfTitle={p.meta.variantOf ? titles.get(p.meta.variantOf) : undefined}
+                      />
                     ))}
                   </div>
                 </div>

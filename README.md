@@ -10,13 +10,15 @@ Three projects live in this repo. Each one installs and runs on its own.
 
 Product and design docs are in `docs/` (start at `docs/README.md`).
 
+**Using an AI agent (Claude Code, Codex, Cursor…)?** It reads [`AGENTS.md`](AGENTS.md) automatically: the repo map, dependencies, rules, and step-by-step recipes for adding a prototype, bringing in an existing project, and making a version or experiment. Mobile design rules are in [`mobile/DESIGN_RULES.md`](mobile/DESIGN_RULES.md).
+
 ## Before you start (once)
 
 1. **Access:** ask the owner to add you to the GitHub repo with write access. For the playground you also need its password.
 2. **Node 22** (see `.nvmrc`). With nvm: `nvm install && nvm use`. Check with `node -v`.
 3. **pnpm** for the web portal: `corepack enable` (ships with Node, gives you the pinned pnpm 9).
 4. **Git**, plus optionally:
-   - **Claude Code** (`npm i -g @anthropic-ai/claude-code`, or claude.ai/code in the browser) to build with an agent. Every project has rules files (`CLAUDE.md` / `AGENTS.md`) the agent reads automatically.
+   - **Claude Code** (`npm i -g @anthropic-ai/claude-code`, or claude.ai/code in the browser) to build with an agent. Every project has rules files (`CLAUDE.md` / `AGENTS.md`) the agent reads automatically. Optional: `npx skills experimental_install` restores the agent skills listed in `skills-lock.json` (e.g. shadcn).
    - **Expo Go** on your phone (App Store / Play Store) to run the mobile app on a device.
 
 ```bash
@@ -75,6 +77,8 @@ npm run dev -- -p 3001   # -p 3001 so it can run next to the web portal
 How to create prototypes, and how to bring an existing project in: see [`playground/README.md`](playground/README.md).
 
 ## Working together
+
+- **Experiments and versions:** never overwrite the current version to try an idea. Ask for a variant; the recipe is in `AGENTS.md` → "Make a version or experiment". Variants show next to the original in the playground.
 
 - Branch from `main` (`git switch -c <your-name>/<topic>`), push, and open a pull request. Don't commit to `main` directly.
 - Run the project's lint, type-check and build before opening the PR.

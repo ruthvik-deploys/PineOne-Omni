@@ -51,6 +51,22 @@ The agent picks one of three ways (details in `CLAUDE.md` → "Bringing in an ex
 
 If you don't say, the agent embeds or links the deployment. That's the fastest option and nothing breaks.
 
+## Trying a version or experiment
+
+Ask for it as a variant, and say what you want to test:
+
+> Make a variant of the KYC onboarding where business verification and banking are one step. Keep the current one as it is.
+
+The original stays untouched. The variant gets its own card, in the same group, labelled "Variant of …", so you can open both and compare.
+
+| You want to vary… | Where the agent builds it |
+|---|---|
+| A playground prototype | A copy of its folder in the playground |
+| A web portal flow (e.g. sign-up, KYC) | A parallel route in the web portal, deployed as a preview and linked here |
+| A mobile app screen | A switch in the app's experiments file, deployed as a preview and linked here |
+
+When you've decided, say which one wins. The other is hidden from the gallery, not deleted.
+
 ## Tips for good requests
 
 - Say what it does and who it's for, in a sentence or two. Leave out layout details unless they matter. The default is a clean single column.

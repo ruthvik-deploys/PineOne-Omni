@@ -11,6 +11,8 @@ export type PrototypeMeta = {
   public: boolean;
   /** Gallery section. Omit for standalone prototypes (they go under "Prototypes"). */
   surface?: "web" | "mobile";
+  /** Slug of the prototype this is a version or experiment of. The card shows "Variant of …". */
+  variantOf?: string;
   /** Gallery group inside the section, usually the product (e.g. "Pine One", "Pine One onboarding"). */
   group?: string;
   /** Optional: the prototype is a separately deployed app. Thumbnails capture this URL when `embed` is "none". */

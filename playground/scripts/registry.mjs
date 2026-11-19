@@ -53,7 +53,15 @@ function readPrototypes() {
       thumbnails: exists(`thumbnails/${slug}-light.png`) && exists(`thumbnails/${slug}-dark.png`),
       ogImage: exists(`og/${slug}.png`),
       ogVideo: exists(`og/${slug}.mp4`) ? "mp4" : exists(`og/${slug}.webm`) ? "webm" : null,
+      variantOf: meta.variantOf,
     });
+  }
+  const slugs = new Set(entries.map((e) => e.slug));
+  for (const e of entries) {
+    const target = e.variantOf;
+    if (target === undefined) continue;
+    if (typeof target !== "string" || !slugs.has(target)) errors.push(`${e.slug}: variantOf "${target}" is not an existing prototype`);
+    else if (target === e.slug) errors.push(`${e.slug}: variantOf can't point at itself`);
   }
   return { errors, entries: entries.sort((a, b) => a.slug.localeCompare(b.slug)) };
 }

@@ -10,7 +10,7 @@ npx expo start       # w = browser, scan QR = Expo Go, i/a = simulators
 - Screens: `src/app/` (file-based routes)
 - Components: `src/components/`
 - Mock data: `src/data/`
-- Agent rules (Expo conventions): `AGENTS.md`
+- Agent rules: `AGENTS.md` (Expo conventions) and `DESIGN_RULES.md` (the app's design rules)
 - Add packages with `npx expo install <pkg>`, not `npm i`, so versions match the Expo SDK
 
 Checks before a PR: `npm run lint` and `npx tsc --noEmit`.
