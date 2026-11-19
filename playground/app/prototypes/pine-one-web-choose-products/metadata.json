@@ -1,0 +1,18 @@
+{
+  "title": "Choose your products",
+  "description": "Product-first onboarding: right after sign-up, pick In-store, Payment links and/or Checkout as checkbox cards; the steps that follow come from the picks.",
+  "tags": [
+    "pine-one",
+    "onboarding"
+  ],
+  "surface": "web",
+  "group": "Pine One onboarding",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T11:47:26.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-user-journey-v2.vercel.app/onboarding-demo/setup/start-catalog",
+    "embed": "none"
+  }
+}

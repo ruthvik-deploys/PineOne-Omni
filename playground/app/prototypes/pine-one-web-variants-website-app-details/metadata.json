@@ -1,0 +1,19 @@
+{
+  "title": "Website & app details: other designs",
+  "description": "The alternative designs tried for the website & app details step (variants B \u00b7 C). The live flow uses the winner; switch between them with the pill at the bottom.",
+  "tags": [
+    "pine-one",
+    "onboarding"
+  ],
+  "surface": "web",
+  "group": "Pine One onboarding variants",
+  "variantOf": "pine-one-web-kyc",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T11:47:13.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-onboarding-variants.vercel.app/onboarding-variants/website-app-details",
+    "embed": "none"
+  }
+}
