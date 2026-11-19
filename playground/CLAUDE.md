@@ -10,6 +10,7 @@ All commands below run from `playground/`, not the repo root. The repo root is a
 |---|---|
 | Gallery (search, tags, hidden toggle, static thumbnails) | `app/page.tsx`, `components/gallery/` |
 | Prototypes | `app/prototypes/<slug>/` (one folder each) |
+| Collaborator guide (humans) | `README.md` |
 | Unknown-slug 404 | `app/prototypes/[slug]/page.tsx` |
 | Public route | `app/p/[slug]/page.tsx`: only `"public": true` prototypes, everything else 404 |
 | Password gate (production only) | `proxy.ts` (Next 16's name for middleware), `app/login/`, `app/api/auth/route.ts`, env `PLAYGROUND_PASSWORD` |
@@ -24,7 +25,7 @@ This is **Next.js 16** with React 19, Tailwind v4 and shadcn/ui (radix-nova, eve
 ## Creating a new prototype (start to pull request)
 
 1. **Branch.** `git switch -c proto/<slug>` from `main`. Never work on `main`.
-2. **Folder.** Create `app/prototypes/<slug>/` (kebab-case; it becomes the URL). Copy the shape of `app/prototypes/orbits/`; it follows every rule below.
+2. **Folder.** Create `app/prototypes/<slug>/` (kebab-case; it becomes the URL). Lay it out as described under "Self-contained and decomposed" below.
 3. **Required files:** `page.tsx`, `metadata.json`, `HOW_IT_WORKS.md` (details below). The registry script fails loudly if any is missing or the metadata is invalid.
 4. **Build it** following "Rules for every prototype".
 5. **Check it** at 375px and at desktop width, in light and dark (screenshots via Playwright are fine).
@@ -117,7 +118,7 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 ### Light and dark mode
 - Design dark-first (dark is the default theme); light must also work, which it will if you only use tokens.
 - Never hardcode a `dark` class on a page or element. The theme is global (`next-themes`, toggle in the header).
-- Use `useTheme().resolvedTheme` only when **behaviour** must change by theme (canvas/WebGL drawing, blend modes, chart libraries), not for colours that tokens can handle. For canvases, prefer a transparent canvas over `bg-background` (see `orbits/orbit-canvas.tsx`).
+- Use `useTheme().resolvedTheme` only when **behaviour** must change by theme (canvas/WebGL drawing, blend modes, chart libraries), not for colours that tokens can handle. For canvases, prefer a transparent canvas with the `bg-background` class, and fade trails with `globalCompositeOperation = "destination-out"` instead of painting a hardcoded background colour.
 
 ### Motion
 - Rows or sections the user adds or removes animate their height open and closed. Nothing pops in and makes the page jump (use `grid-rows-[0fr]→[1fr]` transitions, the shadcn `Collapsible`/`Accordion`, or a measured height).

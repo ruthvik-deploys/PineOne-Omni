@@ -2,9 +2,9 @@
 // Captures light + dark gallery thumbnails (640×400) for prototypes, plus og:image / og:video for public ones.
 //
 //   npm run thumbnails                     # every prototype
-//   npm run thumbnails -- orbits foo       # just these
+//   npm run thumbnails -- my-proto other   # just these
 //   npm run thumbnails -- --missing        # only prototypes without thumbnails
-//   npm run thumbnails -- --og orbits      # also (re)capture OG assets, even if not public
+//   npm run thumbnails -- --og my-proto    # also (re)capture OG assets, even if not public
 //   npm run thumbnails -- --skip-build     # reuse the existing .next build
 //
 // It builds for production, starts `next start` on a spare port with a throwaway password, signs in,
