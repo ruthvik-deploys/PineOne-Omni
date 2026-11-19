@@ -17,11 +17,15 @@ import { BUSINESS_PROFILE_ROLES } from '@/data/business-profile';
 import { CURRENT_USER, ORGANISATIONS } from '@/data/businesses';
 import { markAllNotificationsRead, markNotificationRead, useNotifications } from '@/data/notifications';
 import { INITIAL_ROSTER } from '@/data/user-roster';
+import { VALUE_ADDED_SERVICES } from '@/data/value-added-services';
 import { useBusiness } from '@/hooks/use-business';
 import { type ThemeMode, useThemeMode } from '@/hooks/use-theme-mode';
 import { useToast } from '@/hooks/use-toast';
 
 import { useProfileNav } from './profile-return';
+
+/** Settings pages not listed in the profile for now; their routes stay. */
+const HIDDEN_SETTINGS = ['personal-details', 'refunds', 'online-payments', 'webhooks'];
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'sun' },
@@ -108,7 +112,7 @@ export function ProfilePanel({
   const rows: { key: string; icon: string; title: string; badge?: number; onPress: () => void }[] = [
     { key: 'notifications', icon: 'bell', title: 'Notifications', badge: notifications.unread, onPress: () => setNotificationsOpen(true) },
     ...SETTINGS_GROUPS.flatMap((group) =>
-      group.sections.map((section) => ({
+      group.sections.filter((section) => !HIDDEN_SETTINGS.includes(section.key)).map((section) => ({
         key: section.key,
         icon: section.icon,
         title: section.title,
@@ -119,15 +123,6 @@ export function ProfilePanel({
       }))
     ),
   ];
-  // Checkout configuration lives here too (not in More), after the payment settings.
-  rows.splice(rows.findIndex((row) => row.key === 'online-payments') + 1, 0, {
-    key: 'checkout',
-    icon: 'palette',
-    title: 'Checkout',
-    onPress: () => {
-      profileNav.openPage('/checkout');
-    },
-  });
 
   return (
     <>
@@ -511,7 +506,7 @@ function AppProfileContent({
       title: 'Rewards',
       rows: [
         { key: 'prime', icon: 'crown', title: 'Prime membership', onPress: soon('Prime membership') },
-        { key: 'accept', icon: 'money', title: 'Accept payments', onPress: () => openPage('/payment-links') },
+        { key: 'accept', icon: 'money', title: 'Accept payments', onPress: soon('Accept payments') },
         { key: 'marketplace', icon: 'crown', title: 'Marketplace', onPress: soon('Marketplace') },
       ],
     },
@@ -519,9 +514,10 @@ function AppProfileContent({
       title: 'Manage',
       rows: [
         { key: 'devices', icon: 'device-mobile', title: 'My devices', subtitle: '13,905 installed', onPress: () => openPage('/terminal-devices') },
+        { key: 'payment-links', icon: 'link-simple', title: 'Payment links', subtitle: 'Create and share links to get paid', onPress: () => openPage('/payment-links') },
         { key: 'stores', icon: 'storefront', title: 'My stores', subtitle: `${organisation.shops.length.toLocaleString('en-IN')} registered`, onPress: () => openPage('/stores') },
         { key: 'users', icon: 'user-gear', title: 'Manage user roles & permissions', subtitle: '1,761 registered', onPress: () => openPage('/users') },
-        { key: 'vas', icon: 'diamond', title: 'Value Added Services', subtitle: '6 services', tag: { label: 'NEW', tone: 'new' }, onPress: () => openPage('/value-added-services') },
+        { key: 'vas', icon: 'diamond', title: 'Value Added Services', subtitle: `${VALUE_ADDED_SERVICES.filter((service) => service.status === 'Enabled').length} of ${VALUE_ADDED_SERVICES.length} enabled`, tag: { label: 'NEW', tone: 'new' }, onPress: () => openPage('/value-added-services') },
         { key: 'dues', icon: 'receipt', title: 'Pending dues', subtitle: 'Check your recent dues and pay', tag: { label: 'Check now', tone: 'neutral' }, onPress: () => openPage('/pending-dues') },
       ],
     },
@@ -537,9 +533,9 @@ function AppProfileContent({
   // The business settings pages have no row in the design; they stay reachable, after Preferences.
   const settingsRows: ProfileRow[] = [
     ...SETTINGS_GROUPS.flatMap((group) => group.sections)
-      .filter((section) => section.key !== 'credentials')
+      // Hidden for now: online payment settings, webhooks and checkout (their pages still exist).
+      .filter((section) => section.key !== 'credentials' && !HIDDEN_SETTINGS.includes(section.key))
       .map((section) => ({ key: section.key, icon: section.icon, title: section.title, onPress: () => openPage(`/account-settings/${section.key}`) })),
-    { key: 'checkout', icon: 'palette', title: 'Checkout', onPress: () => openPage('/checkout') },
   ];
   const support: ProfileRow[] = [
     { key: 'suggest', icon: 'question', title: 'Suggest & Report', subtitle: 'Report bugs, request a feature', onPress: () => openPage('/support') },

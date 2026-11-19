@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, type ReactNode, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Icon, IconButton, Portal, Text, TouchableRipple, useTheme } from 'react-native-paper';
 
@@ -28,6 +28,8 @@ type PanelSheetProps = {
   height?: number;
   /** Set false when the body manages its own scrolling or layout (e.g. a two-level filter list). */
   scroll?: boolean;
+  /** Size the sheet to its content (header, body, footer), up to `height` / 86% of the screen; scrolls past that. */
+  fit?: boolean;
   /**
    * The body on the page's grey, with content as white cards (PanelSection,
    * SheetSection) — every sheet's format, after the channel switcher. Set false
@@ -42,7 +44,7 @@ type PanelSheetProps = {
  * Every web side panel (refund, charge slip, activity details, deductions,
  * email report, filters…) opens in one of these on mobile.
  */
-export function PanelSheet({ visible, onDismiss, title, children, footer, height, scroll = true, grouped: groupedProp = true }: PanelSheetProps) {
+export function PanelSheet({ visible, onDismiss, title, children, footer, height, scroll = true, fit = false, grouped: groupedProp = true }: PanelSheetProps) {
   // The app pages' sheets are white throughout (Figma 7249:193498).
   const grouped = groupedProp && !APP_PAGE_LAYOUT;
   const theme = useTheme();
@@ -50,13 +52,20 @@ export function PanelSheet({ visible, onDismiss, title, children, footer, height
   const insets = useSafeAreaInsets();
   // The sheet runs to the screen's bottom edge: keep its content clear of the home indicator.
   const safeBottom = footer ? Math.max(0, insets.bottom - PANEL_PADDING) : insets.bottom;
+  // `fit`: the measured header, body and footer; until the body is measured, the full height.
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [bodyHeight, setBodyHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const maxHeight = height ?? Math.round(windowHeight * 0.86);
+  const fitted = headerHeight + bodyHeight + footerHeight + (footer ? 0 : safeBottom);
+  const sheetHeight = fit && bodyHeight > 0 ? Math.min(fitted, maxHeight + safeBottom) : maxHeight + safeBottom;
 
   return (
     <Portal>
-      <BottomSheet variant="modal" height={(height ?? Math.round(windowHeight * 0.86)) + safeBottom} visible={visible} onDismiss={onDismiss}>
+      <BottomSheet variant="modal" height={sheetHeight} visible={visible} onDismiss={onDismiss}>
         {APP_PAGE_LAYOUT ? (
           // Figma 7249:193499: 16dp all round, the title 14dp medium and muted, a 28dp outlined ✕, a hairline under it.
-          <View style={[styles.appHeader, { borderBottomColor: theme.colors.background }]}>
+          <View onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)} style={[styles.appHeader, { borderBottomColor: theme.colors.background }]}>
             <Text style={[styles.appTitle, { color: theme.colors.onSurfaceVariant }]} accessibilityRole="header">
               {title}
             </Text>
@@ -70,7 +79,7 @@ export function PanelSheet({ visible, onDismiss, title, children, footer, height
             </TouchableRipple>
           </View>
         ) : (
-          <>
+          <View onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}>
             <View style={styles.header}>
               <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }} accessibilityRole="header">
                 {title}
@@ -85,20 +94,20 @@ export function PanelSheet({ visible, onDismiss, title, children, footer, height
               />
             </View>
             <Divider />
-          </>
+          </View>
         )}
         {scroll ? (
-          <ScrollView style={[styles.body, grouped && { backgroundColor: theme.colors.background }]} contentContainerStyle={!footer && { paddingBottom: safeBottom }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={[styles.body, grouped && { backgroundColor: theme.colors.background }]} contentContainerStyle={!footer && { paddingBottom: safeBottom }} onContentSizeChange={(_, contentHeight) => setBodyHeight(contentHeight - (footer ? 0 : safeBottom))} keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         ) : (
           <View style={[styles.body, grouped && { backgroundColor: theme.colors.background }, !footer && { paddingBottom: safeBottom }]}>{children}</View>
         )}
         {footer ? (
-          <>
+          <View onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}>
             <Divider />
             <View style={[styles.footer, { paddingBottom: PANEL_PADDING + safeBottom }]}>{footer}</View>
-          </>
+          </View>
         ) : null}
       </BottomSheet>
     </Portal>

@@ -11,6 +11,7 @@ import { UserGearIcon } from 'phosphor-react-native/src/icons/UserGear';
 import { DiamondIcon } from 'phosphor-react-native/src/icons/Diamond';
 import { SwatchesIcon } from 'phosphor-react-native/src/icons/Swatches';
 import { SealCheckIcon } from 'phosphor-react-native/src/icons/SealCheck';
+import { ClockCountdownIcon } from 'phosphor-react-native/src/icons/ClockCountdown';
 import { MicrophoneIcon } from 'phosphor-react-native/src/icons/Microphone';
 import { ArrowsClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowsClockwise';
 import { MonitorIcon } from 'phosphor-react-native/src/icons/Monitor';
@@ -260,6 +261,7 @@ const ICONS = {
   diamond: DiamondIcon,
   swatches: SwatchesIcon,
   'seal-check': SealCheckIcon,
+  'clock-countdown': ClockCountdownIcon,
   plus: PlusIcon,
   printer: PrinterIcon,
   'qr-code': QrCodeIcon,

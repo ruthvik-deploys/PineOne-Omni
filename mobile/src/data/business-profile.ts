@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react';
+
 import type { DotTone } from '@/components/shared/status';
 
 /**
@@ -35,8 +37,36 @@ export type BankAccount = {
 };
 
 export const BANK_ACCOUNTS: BankAccount[] = [
-  { id: 'acc-1', bank: 'HDFC', bankName: 'HDFC Bank', accountNumber: '50201234123456', ifsc: 'HDFC0000523', holder: 'Health & Glow Retailing Pvt. Ltd.', status: 'Active', primary: true },
-  { id: 'acc-2', bank: 'ICICI', bankName: 'ICICI Bank', accountNumber: '078805009043', ifsc: 'ICIC0000788', holder: 'Health & Glow Retailing Pvt. Ltd.', status: 'Active', primary: false },
+  {
+    id: 'acc-1',
+    bank: 'HDFC',
+    bankName: 'HDFC Bank',
+    accountNumber: '50201234123456',
+    ifsc: 'HDFC0000523',
+    holder: 'Health & Glow Retailing Pvt. Ltd.',
+    status: 'Active',
+    primary: true,
+  },
+  {
+    id: 'acc-2',
+    bank: 'ICICI',
+    bankName: 'ICICI Bank',
+    accountNumber: '078805009043',
+    ifsc: 'ICIC0000788',
+    holder: 'Health & Glow Retailing Pvt. Ltd.',
+    status: 'Active',
+    primary: false,
+  },
+  {
+    id: 'acc-3',
+    bank: 'AXIS',
+    bankName: 'Axis Bank',
+    accountNumber: '917020045671180',
+    ifsc: 'UTIB0000114',
+    holder: 'Health & Glow Retailing Pvt. Ltd.',
+    status: 'Active',
+    primary: false,
+  },
 ];
 
 export type RequestStatus = 'Pending' | 'Approved' | 'Rejected' | 'Completed';
@@ -109,24 +139,26 @@ export const SETTLEMENT_CONFIG = {
 
 /** A payment method with everything configured for it: whether it's live, its per-transaction limits and the MDR charged by category. */
 export type MdrRate = { category: string; rate: string };
-export type PayMode = { key: string; label: string; icon: string; enabled: boolean; min: string; max: string; mdr: MdrRate[] };
+export type PayMode = { key: string; label: string; icon: string; summary: string; enabled: boolean; min: string; max: string; mdr: MdrRate[] };
 export const PAY_MODES: PayMode[] = [
   {
     key: 'upi',
     label: 'UPI',
     icon: 'qr-code',
+    summary: 'UPI payments on terminals',
     enabled: true,
     min: '₹1',
     max: '₹1,00,000',
     mdr: [
-      { category: 'UPI (P2M)', rate: '0%' },
-      { category: 'RuPay credit card on UPI', rate: '1.10%' },
+      { category: 'Person to merchant (P2M)', rate: '1%' },
+      { category: 'Person to person (P2P)', rate: '0%' },
     ],
   },
   {
     key: 'cards',
     label: 'Cards',
     icon: 'credit-card',
+    summary: 'Card payments on terminals',
     enabled: true,
     min: '₹1',
     max: '₹5,00,000',
@@ -137,9 +169,27 @@ export const PAY_MODES: PayMode[] = [
       { category: 'Corporate & international', rate: '2.90%' },
     ],
   },
-  { key: 'netbanking', label: 'Net banking', icon: 'bank', enabled: true, min: '₹10', max: '₹10,00,000', mdr: [{ category: 'All banks', rate: '1.50%' }] },
-  { key: 'wallets', label: 'Wallets', icon: 'wallet', enabled: true, min: '₹1', max: '₹20,000', mdr: [{ category: 'All wallets', rate: '1.90%' }] },
-  { key: 'emi', label: 'EMI', icon: 'calendar-blank', enabled: false, min: '₹2,500', max: '₹5,00,000', mdr: [] },
+  {
+    key: 'netbanking',
+    label: 'Net banking',
+    icon: 'bank',
+    summary: 'Net banking payments online',
+    enabled: true,
+    min: '₹10',
+    max: '₹10,00,000',
+    mdr: [{ category: 'All banks', rate: '1.50%' }],
+  },
+  {
+    key: 'wallets',
+    label: 'Wallets',
+    icon: 'wallet',
+    summary: 'Wallet payments online and on terminals',
+    enabled: true,
+    min: '₹1',
+    max: '₹20,000',
+    mdr: [{ category: 'All wallets', rate: '1.90%' }],
+  },
+  { key: 'emi', label: 'EMI', icon: 'calendar-blank', summary: 'Card and brand EMI on terminals', enabled: false, min: '₹2,500', max: '₹5,00,000', mdr: [] },
 ];
 
 /** "0% – 1.10%", or the one rate. */
@@ -179,3 +229,55 @@ export function bankFromIfsc(ifsc: string) {
   if (code === 'UTIB') return { bank: 'AXIS', bankName: 'Axis Bank' };
   return { bank: 'HDFC', bankName: 'HDFC Bank' };
 }
+
+/** A request to change or enable a payment method. */
+export type ModeRequest = { id: string; modeKey: string; label: string; raisedOn: string; /** The support ticket that tracks it. */ ticket: string };
+
+/**
+ * Open requests, shared by the Business profile hub and its pages (bank
+ * accounts, payment methods) so a request raised on one shows on the others.
+ */
+type RequestState = { bank: BankChangeRequest[]; modes: ModeRequest[]; accounts: BankAccount[] };
+let requestState: RequestState = { bank: BANK_CHANGE_REQUESTS, modes: [], accounts: BANK_ACCOUNTS };
+const requestListeners = new Set<() => void>();
+const subscribeRequests = (listener: () => void) => {
+  requestListeners.add(listener);
+  return () => requestListeners.delete(listener);
+};
+export function useBusinessRequests() {
+  return useSyncExternalStore(
+    subscribeRequests,
+    () => requestState,
+    () => requestState,
+  );
+}
+export function addBankRequest(request: BankChangeRequest) {
+  requestState = { ...requestState, bank: [request, ...requestState.bank] };
+  requestListeners.forEach((listener) => listener());
+}
+/** A verified account change (Figma 7961:26191, "Account updated successfully"): the new account takes the old one's place, and the change is kept as its history. */
+export function replaceBankAccount(fromId: string, next: BankAccount, record: BankChangeRequest) {
+  requestState = {
+    ...requestState,
+    accounts: requestState.accounts.map((account) => (account.id === fromId ? next : account)),
+    bank: [record, ...requestState.bank.filter((request) => request.fromAccountId !== fromId)],
+  };
+  requestListeners.forEach((listener) => listener());
+}
+export function addModeRequest(request: ModeRequest) {
+  requestState = { ...requestState, modes: [request, ...requestState.modes.filter((item) => item.modeKey !== request.modeKey)] };
+  requestListeners.forEach((listener) => listener());
+}
+
+/** Documents the business uploaded at onboarding (and since), downloadable from Business profile. */
+export type BusinessDocument = { id: string; name: string; detail: string; file: 'PDF' | 'JPG'; size: string; uploadedOn: string };
+export const BUSINESS_DOCUMENTS: BusinessDocument[] = [
+  { id: 'doc-pan', name: 'PAN card', detail: 'Business PAN', file: 'PDF', size: '312 KB', uploadedOn: '12 Jan 2025' },
+  { id: 'doc-gst', name: 'GST certificate', detail: 'GSTIN 29AABCH1234K1Z5', file: 'PDF', size: '486 KB', uploadedOn: '12 Jan 2025' },
+  { id: 'doc-coi', name: 'Certificate of incorporation', detail: 'CIN U52590KA1997PTC022211', file: 'PDF', size: '1.2 MB', uploadedOn: '12 Jan 2025' },
+  { id: 'doc-udyam', name: 'Udyam certificate', detail: 'UDYAM-KR-03-0012345', file: 'PDF', size: '274 KB', uploadedOn: '14 Jan 2025' },
+  { id: 'doc-cheque', name: 'Cancelled cheque', detail: 'HDFC Bank ••••3456', file: 'JPG', size: '820 KB', uploadedOn: '14 Jan 2025' },
+  { id: 'doc-shop', name: 'Shop & establishment certificate', detail: 'Koramangala store', file: 'PDF', size: '640 KB', uploadedOn: '18 Jan 2025' },
+  { id: 'doc-board', name: 'Board resolution', detail: 'Authorised signatory', file: 'PDF', size: '398 KB', uploadedOn: '18 Jan 2025' },
+  { id: 'doc-address', name: 'Address proof', detail: 'Electricity bill, Dec 2024', file: 'PDF', size: '512 KB', uploadedOn: '20 Jan 2025' },
+];

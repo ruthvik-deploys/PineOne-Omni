@@ -33,3 +33,6 @@ next-env.d.ts
 /.agents/
 /.claude/
 /.pnpm-store/
+
+# macOS
+.DS_Store
