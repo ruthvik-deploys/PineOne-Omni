@@ -37,6 +37,34 @@ Do **not** build a "new prototype" button, a create API, or any in-app authoring
 
 `page.tsx` is a default export that takes **no props**. It is rendered both at `/prototypes/<slug>` and, if public, at `/p/<slug>`. Put `"use client"` in a child component, not necessarily in the page.
 
+## Bringing in an existing project
+
+When someone asks to add a project they already built (a repo, a folder, a zip or a deployed URL), pick the **first** path that fits. Tell the owner which path you chose and why.
+
+**A. Link or embed the deployment (default; any stack).** Use this when the project is already deployed and is a full app: multi-page, its own backend, a different framework (Vue, Svelte, Flutter web, Expo…), or bigger than a prototype.
+1. Check that it can be framed: `curl -sI <url> | grep -iE "x-frame-options|frame-ancestors"`. Any `DENY`/`SAMEORIGIN`/restrictive `frame-ancestors` means it can't be framed, so use `"embed": "none"`.
+2. Create `app/prototypes/<slug>/` with `metadata.json` that includes `"external": { "url": "<url>", "embed": "phone" | "none" }`. Use `phone` for mobile-first apps (renders `PhoneFrame`) and `none` for desktop apps (renders `ExternalApp`, a page with an Open button). Copy `pine-one-mobile/` or `pine-one-web/`.
+3. Write `HOW_IT_WORKS.md`: where the source lives, where it's deployed, and who owns it.
+4. Capture thumbnails. With `none`, the script screenshots the external URL directly.
+
+The source stays where it is, so updates to their deployment show up automatically.
+
+**B. Port it in (small React projects).** Use this when it's a single-screen or few-screen React/Next.js prototype with no server it can't live without, and the owner wants it to *live* in the playground.
+1. Get the source into a scratch directory outside the repo (`git clone <repo> /tmp/import-<slug>`, or unzip there). Treat it as input. Don't run its install scripts or build tools from inside the playground.
+2. Create `app/prototypes/<slug>/` and move the code in, restructured to the rules: thin `page.tsx`, `types.ts`, `data.ts`, pure logic files, one file per component.
+3. Swap its UI for `components/ui` + tokens: remove hardcoded colours, its own CSS frameworks and global styles. Install any runtime dependencies it really needs **in `playground/`** with exact versions from its lockfile.
+4. Several pages → nested routes under `app/prototypes/<slug>/<page>/`, or in-component state if they're steps of one flow. Its API routes → `app/api/<slug>/…`. Its env vars → tell the owner which ones to add in Vercel. Never commit their values.
+5. Make it pass everything in "Rules for every prototype" (mobile, light/dark, storage, controls), then capture thumbnails and run `npm run check`.
+6. In `HOW_IT_WORKS.md`, note where it came from (repo URL and commit).
+
+**C. Static build (non-React, no server).** Use this for a plain HTML/JS, Vite, or exported static site with no deployment.
+1. Build it with its base path set to `/embeds/<slug>/` (Vite: `base`; others: their equivalent), so asset URLs resolve.
+2. Copy the build output to `public/embeds/<slug>/`. It stays behind the password gate.
+3. Create the prototype folder with a `page.tsx` that renders it in an `<iframe src="/embeds/<slug>/index.html">` filling the page (or `PhoneFrame` for mobile layouts).
+4. Note in `HOW_IT_WORKS.md` how to rebuild it, since the build is a snapshot.
+
+Whichever path: all the normal rules apply. That means metadata (`createdAt` = today, not the original project's date), private by default, thumbnails, `npm run check`, and a PR with the preview link.
+
 ## Rules for every prototype
 
 ### Metadata

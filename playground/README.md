@@ -35,6 +35,22 @@ The agent then:
 
 Open the link, try it, and ask for changes in the same chat. When you're happy, merge the PR and it appears in the live gallery.
 
+## Adding a project you already built
+
+You don't need to rebuild it. Give the agent the link and say how you want it in:
+
+> Add my project https://github.com/someone/budget-app (deployed at https://budget-app.vercel.app) to the playground as "Budget app". Open a PR.
+
+The agent picks one of three ways (details in `CLAUDE.md` → "Bringing in an existing project"):
+
+| Your project | What happens | You need to give |
+|---|---|---|
+| Already deployed, or a big or full app in any framework | A gallery card that embeds it (phone frame) or opens it. The code stays where it is, and your updates show up automatically. | The live URL |
+| Small React / Next.js prototype | Moved into the playground and restyled to its design system, so it lives here from now on. | Repo link or zip, plus any env var names (send values to the owner privately) |
+| Static site (HTML, Vite…) that isn't deployed | Its build is copied in and shown in a frame. | Repo link or zip |
+
+If you don't say, the agent embeds or links the deployment. That's the fastest option and nothing breaks.
+
 ## Tips for good requests
 
 - Say what it does and who it's for, in a sentence or two. Leave out layout details unless they matter. The default is a clean single column.
