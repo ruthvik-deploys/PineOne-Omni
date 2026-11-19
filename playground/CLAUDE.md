@@ -46,6 +46,8 @@ When someone asks to add a project they already built (a repo, a folder, a zip o
 2. Create `app/prototypes/<slug>/` with `metadata.json` that includes `"external": { "url": "<url>", "embed": "phone" | "none" }`. Use `phone` for mobile-first apps (renders `PhoneFrame`) and `none` for desktop apps (renders `ExternalApp`, a page with an Open button). Copy `pine-one-mobile/` or `pine-one-web/`.
 3. Write `HOW_IT_WORKS.md`: where the source lives, where it's deployed, and who owns it.
 4. Capture thumbnails. With `none`, the script screenshots the external URL directly.
+5. **One app, several flows?** Give each distinct flow its own prototype with a deep link (`<app>-<flow>` slugs, shared tag), as with `osmosis-*`. Confirm each route really renders on its own first. Some routes just redirect (Osmosis `/pine-ai` → `/`).
+6. **Mock sign-in in the way?** Add `external.note` (one line telling people how to get in) and `external.seedLocalStorage` (the keys the app's mock auth reads) so thumbnails show the real screen. Read the app's auth code to find the key. Never seed real credentials or tokens.
 
 The source stays where it is, so updates to their deployment show up automatically.
 
@@ -209,4 +211,5 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 - **Cache Components is off** (`next.config.ts`). With it on, `dynamicParams` is rejected and `generateStaticParams` can't return `[]`. Don't turn it on casually.
 - **Turbopack root is pinned** to `playground/` because the repo has other lockfiles. Don't remove `turbopack.root`.
 - **Desktop apps need a wide capture.** External desktop apps are captured at 1440px; at 1280px the Pine One web app cropped its right edge.
+- **External apps with a client-side mock login** redirect every deep link to their login screen in a fresh browser, so thumbnails all looked the same. `external.seedLocalStorage` fixes the captures, and `external.note` tells people to sign in once.
 - **OG URLs must be absolute.** Next resolves `og:image` against `metadataBase` but not `og:video`, so the video URL is built with `SITE_URL` in `app/p/[slug]/page.tsx`.

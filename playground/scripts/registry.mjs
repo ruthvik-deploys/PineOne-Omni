@@ -41,6 +41,9 @@ function readPrototypes() {
     if (!Array.isArray(meta.tags)) errors.push(`${slug}: tags must be an array`);
     if (meta.external && !["phone", "none"].includes(meta.external.embed))
       errors.push(`${slug}: external.embed must be "phone" or "none"`);
+    const seed = meta.external?.seedLocalStorage;
+    if (seed && (typeof seed !== "object" || Object.values(seed).some((v) => typeof v !== "string")))
+      errors.push(`${slug}: external.seedLocalStorage must map keys to strings`);
     entries.push({
       slug,
       thumbnails: exists(`thumbnails/${slug}-light.png`) && exists(`thumbnails/${slug}-dark.png`),

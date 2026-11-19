@@ -1,0 +1,21 @@
+{
+  "title": "Osmosis: Market Agent",
+  "description": "Pine AI agent for Google Ads: link an account, describe the business, review and publish campaigns, then optimise.",
+  "tags": [
+    "osmosis",
+    "pine-ai",
+    "agents"
+  ],
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T09:24:44.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one.vercel.app/pine-ai/agents/local-ads",
+    "embed": "none",
+    "note": "Sign in once on pine-one.vercel.app with any work email and password and pick a merchant. After that, this link opens the page directly.",
+    "seedLocalStorage": {
+      "osmosis.auth-flow.v1": "{\"isAuthenticated\":true,\"authMethod\":\"password\",\"pendingEmail\":\"\",\"selectedProfileId\":\"gd-electronics\"}"
+    }
+  }
+}

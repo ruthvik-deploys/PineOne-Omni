@@ -10,7 +10,14 @@ export type PrototypeMeta = {
   hidden: boolean;
   public: boolean;
   /** Optional: the prototype is a separately deployed app. Thumbnails capture this URL when `embed` is "none". */
-  external?: { url: string | null; embed: "phone" | "none" };
+  external?: {
+    url: string | null;
+    embed: "phone" | "none";
+    /** One line shown under the description, e.g. how to get past the app's own sign-in. */
+    note?: string;
+    /** localStorage entries the thumbnail script sets on the external origin before capturing (e.g. a mock sign-in). */
+    seedLocalStorage?: Record<string, string>;
+  };
 };
 
 export type RegistryEntry = {
