@@ -1,0 +1,14 @@
+<!--
+  Storybook doesn't run app/layout.tsx, so the app's next/font setup (Inter Display,
+  exposed as --font-inter-display) never loads here and components fall back to a serif.
+  Load the same files from public/fonts and set the same variable.
+-->
+<style>
+  @font-face { font-family: "Inter Display"; src: url("./fonts/inter-display/InterDisplay-Light.woff2") format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Inter Display"; src: url("./fonts/inter-display/InterDisplay-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Inter Display"; src: url("./fonts/inter-display/InterDisplay-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Inter Display"; src: url("./fonts/inter-display/InterDisplay-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Inter Display"; src: url("./fonts/inter-display/InterDisplay-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+  :root { --font-inter-display: "Inter Display"; }
+  html, body { font-family: var(--font-sans, "Inter Display"), sans-serif; }
+</style>

@@ -1,0 +1,18 @@
+{
+  "title": "Storybook",
+  "description": "Every web portal component and pattern with live previews, props, code and light/dark: foundations, brand, layout, UI and composed blocks.",
+  "tags": [
+    "pine-one",
+    "design-system"
+  ],
+  "surface": "web",
+  "group": "Pine One",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T10:41:48.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-storybook.vercel.app",
+    "embed": "none"
+  }
+}
