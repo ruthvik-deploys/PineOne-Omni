@@ -1,0 +1,10 @@
+{
+  "title": "Pine One Omni web",
+  "description": "The merchant dashboard: onboarding, transactions, settlements, payment links, disputes and reports.",
+  "tags": ["pine-one", "web"],
+  "createdAt": "2026-06-01",
+  "updatedAt": "2026-11-19T12:04:00.000Z",
+  "hidden": false,
+  "public": false,
+  "external": { "url": "https://pine-one-user-journey-v2.vercel.app", "embed": "none" }
+}
