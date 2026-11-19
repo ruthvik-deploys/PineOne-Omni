@@ -1,11 +1,12 @@
 {
-  "title": "Pine One web: Business verification (KYC)",
+  "title": "Business verification (KYC)",
   "description": "Nine-step onboarding rail: verify business (DigiLocker or document upload), business basics, stores, website, banking, owners, signatory, face check, review and sign.",
   "tags": [
     "pine-one",
-    "web",
     "onboarding"
   ],
+  "surface": "web",
+  "group": "Pine One onboarding",
   "createdAt": "2026-11-19",
   "updatedAt": "2026-11-19T09:39:03.000Z",
   "hidden": false,

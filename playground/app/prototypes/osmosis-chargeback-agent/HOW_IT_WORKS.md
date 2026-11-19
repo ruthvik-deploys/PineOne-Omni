@@ -1,4 +1,4 @@
-# Osmosis web: Chargeback Agent
+# Osmosis agents web: Chargeback Agent
 
 ## What It Does
 Pine AI agent that reviews chargebacks, gathers evidence from connected tools and drafts responses for approval. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/pine-ai/agents/chargeback`.

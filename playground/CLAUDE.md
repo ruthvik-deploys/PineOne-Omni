@@ -82,6 +82,8 @@ Every prototype has `metadata.json`:
   "public": false
 }
 ```
+- Optional gallery placement: `"surface": "web" | "mobile"` puts the card under the **Web** or **Mobile app** section (omit it for standalone prototypes, which go under **Prototypes**). `"group": "<Product>"` groups cards inside the section, e.g. `"Pine One"`, `"Pine One onboarding"`, `"Osmosis agents"`. Groups sort alphabetically, so name a product's sub-groups `<Product> <thing>` to keep them together. Titles shouldn't repeat the group or surface ("Payments", not "Osmosis web: Payments"); the prototype page shows them as a label.
+- Tags shared by two or more prototypes become filter chips; one-off tags are search-only. Don't add a tag nobody else uses.
 - Bump `updatedAt` (full ISO timestamp) on **every** edit, so the gallery stays sorted and thumbnail caches refresh.
 - Optional `"external": { "url": "...", "embed": "phone" | "none" }` is for prototypes that are separately deployed apps (see `pine-one-mobile`, `pine-one-web`). With `"embed": "none"` the thumbnail script captures the external URL directly.
 
@@ -213,5 +215,5 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 - **Desktop apps need a wide capture.** External desktop apps are captured at 1440px; at 1280px the Pine One web app cropped its right edge.
 - **External apps with a client-side mock login** redirect every deep link to their login screen in a fresh browser, so thumbnails all looked the same. `external.seedLocalStorage` fixes the captures, and `external.note` tells people to sign in once.
 - **Phone-frame iframes get their own storage.** Browsers partition third-party storage, so an app embedded with `"embed": "phone"` doesn't see a sign-in made in its own tab. People sign in once inside the frame. The thumbnail script seeds `seedLocalStorage` inside the iframe too.
-- **Name entries by product and surface** (`Osmosis web: …`, `Osmosis app: …`, `Pine One web: …`, `Pine One app`) and tag `web` or `mobile`, so the gallery separates web portals from mobile apps.
+- **Separate web portals from mobile apps with `surface` and `group`**, not title prefixes or `web`/`mobile` tags. The gallery has an All / Web / Mobile app switch and section headings driven by those fields.
 - **OG URLs must be absolute.** Next resolves `og:image` against `metadataBase` but not `og:video`, so the video URL is built with `SITE_URL` in `app/p/[slug]/page.tsx`.

@@ -1,4 +1,4 @@
-# Pine One web: Sign up, mobile first
+# Pine One onboarding web: Sign up, mobile first
 
 ## What It Does
 Create an account from a mobile number and OTP, then set a password and continue into the getting-started home.

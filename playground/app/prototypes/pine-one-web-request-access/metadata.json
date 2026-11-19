@@ -1,12 +1,13 @@
 {
-  "title": "Pine One web: Request access (existing merchant)",
+  "title": "Request access (existing merchant)",
   "description": "Conversational, chat-style flow for an existing Pine Labs merchant to find their business and request access.",
   "tags": [
     "pine-one",
-    "web",
     "onboarding",
     "experiment"
   ],
+  "surface": "web",
+  "group": "Pine One onboarding",
   "createdAt": "2026-11-19",
   "updatedAt": "2026-11-19T09:39:02.000Z",
   "hidden": false,

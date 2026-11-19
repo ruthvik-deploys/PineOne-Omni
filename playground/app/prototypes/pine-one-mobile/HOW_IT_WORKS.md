@@ -1,4 +1,4 @@
-# Pine One mobile app
+# Pine One app
 
 ## What It Does
 Shows the Pine One merchant app (Expo / React Native) inside the playground. Its source lives in `/mobile` at the repo root and is deployed on its own to `pineone-mobile.vercel.app`. This prototype embeds that live build.

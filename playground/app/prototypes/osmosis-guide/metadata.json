@@ -1,12 +1,13 @@
 {
-  "title": "Osmosis web: Guide assistant",
+  "title": "Guide assistant",
   "description": "AI assistant panel that opens beside any page: suggested questions, chat with answer cards, voice input, history and feedback.",
   "tags": [
     "osmosis",
-    "web",
     "pine-ai",
     "experiment"
   ],
+  "surface": "web",
+  "group": "Osmosis",
   "createdAt": "2026-11-19",
   "updatedAt": "2026-11-19T09:39:08.000Z",
   "hidden": false,

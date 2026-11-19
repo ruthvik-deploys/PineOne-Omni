@@ -1,4 +1,4 @@
-# Osmosis web: Campaign Analyzer
+# Osmosis agents web: Campaign Analyzer
 
 ## What It Does
 Pine AI agent that analyses ad campaign performance. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/pine-ai/agents/campaign-analyzer`.

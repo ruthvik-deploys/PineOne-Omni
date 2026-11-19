@@ -1,4 +1,4 @@
-# Pine One web: Business verification (KYC)
+# Pine One onboarding web: Business verification (KYC)
 
 ## What It Does
 Nine-step onboarding rail: verify business (DigiLocker or document upload), business basics, stores, website, banking, owners, signatory, face check, review and sign.

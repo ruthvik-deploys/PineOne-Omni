@@ -1,4 +1,4 @@
-# Pine One Omni web
+# Pine One web: Dashboard
 
 ## What It Does
 Links to the Pine One Omni merchant dashboard, the Next.js app at the repo root. It is deployed on its own to `pine-one-user-journey-v2.vercel.app`. It is a full multi-route desktop app, so it opens in its own tab instead of being embedded.

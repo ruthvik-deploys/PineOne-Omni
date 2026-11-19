@@ -1,4 +1,4 @@
-# Osmosis web: Snapshot Agent
+# Osmosis agents web: Snapshot Agent
 
 ## What It Does
 Pine AI agent that sends a daily business snapshot and flags dips and spikes across stores. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/pine-ai/agents/daily_business_snapshot`.

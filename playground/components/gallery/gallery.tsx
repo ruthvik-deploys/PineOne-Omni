@@ -6,19 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { Prototype } from "@/lib/prototypes";
-import { collectTags, filterPrototypes } from "./filter";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { type Surface, collectTags, filterPrototypes, groupPrototypes } from "./filter";
 import { PrototypeCard } from "./prototype-card";
 
 export function Gallery({ prototypes }: { prototypes: Prototype[] }) {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
+  const [surface, setSurface] = useState<Surface | null>(null);
 
   const tags = useMemo(() => collectTags(prototypes, showHidden), [prototypes, showHidden]);
   const visible = useMemo(
-    () => filterPrototypes(prototypes, { query, tag, showHidden }),
-    [prototypes, query, tag, showHidden]
+    () => filterPrototypes(prototypes, { query, tag, showHidden, surface }),
+    [prototypes, query, tag, showHidden, surface]
   );
+  const sections = useMemo(() => groupPrototypes(visible), [visible]);
   const hiddenCount = prototypes.filter((p) => p.meta.hidden).length;
 
   return (
@@ -34,6 +37,22 @@ export function Gallery({ prototypes }: { prototypes: Prototype[] }) {
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
+
+      {prototypes.some((p) => p.meta.surface) && (
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          className="w-full"
+          value={surface ?? "all"}
+          onValueChange={(v) => v && setSurface(v === "all" ? null : (v as Surface))}
+          spacing={0}
+          aria-label="Show"
+        >
+          <ToggleGroupItem value="all" className="h-11 flex-1">All</ToggleGroupItem>
+          <ToggleGroupItem value="web" className="h-11 flex-1">Web</ToggleGroupItem>
+          <ToggleGroupItem value="mobile" className="h-11 flex-1">Mobile app</ToggleGroupItem>
+        </ToggleGroup>
+      )}
 
       {(tags.length > 0 || hiddenCount > 0) && (
         <div className="flex flex-wrap items-center gap-2">
@@ -60,9 +79,23 @@ export function Gallery({ prototypes }: { prototypes: Prototype[] }) {
       {visible.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted-foreground">Nothing matches.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {visible.map((p) => (
-            <PrototypeCard key={p.slug} prototype={p} />
+        <div className="flex flex-col gap-10 pt-2">
+          {sections.map((section) => (
+            <section key={section.id} aria-labelledby={`section-${section.id}`} className="flex flex-col gap-6">
+              <h2 id={`section-${section.id}`} className="text-lg font-semibold">
+                {section.title}
+              </h2>
+              {section.groups.map((group) => (
+                <div key={group.title ?? "ungrouped"} className="flex flex-col gap-3">
+                  {group.title && <h3 className="text-sm text-muted-foreground">{group.title}</h3>}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {group.items.map((p) => (
+                      <PrototypeCard key={p.slug} prototype={p} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
           ))}
         </div>
       )}

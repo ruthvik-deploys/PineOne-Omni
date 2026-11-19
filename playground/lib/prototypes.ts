@@ -9,6 +9,10 @@ export type PrototypeMeta = {
   updatedAt: string;
   hidden: boolean;
   public: boolean;
+  /** Gallery section. Omit for standalone prototypes (they go under "Prototypes"). */
+  surface?: "web" | "mobile";
+  /** Gallery group inside the section, usually the product (e.g. "Pine One", "Pine One onboarding"). */
+  group?: string;
   /** Optional: the prototype is a separately deployed app. Thumbnails capture this URL when `embed` is "none". */
   external?: {
     url: string | null;

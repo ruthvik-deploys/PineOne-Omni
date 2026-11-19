@@ -41,6 +41,10 @@ function readPrototypes() {
     if (!Array.isArray(meta.tags)) errors.push(`${slug}: tags must be an array`);
     if (meta.external && !["phone", "none"].includes(meta.external.embed))
       errors.push(`${slug}: external.embed must be "phone" or "none"`);
+    if ("surface" in meta && !["web", "mobile"].includes(meta.surface))
+      errors.push(`${slug}: surface must be "web" or "mobile"`);
+    if ("group" in meta && (typeof meta.group !== "string" || !meta.group.trim()))
+      errors.push(`${slug}: group must be a non-empty string`);
     const seed = meta.external?.seedLocalStorage;
     if (seed && (typeof seed !== "object" || Object.values(seed).some((v) => typeof v !== "string")))
       errors.push(`${slug}: external.seedLocalStorage must map keys to strings`);

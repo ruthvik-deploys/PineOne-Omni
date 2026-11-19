@@ -1,4 +1,4 @@
-# Pine One web: Request access (existing merchant)
+# Pine One onboarding web: Request access (existing merchant)
 
 ## What It Does
 Conversational, chat-style flow for an existing Pine Labs merchant to find their business and request access.

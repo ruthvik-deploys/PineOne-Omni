@@ -1,11 +1,12 @@
 {
-  "title": "Osmosis web: Payments",
+  "title": "Payments",
   "description": "Transaction list with filters and payment details.",
   "tags": [
     "osmosis",
-    "web",
     "payments"
   ],
+  "surface": "web",
+  "group": "Osmosis",
   "createdAt": "2026-11-19",
   "updatedAt": "2026-11-19T09:38:46.000Z",
   "hidden": false,

@@ -13,7 +13,7 @@ export function PrototypeCard({ prototype }: { prototype: Prototype }) {
       <Thumbnail prototype={prototype} />
       <div className="flex flex-col gap-1 p-4">
         <div className="flex items-center gap-2">
-          <h2 className="truncate font-medium">{meta.title}</h2>
+          <h4 className="truncate font-medium">{meta.title}</h4>
           {meta.public && <Badge variant="outline">Public</Badge>}
           {meta.hidden && <Badge variant="outline">Hidden</Badge>}
         </div>

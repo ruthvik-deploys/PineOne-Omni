@@ -1,4 +1,4 @@
-# Osmosis web: Market Agent
+# Osmosis agents web: Market Agent
 
 ## What It Does
 Pine AI agent for Google Ads: link an account, describe the business, review and publish campaigns, then optimise. It's one flow of Osmosis, a separate Next.js app, linked here so it opens straight to `/pine-ai/agents/local-ads`.

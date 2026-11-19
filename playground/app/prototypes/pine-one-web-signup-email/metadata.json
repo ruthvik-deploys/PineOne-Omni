@@ -1,11 +1,12 @@
 {
-  "title": "Pine One web: Sign up, email first",
+  "title": "Sign up, email first",
   "description": "Create an account starting from a work email, then OTP, password, phone and business name.",
   "tags": [
     "pine-one",
-    "web",
     "onboarding"
   ],
+  "surface": "web",
+  "group": "Pine One onboarding",
   "createdAt": "2026-11-19",
   "updatedAt": "2026-11-19T09:39:05.000Z",
   "hidden": false,

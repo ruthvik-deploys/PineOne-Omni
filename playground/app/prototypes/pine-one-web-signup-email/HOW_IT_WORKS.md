@@ -1,4 +1,4 @@
-# Pine One web: Sign up, email first
+# Pine One onboarding web: Sign up, email first
 
 ## What It Does
 Create an account starting from a work email, then OTP, password, phone and business name.
