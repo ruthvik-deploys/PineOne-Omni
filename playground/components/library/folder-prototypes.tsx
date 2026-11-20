@@ -1,15 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useShowHidden } from "@/hooks/use-show-hidden";
 import type { Prototype } from "@/lib/prototypes";
 import { PrototypeCard } from "./prototype-card";
 import { sectionsFor } from "./search";
 
-/** A prototype folder's contents, split into sections. Hidden ones show only when the home page's Show hidden switch is on. */
+/** A prototype folder's contents, split into sections. */
 export function FolderPrototypes({ prototypes, titles }: { prototypes: Prototype[]; titles: Record<string, string> }) {
-  const [showHidden] = useShowHidden();
-  const sections = useMemo(() => sectionsFor(prototypes.filter((p) => showHidden || !p.meta.hidden)), [prototypes, showHidden]);
+  const sections = useMemo(() => sectionsFor(prototypes), [prototypes]);
 
   return (
     <div className="flex flex-col gap-6">

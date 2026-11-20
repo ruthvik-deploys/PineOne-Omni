@@ -97,7 +97,7 @@ A variant is a **new prototype** that points at the one it varies. Never edit th
 
 Deploy a **preview**, then add an `external` entry here with `variantOf` set to the entry it varies (e.g. `pine-one-mobile`, `pine-one-web-kyc`) and `url` set to the preview URL.
 
-**Deciding:** when the owner picks a winner, either merge it into the original (bump `updatedAt`, recapture thumbnails) or keep the variant. Set `"hidden": true` on the loser. Don't delete it unless asked; hidden entries stay reachable with the Show hidden switch at the bottom of the home page.
+**Deciding:** when the owner picks a winner, either merge it into the original (bump `updatedAt`, recapture thumbnails) or keep the variant. Don't delete the loser unless asked. The gallery shows everything (there is no hidden state, Nov 20); `"hidden": true` is only a record that it lost. Say so in its title or description if it would confuse people.
 
 ## Rules for every prototype
 

@@ -1,5 +1,10 @@
 /** Filter tags on the Docs folder: the channels a doc covers (from `topics`) and the personas it cites. Client-safe. */
-export const DOC_TAGS = ["In-store", "Online", "Business owner", "Store manager", "Cashier", "Finance & ops", "Access admin"] as const;
+export const TAG_GROUPS = [
+  { label: "Channel", tags: ["In-store", "Online"] },
+  { label: "Persona", tags: ["Business owner", "Store manager", "Cashier", "Finance & ops", "Access admin"] },
+] as const;
+
+export const DOC_TAGS = TAG_GROUPS.flatMap((g) => g.tags);
 
 export const PERSONA_TAGS: Record<string, string> = {
   P1: "Business owner",

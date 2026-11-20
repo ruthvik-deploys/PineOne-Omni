@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { DocsBrowser } from "@/components/library/docs-browser";
 import { FolderPrototypes } from "@/components/library/folder-prototypes";
 import { PageHeader } from "@/components/page-header";
+import { PageTitle } from "@/components/page-title";
 import { getDocSummaries } from "@/lib/docs";
 import { FOLDERS, getFolder } from "@/lib/folders";
 import { getAllPrototypes } from "@/lib/prototypes";
@@ -28,13 +29,10 @@ export default async function FolderPage({ params }: PageProps<"/folders/[folder
       <PageHeader crumbs={[{ label: "Playground", href: "/" }, { label: folder.title }]} back={{ href: "/", label: "Playground" }} />
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 pb-16">
         {folder.id === "docs" ? (
-          <DocsBrowser docs={docs} title={folder.title} description={folder.description} />
+          <DocsBrowser docs={docs} title={folder.title} />
         ) : (
           <>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-semibold">{folder.title}</h1>
-              <p className="text-muted-foreground">{folder.description}</p>
-            </div>
+            <PageTitle>{folder.title}</PageTitle>
             <FolderPrototypes
               prototypes={all.filter((p) => p.meta.folder === folder.id)}
               titles={Object.fromEntries(all.map((p) => [p.slug, p.meta.title]))}

@@ -13,7 +13,6 @@ export function PrototypeCard({ prototype, variantOfTitle }: { prototype: Protot
         <div className="flex items-center gap-2">
           <h4 className="truncate font-medium">{meta.title}</h4>
           {meta.public && <Badge variant="outline">Public</Badge>}
-          {meta.hidden && <Badge variant="outline">Hidden</Badge>}
         </div>
         {variantOfTitle && <p className="text-sm text-muted-foreground">Variant of {variantOfTitle}</p>}
         <p className="line-clamp-2 text-sm text-muted-foreground">{meta.description}</p>

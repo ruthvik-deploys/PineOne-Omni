@@ -1,5 +1,5 @@
 import type { DocSummary } from "@/lib/docs";
-import { FOLDERS, type Folder, type FolderId } from "@/lib/folders";
+import { FOLDERS, type Folder } from "@/lib/folders";
 import type { Prototype } from "@/lib/prototypes";
 
 /** Pure helpers for the home page and folder pages. No React. */
@@ -22,14 +22,6 @@ export function searchDocs(query: string, docs: DocSummary[]): DocHit[] {
 export type FolderHits = { folder: Folder; prototypes: Prototype[]; docs: DocHit[] };
 
 const SNIPPET_RADIUS = 70;
-
-/** Visible (not hidden) items per folder, for the folder cards. */
-export function countByFolder(prototypes: Prototype[], docs: DocSummary[]): Record<FolderId, number> {
-  const counts = Object.fromEntries(FOLDERS.map((f) => [f.id, 0])) as Record<FolderId, number>;
-  for (const p of prototypes) if (!p.meta.hidden) counts[p.meta.folder] += 1;
-  counts.docs = docs.length;
-  return counts;
-}
 
 function words(query: string) {
   return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -77,14 +69,13 @@ function snippet(text: string, terms: string[], query: string) {
  * documents by their front matter and full text (with a snippet when the hit is in the text).
  * Hidden prototypes are left out unless `showHidden`. Folders without hits are dropped; folder order is kept.
  */
-export function searchAll(query: string, prototypes: Prototype[], docs: DocSummary[], showHidden = false): FolderHits[] {
+export function searchAll(query: string, prototypes: Prototype[], docs: DocSummary[]): FolderHits[] {
   const terms = words(query);
   if (!terms.length) return [];
   return FOLDERS.map((folder) => {
     const protoHits = prototypes.filter(
       (p) =>
         p.meta.folder === folder.id &&
-        (showHidden || !p.meta.hidden) &&
         matchesAll([p.meta.title, p.meta.description, p.slug, p.meta.group ?? "", folder.title, ...p.meta.tags], terms)
     );
     const docHits: DocHit[] =

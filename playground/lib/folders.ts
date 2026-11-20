@@ -4,13 +4,13 @@
  * `docs` holds the research documents in `docs/*.md`, not prototypes.
  */
 export const FOLDERS = [
-  { id: "docs", title: "Docs", description: "Design strategy, personas, module design documents and merchant research" },
-  { id: "design-system", title: "Design system", description: "Storybooks and design system docs for web and the app" },
-  { id: "pine-one", title: "Pine One", description: "Pine One web dashboard" },
-  { id: "pine-one-app", title: "Pine One app", description: "Pine One mobile app and its flows" },
-  { id: "pine-omni", title: "Pine Omni", description: "Pine Omni web pages and agents" },
-  { id: "pine-omni-app", title: "Pine Omni app", description: "Pine Omni mobile app" },
-  { id: "onboarding", title: "Onboarding", description: "Sign-up, KYC and onboarding flows, with other designs per step" },
+  { id: "docs", title: "Docs" },
+  { id: "design-system", title: "Design system" },
+  { id: "pine-one", title: "Pine One" },
+  { id: "pine-one-app", title: "Pine One app" },
+  { id: "pine-omni", title: "Pine Omni" },
+  { id: "pine-omni-app", title: "Pine Omni app" },
+  { id: "onboarding", title: "Onboarding" },
 ] as const;
 
 export type FolderId = (typeof FOLDERS)[number]["id"];

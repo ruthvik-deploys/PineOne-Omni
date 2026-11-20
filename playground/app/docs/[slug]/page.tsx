@@ -5,6 +5,7 @@ import { DocContentsInline, DocContentsRail } from "@/components/library/doc-con
 import { formatDocDate } from "@/components/library/format";
 import { Markdown } from "@/components/library/markdown";
 import { PageHeader } from "@/components/page-header";
+import { PageTitle } from "@/components/page-title";
 import { Badge } from "@/components/ui/badge";
 import { getAllDocs, getDoc } from "@/lib/docs";
 import { buildGlossary, documentNames } from "@/lib/references";
@@ -36,7 +37,7 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
         <main className="mx-auto w-full max-w-[44rem] lg:mx-0">
           <header className="flex flex-col gap-4 border-b border-border pb-8">
             <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{meta.kind}</p>
-            <h1 className="text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-[2.5rem]">{meta.title}</h1>
+            <PageTitle>{meta.title}</PageTitle>
             <p className="text-lg leading-relaxed text-pretty text-muted-foreground">{meta.description}</p>
             <p className="text-sm text-muted-foreground">
               {formatDocDate(meta.date)} · {minutes} min read
