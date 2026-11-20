@@ -115,7 +115,7 @@ Every prototype has `metadata.json`:
   "public": false
 }
 ```
-- **`folder` (required)** puts the card in a home-page folder: `design-system`, `pine-one` (web), `pine-one-app`, `pine-omni` (Osmosis web), `pine-omni-app`, `onboarding`. The home page shows only folders; people open one to see its prototypes. A new folder needs an entry in `lib/folders.ts` and in `FOLDERS` in `scripts/registry.mjs`.
+- **`folder` (required)** puts the card in a home-page folder: `design-system`, `pine-one` (web), `pine-one-app`, `pine-omni` (Osmosis web), `pine-omni-app`, `agents` (AI agents, web or app), `onboarding`. The home page shows only folders; people open one to see its prototypes. A new folder needs an entry in `lib/folders.ts` and in `FOLDERS` in `scripts/registry.mjs`.
 - `"surface": "web" | "mobile"` and `"group": "<name>"` are labels (shown on the prototype page); folders list their cards in one grid, newest first, with no sub-headings. Titles shouldn't repeat the folder or surface ("Payments", not "Osmosis web: Payments").
 - Optional `"variantOf": "<slug>"` marks a version or experiment of another prototype (see "Making a version or experiment").
 - Tags are search-only (there are no filter chips). Add one only when it's a word people would search for that isn't already in the title or description.
