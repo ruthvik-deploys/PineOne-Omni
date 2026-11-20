@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DOC_TAGS } from "@/lib/doc-tags";
 import type { DocSummary } from "@/lib/docs";
-import { DocRow } from "./doc-row";
+import { DocTile } from "./doc-tile";
 import { plural } from "./format";
 import { SearchBox } from "./search-box";
 import { searchDocs } from "./search";
 
 /**
  * The Docs folder: search (full text, ranked, with the matching passage) and tags
- * (channel and persona) on top, then one list of every doc (A–Z, or ranked while searching).
+ * (channel and persona) on top, then every doc as a file with its page preview (A–Z, or ranked while searching).
  */
 export function DocsBrowser({ docs }: { docs: DocSummary[] }) {
   const [query, setQuery] = useState("");
@@ -46,9 +46,9 @@ export function DocsBrowser({ docs }: { docs: DocSummary[] }) {
       {hits.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted-foreground">Nothing matches.</p>
       ) : (
-        <div className="flex flex-col gap-3">
-          {list.map(({ doc, snippet }) => (
-            <DocRow key={doc.slug} doc={doc} snippet={snippet} />
+        <div className="grid grid-cols-3 gap-x-2 gap-y-6 sm:grid-cols-4">
+          {list.map(({ doc }) => (
+            <DocTile key={doc.slug} doc={doc} />
           ))}
         </div>
       )}
