@@ -26,7 +26,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       className="size-11"
-      aria-label={`Theme: ${current}. Switch to ${next}`}
+      aria-label={mounted ? `Theme: ${current}. Switch to ${next}` : "Switch theme"}
       onClick={() => setTheme(next)}
     >
       {mounted ? <Icon /> : <span className="size-4" />}

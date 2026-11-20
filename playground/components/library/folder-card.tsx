@@ -2,55 +2,59 @@ import Link from "next/link";
 import type { DocSummary } from "@/lib/docs";
 import type { Folder } from "@/lib/folders";
 import type { Prototype } from "@/lib/prototypes";
-import { CARD_LINK } from "./card-styles";
+import { FolderIcon } from "./folder-icon";
 import { plural } from "./format";
-import { Thumbnail } from "./thumbnail";
-
-const COVER = "aspect-[16/10] bg-muted";
 
 /**
- * A folder on the home page: a cover (the four newest thumbnails, or the newest document titles
- * for Docs), then its name and how many things are inside.
+ * A folder on the home page, Finder icon-view style: the folder (with the newest few things inside
+ * peeking out: screenshots for prototype folders, pages for Docs), its name, and how many items.
  */
 export function FolderCard({ folder, prototypes, docs }: { folder: Folder; prototypes: Prototype[]; docs: DocSummary[] }) {
   const isDocs = folder.id === "docs";
-  const count = isDocs ? plural(docs.length, "document") : plural(prototypes.length, "prototype");
+  const count = isDocs ? plural(docs.length, "doc") : plural(prototypes.length, "item");
+  const sheets = isDocs
+    ? docs.slice(0, 3).map((d) => <FileSheet key={d.slug} title={d.meta.title} />)
+    : prototypes
+        .filter((p) => p.assets.thumbnails)
+        .slice(0, 3)
+        .map((p) => <ShotSheet key={p.slug} prototype={p} />);
   return (
-    <Link href={`/folders/${folder.id}`} className={CARD_LINK}>
-      {isDocs ? <DocsCover docs={docs} /> : <Mosaic prototypes={prototypes.filter((p) => p.assets.thumbnails).slice(0, 4)} />}
-      <div className="flex flex-col gap-0.5 p-3 sm:gap-1 sm:p-4">
-        <h3 className="font-medium">{folder.title}</h3>
-        <p className="text-sm text-muted-foreground">{count}</p>
+    <Link
+      href={`/folders/${folder.id}`}
+      className="group flex flex-col items-center gap-2 rounded-xl p-2 text-center transition-colors duration-150 ease-out hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:bg-muted"
+    >
+      <div className="w-full max-w-36 transition-transform duration-200 ease-out group-hover:-translate-y-0.5 motion-reduce:transition-none">
+        <FolderIcon sheets={sheets} />
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-sm leading-tight font-medium">{folder.title}</h3>
+        <p className="text-xs text-muted-foreground">{count}</p>
       </div>
     </Link>
   );
 }
 
-function Mosaic({ prototypes }: { prototypes: Prototype[] }) {
-  if (prototypes.length === 0) return <div className={COVER} />;
-  if (prototypes.length === 1) return <Thumbnail prototype={prototypes[0]} />;
+function ShotSheet({ prototype }: { prototype: Prototype }) {
+  const v = Date.parse(prototype.meta.updatedAt);
+  const src = (mode: string) => `/thumbnails/${prototype.slug}-${mode}.png?v=${v}`;
   return (
-    <div className={`grid grid-cols-2 gap-px ${prototypes.length === 2 ? "grid-rows-1" : "grid-rows-2"} ${COVER}`}>
-      {prototypes.map((p) => (
-        <Thumbnail key={p.slug} prototype={p} className="aspect-auto h-full min-h-0" />
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src("light")} alt="" loading="lazy" decoding="async" className="size-full object-cover object-top dark:hidden" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src("dark")} alt="" loading="lazy" decoding="async" className="hidden size-full object-cover object-top dark:block" />
+    </>
+  );
+}
+
+function FileSheet({ title }: { title: string }) {
+  return (
+    <div className="flex flex-col gap-[3px] p-[8%]">
+      <span className="truncate text-[6px] leading-tight font-semibold">{title}</span>
+      {[100, 85, 95, 70, 90].map((w) => (
+        <span key={w} className="h-px rounded-full bg-muted-foreground/40" style={{ width: `${w}%` }} />
       ))}
-      {prototypes.length === 3 && <div className="bg-muted" />}
     </div>
   );
 }
 
-function DocsCover({ docs }: { docs: DocSummary[] }) {
-  return (
-    <div className={`flex flex-col justify-end gap-1.5 p-3 sm:gap-2 sm:p-4 ${COVER}`}>
-      {docs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nothing here yet</p>
-      ) : (
-        docs.slice(0, 3).map((d) => (
-          <p key={d.slug} className="truncate rounded-md bg-card px-2 py-1 text-xs ring-1 ring-border sm:px-3 sm:py-2 sm:text-sm">
-            {d.meta.title}
-          </p>
-        ))
-      )}
-    </div>
-  );
-}

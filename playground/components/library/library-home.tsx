@@ -22,7 +22,7 @@ export function LibraryHome({ prototypes, docs }: { prototypes: Prototype[]; doc
       {query.trim() ? (
         <SearchResults hits={hits} titles={titles} />
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 gap-x-2 gap-y-5 sm:grid-cols-4">
           {FOLDERS.map((folder) => (
             <FolderCard key={folder.id} folder={folder} prototypes={visible.filter((p) => p.meta.folder === folder.id)} docs={docs} />
           ))}

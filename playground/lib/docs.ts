@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import GithubSlugger from "github-slugger";
 
 /**
  * Research documents: one Markdown file per document in `playground/docs/`, with front matter.
@@ -18,9 +19,16 @@ export type DocMeta = {
   source?: string;
 };
 
-export type Doc = { slug: string; meta: DocMeta; body: string };
+/** "Updated: 5 October 2026"-style lines at the top of a document, lifted into the title block. */
+export type DocDetail = { label: string; value: string };
+/** Heading ids match what rehype-slug gives the rendered headings (same slugger, same order). */
+export type DocHeading = { depth: number; text: string; id: string };
+
+export type Doc = { slug: string; meta: DocMeta; details: DocDetail[]; body: string; headings: DocHeading[]; minutes: number };
 /** What the client needs for listing and search: no full Markdown. */
-export type DocSummary = { slug: string; meta: DocMeta; text: string };
+export type DocSummary = { slug: string; meta: DocMeta; text: string; minutes: number };
+
+const WORDS_PER_MINUTE = 220;
 
 const DOCS_DIR = path.join(process.cwd(), "docs");
 const SKIP = new Set(["README.md"]);
@@ -62,8 +70,35 @@ function parse(slug: string, file: string): Doc {
       topics: Array.isArray(topics) ? topics : [topics],
       source: typeof fields.source === "string" && fields.source ? fields.source : undefined,
     },
-    body: match[2].trim(),
+    ...structure(match[2].trim()),
   };
+}
+
+/** Pulls the "Key: value" lines before the first heading out of the body, and lists the headings. */
+function structure(markdown: string) {
+  const firstHeading = markdown.search(/^#{1,6} /m);
+  const intro = firstHeading < 0 ? markdown : markdown.slice(0, firstHeading);
+  const rest = firstHeading < 0 ? "" : markdown.slice(firstHeading);
+  const details: DocDetail[] = [];
+  const kept = intro.split(/\n{2,}/).filter((para) => {
+    const m = /^([A-Z][A-Za-z ,]{1,60}):\s+(\S[^\n]*)$/.exec(para.trim());
+    if (!m) return true;
+    details.push({ label: m[1] === "Design owner, product owner and launch milestone" ? "Owners" : m[1], value: m[2].trim() });
+    return false;
+  });
+  const body = [kept.join("\n\n").trim(), rest].filter(Boolean).join("\n\n");
+  const slugger = new GithubSlugger();
+  const headings: DocHeading[] = [];
+  let inFence = false;
+  for (const line of body.split("\n")) {
+    if (line.startsWith("```")) inFence = !inFence;
+    const m = !inFence && /^(#{1,6})\s+(.+?)\s*#*$/.exec(line);
+    if (!m) continue;
+    const text = m[2].replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "").trim();
+    headings.push({ depth: m[1].length, text, id: slugger.slug(text) });
+  }
+  const minutes = Math.max(1, Math.round(plain(body).split(" ").length / WORDS_PER_MINUTE));
+  return { details, body, headings, minutes };
 }
 
 /** Every document, newest first. */
@@ -97,5 +132,5 @@ function plain(md: string) {
 }
 
 export function getDocSummaries(): DocSummary[] {
-  return getAllDocs().map(({ slug, meta, body }) => ({ slug, meta, text: plain(body) }));
+  return getAllDocs().map(({ slug, meta, body, minutes }) => ({ slug, meta, text: plain(body), minutes }));
 }

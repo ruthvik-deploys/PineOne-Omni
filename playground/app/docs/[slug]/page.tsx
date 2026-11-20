@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DocContentsInline, DocContentsRail } from "@/components/library/doc-contents";
 import { formatDocDate } from "@/components/library/format";
 import { Markdown } from "@/components/library/markdown";
 import { PageHeader } from "@/components/page-header";
@@ -20,32 +22,58 @@ export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): P
 export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
   const doc = getDoc((await params).slug);
   if (!doc) notFound();
-  const { meta, body } = doc;
+  const { meta, details, body, headings, minutes } = doc;
   return (
     <div className="flex min-h-dvh flex-col">
       <PageHeader href="/folders/docs" label="Docs" />
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-4 pb-16">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">
-            {meta.kind} · {formatDocDate(meta.date)}
-          </p>
-          <h1 className="text-2xl font-semibold">{meta.title}</h1>
-          <p className="text-muted-foreground">{meta.description}</p>
-          {meta.topics.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {meta.topics.map((t) => (
-                <Badge key={t} variant="outline">
-                  {t}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-        <article>
-          <Markdown>{body}</Markdown>
-        </article>
-        {meta.source && <p className="text-sm text-muted-foreground">Converted from {meta.source}</p>}
-      </main>
+      <div className="mx-auto w-full max-w-6xl px-4 pt-6 pb-24 sm:px-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16 lg:pt-10">
+        <aside className="hidden lg:block">
+          <DocContentsRail headings={headings} />
+        </aside>
+        <main className="mx-auto w-full max-w-[44rem] lg:mx-0">
+          <header className="flex flex-col gap-4 border-b border-border pb-8">
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{meta.kind}</p>
+            <h1 className="text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-[2.5rem]">{meta.title}</h1>
+            <p className="text-lg leading-relaxed text-pretty text-muted-foreground">{meta.description}</p>
+            <p className="text-sm text-muted-foreground">
+              {formatDocDate(meta.date)} · {minutes} min read
+            </p>
+            {details.length > 0 && (
+              <dl className="mt-2 grid gap-x-8 gap-y-4 rounded-xl bg-muted/50 p-5 sm:grid-cols-2">
+                {details
+                  .filter((d) => d.label !== "Updated")
+                  .map((d) => (
+                    <div key={d.label} className="flex flex-col gap-1">
+                      <dt className="text-xs font-medium text-muted-foreground">{d.label}</dt>
+                      <dd className="text-sm leading-snug">{d.value}</dd>
+                    </div>
+                  ))}
+              </dl>
+            )}
+            {meta.topics.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {meta.topics.map((t) => (
+                  <Badge key={t} variant="outline">
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </header>
+          <div className="mt-8 lg:hidden">
+            <DocContentsInline headings={headings} />
+          </div>
+          <article className="mt-12">
+            <Markdown>{body}</Markdown>
+          </article>
+          <footer className="mt-16 flex flex-col gap-2 border-t border-border pt-8 text-sm text-muted-foreground">
+            {meta.source && <p>Converted from {meta.source}</p>}
+            <Link href="/folders/docs" className="w-fit underline underline-offset-4 hover:text-foreground">
+              All docs
+            </Link>
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

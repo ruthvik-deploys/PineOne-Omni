@@ -11,31 +11,13 @@ Cross platform product and UX discovery for web and mobile
 
 **Pine One gives merchants one reliable place to understand and manage in-store and online payments across mobile and web.**
 
-Last updated 1 October 2026  
-Status Working discovery document  
-Platforms Pine One web and Pine One mobile app
+Updated: 1 October 2026
+
+Status: Working discovery document
+
+Platforms: Pine One web and Pine One mobile app
 
 This document consolidates stakeholder inputs with evidence from the current prototypes. It establishes the cross-platform product model and records the decisions still required.
-
-# Contents
-
-1 Purpose
-
-2 Working product definition
-
-3 Scope
-
-4 Product and account model
-
-5 Information architecture established by the prototype
-
-6 Consolidated discovery answers
-
-7 Cross platform capability model inferred from the prototype
-
-8 Decisions and conflicts requiring resolution
-
-9 Recommended documentation set
 
 # 1. Purpose
 

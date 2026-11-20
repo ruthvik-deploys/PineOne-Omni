@@ -24,6 +24,9 @@
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
+  --color-folder-back: var(--folder-back);
+  --color-folder-front: var(--folder-front);
+  --color-folder-edge: var(--folder-edge);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
@@ -51,6 +54,10 @@
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  /* Finder-style folders on the home page, in the Pine lime accent (the one place the playground uses a hue). */
+  --folder-back: oklch(0.77 0.17 128);
+  --folder-front: oklch(0.87 0.16 125);
+  --folder-edge: oklch(0.94 0.1 122);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -86,6 +93,9 @@
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --folder-back: oklch(0.5 0.12 131);
+  --folder-front: oklch(0.65 0.16 129);
+  --folder-edge: oklch(0.77 0.17 128);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);

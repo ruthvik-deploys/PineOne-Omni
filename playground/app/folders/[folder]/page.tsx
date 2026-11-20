@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DocRow } from "@/components/library/doc-row";
+import { DocTile } from "@/components/library/doc-tile";
 import { FolderPrototypes } from "@/components/library/folder-prototypes";
 import { groupDocsByKind } from "@/components/library/search";
 import { PageHeader } from "@/components/page-header";
@@ -39,9 +39,11 @@ export default async function FolderPage({ params }: PageProps<"/folders/[folder
             groupDocsByKind(docs).map(({ kind, docs: list }) => (
               <section key={kind} className="flex flex-col gap-3">
                 <h2 className="text-sm text-muted-foreground">{kind}</h2>
-                {list.map((doc) => (
-                  <DocRow key={doc.slug} doc={doc} />
-                ))}
+                <div className="grid grid-cols-3 gap-x-2 gap-y-6 sm:grid-cols-4">
+                  {list.map((doc) => (
+                    <DocTile key={doc.slug} doc={doc} />
+                  ))}
+                </div>
               </section>
             ))
           )
