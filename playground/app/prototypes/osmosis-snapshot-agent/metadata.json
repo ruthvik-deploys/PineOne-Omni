@@ -6,6 +6,7 @@
     "pine-ai",
     "agents"
   ],
+  "folder": "agents",
   "surface": "web",
   "group": "Osmosis agents",
   "createdAt": "2026-11-19",

@@ -5,6 +5,7 @@
     "pine-one",
     "onboarding"
   ],
+  "folder": "onboarding",
   "surface": "web",
   "group": "Pine One onboarding",
   "variantOf": "pine-one-web-choose-products",
