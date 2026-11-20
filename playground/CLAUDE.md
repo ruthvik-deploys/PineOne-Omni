@@ -97,7 +97,7 @@ A variant is a **new prototype** that points at the one it varies. Never edit th
 
 Deploy a **preview**, then add an `external` entry here with `variantOf` set to the entry it varies (e.g. `pine-one-mobile`, `pine-one-web-kyc`) and `url` set to the preview URL.
 
-**Deciding:** when the owner picks a winner, either merge it into the original (bump `updatedAt`, recapture thumbnails) or keep the variant. Set `"hidden": true` on the loser. Don't delete it unless asked; hidden entries stay reachable with the Hidden toggle.
+**Deciding:** when the owner picks a winner, either merge it into the original (bump `updatedAt`, recapture thumbnails) or keep the variant. Set `"hidden": true` on the loser. Don't delete it unless asked; hidden entries stay reachable with the Show hidden switch at the bottom of the home page.
 
 ## Rules for every prototype
 
@@ -244,7 +244,7 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 ## Lessons learned
 
 - **shadcn CLI import bug (Nov 2026).** `shadcn add` rewrote `@/lib/utils` imports to `"cn"`, installed an unrelated npm package called `cn`, and turned `lib/utils.ts` into a self re-export. After adding components, run `grep -rn 'from "cn"' components` and make sure `lib/utils.ts` defines `cn` with `clsx` + `tailwind-merge`.
-- **Font variable loop.** shadcn wrote `--font-sans: var(--font-sans)` in `globals.css`, so the site fell back to a serif font. It must point at `--font-geist-sans`. If text looks serif in a screenshot, check this first.
+- **Font variable loop.** shadcn wrote `--font-sans: var(--font-sans)` in `globals.css`, so the site fell back to a serif font. It must point at the loaded font's variable, now `--font-allo` (Allo, self-hosted in `app/fonts/allo/`, since Nov 20; Geist Mono stays for code). If text looks serif in a screenshot, check this first.
 - **Cache Components is off** (`next.config.ts`). With it on, `dynamicParams` is rejected and `generateStaticParams` can't return `[]`. Don't turn it on casually.
 - **Turbopack root is pinned** to `playground/` because the repo has other lockfiles. Don't remove `turbopack.root`.
 - **Desktop apps need a wide capture.** External desktop apps are captured at 1440px; at 1280px the Pine One web app cropped its right edge.

@@ -75,16 +75,16 @@ function snippet(text: string, terms: string[], query: string) {
 /**
  * Search across every folder: prototypes by title, description, group, tags and folder name;
  * documents by their front matter and full text (with a snippet when the hit is in the text).
- * Hidden prototypes are left out. Folders without hits are dropped; folder order is kept.
+ * Hidden prototypes are left out unless `showHidden`. Folders without hits are dropped; folder order is kept.
  */
-export function searchAll(query: string, prototypes: Prototype[], docs: DocSummary[]): FolderHits[] {
+export function searchAll(query: string, prototypes: Prototype[], docs: DocSummary[], showHidden = false): FolderHits[] {
   const terms = words(query);
   if (!terms.length) return [];
   return FOLDERS.map((folder) => {
     const protoHits = prototypes.filter(
       (p) =>
         p.meta.folder === folder.id &&
-        !p.meta.hidden &&
+        (showHidden || !p.meta.hidden) &&
         matchesAll([p.meta.title, p.meta.description, p.slug, p.meta.group ?? "", folder.title, ...p.meta.tags], terms)
     );
     const docHits: DocHit[] =
