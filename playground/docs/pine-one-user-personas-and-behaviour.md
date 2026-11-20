@@ -3,7 +3,7 @@ title: User personas and behaviour reference
 description: Canonical personas (P), task lenses (T), behaviour hypotheses (B) and merchant research sources (R) that the module documents cite.
 kind: Persona reference
 date: 2026-10-05
-topics: [pine-one, pine-one-app, personas, behaviour, merchant research]
+topics: [in-store, online, personas, behaviour, merchant research]
 source: docs/exports/omni-design-suite/Pine One User Personas and Behaviour Reference.docx
 ---
 

@@ -3,7 +3,7 @@ title: Settlements design document
 description: In-store and online settlements on web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, settlements, reconciliation]
+topics: [in-store, online, settlements, reconciliation]
 source: docs/exports/omni-design-suite/Pine One Settlements Design Document.docx
 ---
 

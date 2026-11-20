@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DocTile } from "@/components/library/doc-tile";
+import { DocsBrowser } from "@/components/library/docs-browser";
 import { FolderPrototypes } from "@/components/library/folder-prototypes";
-import { groupDocsByKind } from "@/components/library/search";
 import { PageHeader } from "@/components/page-header";
 import { getDocSummaries } from "@/lib/docs";
 import { FOLDERS, getFolder } from "@/lib/folders";
@@ -26,27 +25,14 @@ export default async function FolderPage({ params }: PageProps<"/folders/[folder
   const docs = folder.id === "docs" ? getDocSummaries() : [];
   return (
     <div className="flex min-h-dvh flex-col">
-      <PageHeader href="/" label="Playground" />
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-4 pb-16">
+      <PageHeader crumbs={[{ label: "Playground", href: "/" }, { label: folder.title }]} back={{ href: "/", label: "Playground" }} />
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 pb-16">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">{folder.title}</h1>
           <p className="text-muted-foreground">{folder.description}</p>
         </div>
         {folder.id === "docs" ? (
-          docs.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">Nothing here yet.</p>
-          ) : (
-            groupDocsByKind(docs).map(({ kind, docs: list }) => (
-              <section key={kind} className="flex flex-col gap-3">
-                <h2 className="text-sm text-muted-foreground">{kind}</h2>
-                <div className="grid grid-cols-3 gap-x-2 gap-y-6 sm:grid-cols-4">
-                  {list.map((doc) => (
-                    <DocTile key={doc.slug} doc={doc} />
-                  ))}
-                </div>
-              </section>
-            ))
-          )
+          <DocsBrowser docs={docs} />
         ) : (
           <FolderPrototypes
             prototypes={all.filter((p) => p.meta.folder === folder.id)}

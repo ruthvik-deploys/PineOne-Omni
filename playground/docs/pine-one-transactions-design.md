@@ -3,7 +3,7 @@ title: Transactions design document
 description: Payment verification and investigation across Online and In-store web and app views.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, transactions, payments]
+topics: [in-store, online, transactions, payments]
 source: docs/exports/omni-design-suite/Pine One Transactions Design Document.docx
 ---
 

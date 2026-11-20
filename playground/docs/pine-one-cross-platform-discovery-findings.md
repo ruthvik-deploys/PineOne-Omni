@@ -3,7 +3,7 @@ title: Cross-platform experience discovery findings
 description: Stakeholder discovery answers checked against the web and mobile prototypes: product model, information architecture and open decisions.
 kind: Discovery findings
 date: 2026-10-01
-topics: [pine-one, pine-one-app, discovery, information architecture, cross-platform]
+topics: [in-store, online, discovery, information architecture, cross-platform]
 source: docs/exports/Pine One Cross Platform Experience Discovery Findings.docx
 ---
 

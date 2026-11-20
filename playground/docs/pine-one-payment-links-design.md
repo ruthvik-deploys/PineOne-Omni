@@ -3,7 +3,7 @@ title: Payment Links design document
 description: Online link creation, sharing and collection tracking across web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, payment links, online]
+topics: [online, payment links]
 source: docs/exports/omni-design-suite/Pine One Payment Links Design Document.docx
 ---
 

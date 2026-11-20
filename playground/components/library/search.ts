@@ -5,6 +5,20 @@ import type { Prototype } from "@/lib/prototypes";
 /** Pure helpers for the home page and folder pages. No React. */
 
 export type DocHit = { doc: DocSummary; snippet: string | null };
+
+/** Ranked document search, shared by the home search and the Docs folder. */
+export function searchDocs(query: string, docs: DocSummary[]): DocHit[] {
+  const terms = words(query);
+  if (!terms.length) return docs.map((doc) => ({ doc, snippet: null }));
+  return docs
+    .flatMap((doc) => {
+      const head = [doc.meta.title, doc.meta.description, doc.meta.kind, ...doc.meta.topics];
+      if (!matchesAll([...head, doc.text], terms)) return [];
+      return [{ hit: { doc, snippet: matchesAll(head, terms) ? null : snippet(doc.text, terms, query) }, score: score(doc, terms, query) }];
+    })
+    .sort((a, b) => b.score - a.score)
+    .map(({ hit }) => hit);
+}
 export type FolderHits = { folder: Folder; prototypes: Prototype[]; docs: DocHit[] };
 
 const SNIPPET_RADIUS = 70;
@@ -74,17 +88,7 @@ export function searchAll(query: string, prototypes: Prototype[], docs: DocSumma
         matchesAll([p.meta.title, p.meta.description, p.slug, p.meta.group ?? "", folder.title, ...p.meta.tags], terms)
     );
     const docHits: DocHit[] =
-      folder.id !== "docs"
-        ? []
-        : docs
-            .flatMap((doc) => {
-              const head = [doc.meta.title, doc.meta.description, doc.meta.kind, ...doc.meta.topics];
-              if (!matchesAll([...head, doc.text], terms)) return [];
-              const hit = { doc, snippet: matchesAll(head, terms) ? null : snippet(doc.text, terms, query) };
-              return [{ hit, score: score(doc, terms, query) }];
-            })
-            .sort((a, b) => b.score - a.score)
-            .map(({ hit }) => hit);
+      folder.id !== "docs" ? [] : searchDocs(query, docs);
     return { folder, prototypes: protoHits, docs: docHits };
   }).filter((h) => h.prototypes.length + h.docs.length > 0);
 }
@@ -112,17 +116,4 @@ export function sectionsFor(prototypes: Prototype[]): FolderSection[] {
       { title: null, items: prototypes },
     ]
   );
-}
-
-/** Kinds that frame everything else come first; any other kind follows alphabetically. */
-const KIND_ORDER = ["Design strategy", "Persona reference", "Merchant research", "Discovery findings", "User journey", "Module design"];
-
-/** Docs folder sections: one per `kind`, titles A–Z inside. */
-export function groupDocsByKind(docs: DocSummary[]) {
-  const map = new Map<string, DocSummary[]>();
-  for (const d of docs) map.set(d.meta.kind, [...(map.get(d.meta.kind) ?? []), d]);
-  const rank = (k: string) => (KIND_ORDER.includes(k) ? KIND_ORDER.indexOf(k) : KIND_ORDER.length);
-  return [...map.entries()]
-    .sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
-    .map(([kind, list]) => ({ kind, docs: [...list].sort((a, b) => a.meta.title.localeCompare(b.meta.title)) }));
 }

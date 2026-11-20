@@ -3,7 +3,7 @@ title: Refunds design document
 description: Online and In-store refund visibility, initiation, approval and configuration.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, refunds]
+topics: [in-store, online, refunds]
 source: docs/exports/omni-design-suite/Pine One Refunds Design Document.docx
 ---
 

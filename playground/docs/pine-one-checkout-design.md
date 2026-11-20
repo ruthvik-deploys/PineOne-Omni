@@ -3,7 +3,7 @@ title: Checkout design document
 description: Merchant configuration and preview of Online checkout across web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, checkout, online]
+topics: [online, checkout]
 source: docs/exports/omni-design-suite/Pine One Checkout Design Document.docx
 ---
 

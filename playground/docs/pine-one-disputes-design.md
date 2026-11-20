@@ -3,7 +3,7 @@ title: Disputes design document
 description: Channel-specific case review and response across web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, disputes, chargebacks]
+topics: [in-store, online, disputes, chargebacks]
 source: docs/exports/omni-design-suite/Pine One Disputes Design Document.docx
 ---
 

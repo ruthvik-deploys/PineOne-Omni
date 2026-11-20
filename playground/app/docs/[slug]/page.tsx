@@ -7,6 +7,7 @@ import { Markdown } from "@/components/library/markdown";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { getAllDocs, getDoc } from "@/lib/docs";
+import { buildGlossary, documentNames } from "@/lib/references";
 
 export const dynamicParams = false;
 
@@ -23,9 +24,11 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
   const doc = getDoc((await params).slug);
   if (!doc) notFound();
   const { meta, details, body, headings, minutes } = doc;
+  const all = getAllDocs();
+  const references = { glossary: buildGlossary(all), names: documentNames(all), slug: doc.slug };
   return (
     <div className="flex min-h-dvh flex-col">
-      <PageHeader href="/folders/docs" label="Docs" />
+      <PageHeader crumbs={[{ label: "Playground", href: "/" }, { label: "Docs", href: "/folders/docs" }, { label: meta.title }]} back={{ href: "/folders/docs", label: "Docs" }} width="max-w-6xl sm:px-6" />
       <div className="mx-auto w-full max-w-6xl px-4 pt-6 pb-24 sm:px-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-16 lg:pt-10">
         <aside className="hidden lg:block">
           <DocContentsRail headings={headings} />
@@ -64,7 +67,7 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
             <DocContentsInline headings={headings} />
           </div>
           <article className="mt-12">
-            <Markdown>{body}</Markdown>
+            <Markdown references={references}>{body}</Markdown>
           </article>
           <footer className="mt-16 flex flex-col gap-2 border-t border-border pt-8 text-sm text-muted-foreground">
             {meta.source && <p>Converted from {meta.source}</p>}

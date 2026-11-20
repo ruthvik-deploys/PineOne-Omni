@@ -3,7 +3,7 @@ title: Overview design document
 description: Permitted business summary and task entry across web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, overview, home]
+topics: [in-store, online, overview, home]
 source: docs/exports/omni-design-suite/Pine One Overview Design Document.docx
 ---
 

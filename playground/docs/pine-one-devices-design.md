@@ -3,7 +3,7 @@ title: Devices design document
 description: In-store terminal and soundbox identification and proposed device administration.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, devices, in-store, pos]
+topics: [in-store, devices, pos]
 source: docs/exports/omni-design-suite/Pine One Devices Design Document.docx
 ---
 

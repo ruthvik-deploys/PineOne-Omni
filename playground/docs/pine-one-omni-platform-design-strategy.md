@@ -3,7 +3,7 @@ title: Omni platform design strategy
 description: Platform goals, design principles and decisions for unified login and merchant operations across web and app; parent of every module document.
 kind: Design strategy
 date: 2026-10-05
-topics: [pine-one, pine-one-app, strategy, principles, login, platform]
+topics: [in-store, online, strategy, principles, login, platform]
 source: docs/exports/omni-design-suite/Pine One Omni Platform Design Strategy.docx
 ---
 

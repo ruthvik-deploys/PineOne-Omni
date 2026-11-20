@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import GithubSlugger from "github-slugger";
+import { DOC_TAGS, PERSONA_TAGS } from "./doc-tags";
 
 /**
  * Research documents: one Markdown file per document in `playground/docs/`, with front matter.
@@ -26,7 +27,20 @@ export type DocHeading = { depth: number; text: string; id: string };
 
 export type Doc = { slug: string; meta: DocMeta; details: DocDetail[]; body: string; headings: DocHeading[]; minutes: number };
 /** What the client needs for listing and search: no full Markdown. */
-export type DocSummary = { slug: string; meta: DocMeta; text: string; minutes: number };
+export type DocSummary = { slug: string; meta: DocMeta; text: string; minutes: number; tags: string[] };
+
+
+function tagsFor(meta: DocMeta, body: string) {
+  const tags = new Set<string>();
+  if (meta.topics.includes("in-store")) tags.add("In-store");
+  if (meta.topics.includes("online")) tags.add("Online");
+  for (const line of body.split("\n")) {
+    // Requirement tables put a priority (P0, P1 proposed…) alone in a cell; that isn't a persona.
+    const text = line.startsWith("|") ? line.split("|").filter((c) => !/^\s*P\d(\s+proposed)?\s*$/i.test(c)).join("|") : line;
+    for (const m of text.matchAll(/\bP([1-5])\b/g)) tags.add(PERSONA_TAGS[`P${m[1]}`]);
+  }
+  return DOC_TAGS.filter((t) => tags.has(t));
+}
 
 const WORDS_PER_MINUTE = 220;
 
@@ -132,5 +146,5 @@ function plain(md: string) {
 }
 
 export function getDocSummaries(): DocSummary[] {
-  return getAllDocs().map(({ slug, meta, body, minutes }) => ({ slug, meta, text: plain(body), minutes }));
+  return getAllDocs().map(({ slug, meta, body, minutes }) => ({ slug, meta, text: plain(body), minutes, tags: tagsFor(meta, body) }));
 }

@@ -3,7 +3,7 @@ title: Help and Support design document
 description: Contextual help, knowledge discovery and support-case continuity across web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, support, tickets]
+topics: [in-store, online, support, tickets]
 source: docs/exports/omni-design-suite/Pine One Help and Support Design Document.docx
 ---
 

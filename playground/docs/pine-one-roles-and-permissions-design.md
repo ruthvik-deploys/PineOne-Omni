@@ -3,7 +3,7 @@ title: Roles and Permissions design document
 description: Merchant user access across Online and In-store products.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, roles, permissions, users]
+topics: [in-store, online, roles, permissions, users]
 source: docs/exports/omni-design-suite/Pine One Roles and Permissions Design Document.docx
 ---
 

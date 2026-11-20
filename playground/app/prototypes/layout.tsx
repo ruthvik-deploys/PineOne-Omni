@@ -3,15 +3,15 @@ import { getFolder } from "@/lib/folders";
 import { getAllPrototypes } from "@/lib/prototypes";
 
 export default function PrototypesLayout({ children }: LayoutProps<"/prototypes">) {
-  const folders = Object.fromEntries(
+  const entries = Object.fromEntries(
     getAllPrototypes().flatMap((p) => {
       const folder = getFolder(p.meta.folder);
-      return folder ? [[p.slug, { id: folder.id, title: folder.title }]] : [];
+      return folder ? [[p.slug, { folderId: folder.id, folderTitle: folder.title, title: p.meta.title }]] : [];
     })
   );
   return (
     <div className="flex min-h-dvh flex-col">
-      <PrototypeBack folders={folders} />
+      <PrototypeBack entries={entries} />
       <div className="flex flex-1 flex-col">{children}</div>
     </div>
   );

@@ -3,7 +3,7 @@ title: Online Payment Configuration design document
 description: Online gateway, payment-mode and integration configuration with product discovery.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, online, payment methods, configuration]
+topics: [online, payment methods, configuration]
 source: docs/exports/omni-design-suite/Pine One Online Payment Configuration Design Document.docx
 ---
 

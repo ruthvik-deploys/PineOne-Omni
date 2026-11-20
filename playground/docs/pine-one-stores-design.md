@@ -3,7 +3,7 @@ title: Stores design document
 description: In-store location context and proposed store administration across web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, stores, in-store]
+topics: [in-store, stores]
 source: docs/exports/omni-design-suite/Pine One Stores Design Document.docx
 ---
 

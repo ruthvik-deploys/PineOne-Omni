@@ -3,7 +3,7 @@ title: Account Settings design document
 description: Personal profile, business details, preferences, security entry and feedback.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, account settings, profile, preferences]
+topics: [in-store, online, account settings, profile, preferences]
 source: docs/exports/omni-design-suite/Pine One Account Settings Design Document.docx
 ---
 

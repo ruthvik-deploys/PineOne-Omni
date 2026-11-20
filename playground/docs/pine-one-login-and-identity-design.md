@@ -3,7 +3,7 @@ title: Login and Identity design document
 description: Unified authentication, identity resolution and business selection.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, login, identity, business selection]
+topics: [in-store, online, login, identity, business selection]
 source: docs/exports/omni-design-suite/Pine One Login and Identity Design Document.docx
 ---
 

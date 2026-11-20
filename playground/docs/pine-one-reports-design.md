@@ -3,7 +3,7 @@ title: Reports design document
 description: Report discovery, generation, history and proposed delivery management on web and app.
 kind: Module design
 date: 2026-10-05
-topics: [pine-one, pine-one-app, reports]
+topics: [in-store, online, reports]
 source: docs/exports/omni-design-suite/Pine One Reports Design Document.docx
 ---
 
