@@ -27,17 +27,19 @@ export default async function FolderPage({ params }: PageProps<"/folders/[folder
     <div className="flex min-h-dvh flex-col">
       <PageHeader crumbs={[{ label: "Playground", href: "/" }, { label: folder.title }]} back={{ href: "/", label: "Playground" }} />
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 pb-16">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{folder.title}</h1>
-          <p className="text-muted-foreground">{folder.description}</p>
-        </div>
         {folder.id === "docs" ? (
-          <DocsBrowser docs={docs} />
+          <DocsBrowser docs={docs} title={folder.title} description={folder.description} />
         ) : (
-          <FolderPrototypes
-            prototypes={all.filter((p) => p.meta.folder === folder.id)}
-            titles={Object.fromEntries(all.map((p) => [p.slug, p.meta.title]))}
-          />
+          <>
+            <div className="flex flex-col gap-1">
+              <h1 className="text-2xl font-semibold">{folder.title}</h1>
+              <p className="text-muted-foreground">{folder.description}</p>
+            </div>
+            <FolderPrototypes
+              prototypes={all.filter((p) => p.meta.folder === folder.id)}
+              titles={Object.fromEntries(all.map((p) => [p.slug, p.meta.title]))}
+            />
+          </>
         )}
       </main>
     </div>

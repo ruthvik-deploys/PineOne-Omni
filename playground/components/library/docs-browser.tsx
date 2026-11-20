@@ -13,7 +13,7 @@ import { searchDocs } from "./search";
  * The Docs folder: search (full text, ranked, with the matching passage) and tags
  * (channel and persona) on top, then every doc as a file with its page preview (A–Z, or ranked while searching).
  */
-export function DocsBrowser({ docs }: { docs: DocSummary[] }) {
+export function DocsBrowser({ docs, title, description }: { docs: DocSummary[]; title: string; description: string }) {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const tagged = useMemo(() => (tag ? docs.filter((d) => d.tags.includes(tag)) : docs), [docs, tag]);
@@ -25,6 +25,15 @@ export function DocsBrowser({ docs }: { docs: DocSummary[] }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-baseline justify-between gap-4">
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          <p className="shrink-0 text-sm text-muted-foreground tabular-nums" aria-live="polite">
+            {plural(hits.length, "doc")}
+          </p>
+        </div>
+        <p className="text-muted-foreground">{description}</p>
+      </div>
       <div className="flex flex-col gap-3">
         <SearchBox value={query} onChange={setQuery} label="Search docs" />
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by tag">
@@ -40,7 +49,6 @@ export function DocsBrowser({ docs }: { docs: DocSummary[] }) {
             </Button>
           ))}
         </div>
-        <p className="text-sm text-muted-foreground">{plural(hits.length, "doc")}</p>
       </div>
 
       {hits.length === 0 ? (
