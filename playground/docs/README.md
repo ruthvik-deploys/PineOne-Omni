@@ -16,7 +16,7 @@ Never edit a document's findings to fit a design. Fixing a conversion error is f
 
 ## Adding a document
 
-> **The GitHub repo is public.** Research documents (visit notes, interviews, merchant details) must not be pushed to it until the owner has chosen where they live (private repo, or kept out of git and deployed from the CLI). Until then, ask before committing anything in this folder except this README.
+> **The GitHub repo is public.** The design documents here were already in the repo (`docs/exports/`). Raw customer research (visit notes, interview transcripts, merchant contact details) must not be pushed until the owner has decided where it lives (private repo, or kept out of git). Ask before committing that kind of document.
 
 The owner gives you a file (Word, PDF, Google Doc export, notes). Then:
 
@@ -50,6 +50,25 @@ Don't commit the original file unless the owner asks for it.
 
 ## Index
 
+Start with the **Omni platform design strategy** (goals G1–G5, principles, decisions) and the **User personas and behaviour reference** (P personas, T task lenses, B behaviours, R research sources). The module documents cite those IDs.
+
 | Document | Kind | Date | Topics |
 |---|---|---|---|
-| _None yet_ | | | |
+| [Omni platform design strategy](pine-one-omni-platform-design-strategy.md) | Design strategy | 2026-10-05 | pine-one, pine-one-app, strategy, principles, login, platform |
+| [User personas and behaviour reference](pine-one-user-personas-and-behaviour.md) | Persona reference | 2026-10-05 | pine-one, pine-one-app, personas, behaviour, merchant research |
+| [Cross-platform experience discovery findings](pine-one-cross-platform-discovery-findings.md) | Discovery findings | 2026-10-01 | pine-one, pine-one-app, discovery, information architecture, cross-platform |
+| [Account Settings design document](pine-one-account-settings-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, account settings, profile, preferences |
+| [Checkout design document](pine-one-checkout-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, checkout, online |
+| [Devices design document](pine-one-devices-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, devices, in-store, pos |
+| [Disputes design document](pine-one-disputes-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, disputes, chargebacks |
+| [Help and Support design document](pine-one-help-and-support-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, support, tickets |
+| [Login and Identity design document](pine-one-login-and-identity-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, login, identity, business selection |
+| [Online Payment Configuration design document](pine-one-online-payment-configuration-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, online, payment methods, configuration |
+| [Overview design document](pine-one-overview-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, overview, home |
+| [Payment Links design document](pine-one-payment-links-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, payment links, online |
+| [Refunds design document](pine-one-refunds-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, refunds |
+| [Reports design document](pine-one-reports-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, reports |
+| [Roles and Permissions design document](pine-one-roles-and-permissions-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, roles, permissions, users |
+| [Settlements design document](pine-one-settlements-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, settlements, reconciliation |
+| [Stores design document](pine-one-stores-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, stores, in-store |
+| [Transactions design document](pine-one-transactions-design.md) | Module design | 2026-10-05 | pine-one, pine-one-app, transactions, payments |

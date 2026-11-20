@@ -4,7 +4,7 @@
  * `docs` holds the research documents in `docs/*.md`, not prototypes.
  */
 export const FOLDERS = [
-  { id: "docs", title: "Docs", description: "Merchant research, user journeys and other reference documents" },
+  { id: "docs", title: "Docs", description: "Design strategy, personas, module design documents and merchant research" },
   { id: "design-system", title: "Design system", description: "Storybooks and design system docs for web and the app" },
   { id: "pine-one", title: "Pine One", description: "Pine One web dashboard" },
   { id: "pine-one-app", title: "Pine One app", description: "Pine One mobile app and its flows" },
