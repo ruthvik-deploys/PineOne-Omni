@@ -1,5 +1,6 @@
-import { Gallery } from "@/components/gallery/gallery";
+import { LibraryHome } from "@/components/library/library-home";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getDocSummaries } from "@/lib/docs";
 import { getAllPrototypes } from "@/lib/prototypes";
 
 export default function Home() {
@@ -9,7 +10,7 @@ export default function Home() {
         <h1 className="text-xl font-semibold">Playground</h1>
         <ThemeToggle />
       </header>
-      <Gallery prototypes={getAllPrototypes()} />
+      <LibraryHome prototypes={getAllPrototypes()} docs={getDocSummaries()} />
     </main>
   );
 }

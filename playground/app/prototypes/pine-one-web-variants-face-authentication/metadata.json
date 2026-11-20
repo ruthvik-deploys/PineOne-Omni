@@ -1,10 +1,11 @@
 {
   "title": "Face authentication: other designs",
-  "description": "The alternative designs tried for the face authentication step (variants B \u00b7 C). The live flow uses the winner; switch between them with the pill at the bottom.",
+  "description": "The alternative designs tried for the face authentication step (variants B · C). The live flow uses the winner; switch between them with the pill at the bottom.",
   "tags": [
     "pine-one",
     "onboarding"
   ],
+  "folder": "onboarding",
   "surface": "web",
   "group": "Pine One onboarding variants",
   "variantOf": "pine-one-web-kyc",

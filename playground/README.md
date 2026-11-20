@@ -10,6 +10,14 @@ Agents: read [CLAUDE.md](./CLAUDE.md) first. It holds every rule.
 2. **Playground password:** ask the owner. It opens the live site and every preview link.
 3. **Claude Code:** install it (`npm i -g @anthropic-ai/claude-code`) or use it on the web at claude.ai/code, which also works from a phone.
 
+## Finding things
+
+The home page shows folders: Docs, Design system, Pine One, Pine One app, Pine Omni, Pine Omni app and Onboarding. Open one to see what's inside. The search box looks through every folder at once, including the full text of the research docs.
+
+## Research docs
+
+Merchant research, user journeys and similar documents live in the **Docs** folder (`docs/`, one Markdown file each). Give the agent the file and ask it to add it; `docs/README.md` has the steps. Agents working anywhere in the repo read these before making design judgements.
+
 ## Making a prototype
 
 You describe it; the agent builds it. `CLAUDE.md` tells the agent the folder layout, design rules, thumbnails and PR steps, so your request only has to say *what* you want.

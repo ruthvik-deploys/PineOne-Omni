@@ -38,6 +38,7 @@ The skills used here (e.g. the shadcn skill) aren't committed, but `skills-lock.
 
 ## 2. Rules that always apply
 
+- **Check the research before you judge.** Merchant research, user journeys and similar documents live in `playground/docs/` (index and rules in `playground/docs/README.md`). Before a design or product decision in any of the three projects, read what's relevant there and cite it. If it contradicts the request, say so; if nothing covers it, say that instead of inventing findings.
 - **Read the project's own rules before changing it:**
   - Web portal: section 4 below, plus `docs/design/` for the module you touch.
   - Mobile: `mobile/AGENTS.md` (Expo conventions) and `mobile/DESIGN_RULES.md` (the app's design rules).
@@ -60,7 +61,7 @@ The skills used here (e.g. the shadcn skill) aren't committed, but `skills-lock.
 ## 3. Recipes
 
 ### Add a new prototype (most requests)
-Follow `playground/CLAUDE.md` → "Creating a new prototype". In short: `app/prototypes/<slug>/` with `page.tsx`, `metadata.json` (including `surface` and `group`) and `HOW_IT_WORKS.md`; build to the rules; `npm run thumbnails -- <slug>`; `npm run check`; then a PR plus the preview link.
+Follow `playground/CLAUDE.md` → "Creating a new prototype". In short: `app/prototypes/<slug>/` with `page.tsx`, `metadata.json` (including `folder`, `surface` and `group`) and `HOW_IT_WORKS.md`; build to the rules; `npm run thumbnails -- <slug>`; `npm run check`; then a PR plus the preview link.
 
 ### Bring in a project someone already built
 Follow `playground/CLAUDE.md` → "Bringing in an existing project". Default: link or embed its deployment (`external`). Port the code only when it's a small React prototype and they want it to live here. If it's an app with several flows, give each flow its own entry with a deep link.

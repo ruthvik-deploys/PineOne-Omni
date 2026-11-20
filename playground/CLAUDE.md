@@ -8,7 +8,9 @@ All commands below run from `playground/`, not the repo root. The repo root is a
 
 | Piece | Where |
 |---|---|
-| Gallery (search, tags, hidden toggle, static thumbnails) | `app/page.tsx`, `components/gallery/` |
+| Home: folders + one search across all of them | `app/page.tsx`, `components/library/` (pure logic in `search.ts`) |
+| Folders (the list, order and names) | `lib/folders.ts` (mirror the ids in `scripts/registry.mjs`), pages at `app/folders/[folder]/` |
+| Research docs | `docs/*.md` (Markdown + front matter), read by `lib/docs.ts`, shown at `app/docs/[slug]/`. Guide and index: `docs/README.md` |
 | Prototypes | `app/prototypes/<slug>/` (one folder each) |
 | Collaborator guide (humans) | `README.md` |
 | Unknown-slug 404 | `app/prototypes/[slug]/page.tsx` |
@@ -21,6 +23,10 @@ All commands below run from `playground/`, not the repo root. The repo root is a
 | Thumbnails / OG capture | `scripts/capture.mjs` → `public/thumbnails/`, `public/og/` |
 
 This is **Next.js 16** with React 19, Tailwind v4 and shadcn/ui (radix-nova, every component installed in `components/ui/`). APIs differ from older versions: `params`/`searchParams` are Promises, middleware is `proxy.ts`, and there are global `PageProps<"/route">` / `LayoutProps` types. When unsure, read `node_modules/next/dist/docs/` first.
+
+## Research first
+
+Before making a design or product judgement (what merchants need, which steps to keep, naming, what to show first), check `docs/` for research that covers it. Read `docs/README.md` → "For agents", scan its Index, read what's relevant and cite it. If research contradicts the request, say so; if nothing covers it, say that rather than inventing findings. This applies to work on the web portal and mobile app too, not just prototypes.
 
 ## Creating a new prototype (start to pull request)
 
@@ -101,15 +107,17 @@ Every prototype has `metadata.json`:
   "title": "My Prototype",
   "description": "What it does",
   "tags": ["tag1"],
+  "folder": "pine-one",
   "createdAt": "YYYY-MM-DD",
   "updatedAt": "ISO timestamp",
   "hidden": false,
   "public": false
 }
 ```
-- Optional gallery placement: `"surface": "web" | "mobile"` puts the card under the **Web** or **Mobile app** section (omit it for standalone prototypes, which go under **Prototypes**). `"group": "<Product>"` groups cards inside the section, e.g. `"Pine One"`, `"Pine One onboarding"`, `"Osmosis agents"`. Groups sort alphabetically, so name a product's sub-groups `<Product> <thing>` to keep them together. Titles shouldn't repeat the group or surface ("Payments", not "Osmosis web: Payments"); the prototype page shows them as a label.
+- **`folder` (required)** puts the card in a home-page folder: `design-system`, `pine-one` (web), `pine-one-app`, `pine-omni` (Osmosis web), `pine-omni-app`, `onboarding`. The home page shows only folders; people open one to see its prototypes. A new folder needs an entry in `lib/folders.ts` and in `FOLDERS` in `scripts/registry.mjs`.
+- `"surface": "web" | "mobile"` and `"group": "<name>"` split a folder into sections: by group when it has several groups (e.g. "Osmosis" / "Osmosis agents"), otherwise into Web / Mobile app when it mixes both. Titles shouldn't repeat the folder or surface ("Payments", not "Osmosis web: Payments"); the prototype page shows the group as a label.
 - Optional `"variantOf": "<slug>"` marks a version or experiment of another prototype (see "Making a version or experiment").
-- Tags shared by two or more prototypes become filter chips; one-off tags are search-only. Don't add a tag nobody else uses.
+- Tags are search-only (there are no filter chips). Add one only when it's a word people would search for that isn't already in the title or description.
 - Bump `updatedAt` (full ISO timestamp) on **every** edit, so the gallery stays sorted and thumbnail caches refresh.
 - Optional `"external": { "url": "...", "embed": "phone" | "none" }` is for prototypes that are separately deployed apps (see `pine-one-mobile`, `pine-one-web`). With `"embed": "none"` the thumbnail script captures the external URL directly.
 
@@ -241,5 +249,5 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 - **Desktop apps need a wide capture.** External desktop apps are captured at 1440px; at 1280px the Pine One web app cropped its right edge.
 - **External apps with a client-side mock login** redirect every deep link to their login screen in a fresh browser, so thumbnails all looked the same. `external.seedLocalStorage` fixes the captures, and `external.note` tells people to sign in once.
 - **Phone-frame iframes get their own storage.** Browsers partition third-party storage, so an app embedded with `"embed": "phone"` doesn't see a sign-in made in its own tab. People sign in once inside the frame. The thumbnail script seeds `seedLocalStorage` inside the iframe too.
-- **Separate web portals from mobile apps with `surface` and `group`**, not title prefixes or `web`/`mobile` tags. The gallery has an All / Web / Mobile app switch and section headings driven by those fields.
+- **Separate web portals from mobile apps with `folder`, `surface` and `group`**, not title prefixes or `web`/`mobile` tags. (Nov 20: the All / Web / Mobile switch and tag chips were replaced by folders.)
 - **OG URLs must be absolute.** Next resolves `og:image` against `metadataBase` but not `og:video`, so the video URL is built with `SITE_URL` in `app/p/[slug]/page.tsx`.

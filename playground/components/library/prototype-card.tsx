@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Prototype } from "@/lib/prototypes";
+import { CARD_LINK } from "./card-styles";
 import { Thumbnail } from "./thumbnail";
 
 export function PrototypeCard({ prototype, variantOfTitle }: { prototype: Prototype; variantOfTitle?: string }) {
   const { meta } = prototype;
   return (
-    <Link
-      href={`/prototypes/${prototype.slug}`}
-      className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition-shadow duration-200 ease-out hover:ring-foreground/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:ring-foreground/20"
-    >
+    <Link href={`/prototypes/${prototype.slug}`} className={CARD_LINK}>
       <Thumbnail prototype={prototype} />
       <div className="flex flex-col gap-1 p-4">
         <div className="flex items-center gap-2">
