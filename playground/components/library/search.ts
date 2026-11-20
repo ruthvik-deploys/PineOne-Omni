@@ -83,28 +83,3 @@ export function searchAll(query: string, prototypes: Prototype[], docs: DocSumma
     return { folder, prototypes: protoHits, docs: docHits };
   }).filter((h) => h.prototypes.length + h.docs.length > 0);
 }
-
-export type FolderSection = { title: string | null; items: Prototype[] };
-
-const SURFACE_LABEL = { web: "Web", mobile: "Mobile app" } as const;
-
-/**
- * Inside a folder: one section per `group` when there are several groups, otherwise
- * Web / Mobile app when the folder mixes both, otherwise a single untitled list.
- * Items keep their input order (newest first).
- */
-export function sectionsFor(prototypes: Prototype[]): FolderSection[] {
-  const split = (key: (p: Prototype) => string, label: (k: string) => string) => {
-    const map = new Map<string, Prototype[]>();
-    for (const p of prototypes) map.set(key(p), [...(map.get(key(p)) ?? []), p]);
-    return map.size > 1
-      ? [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, items]) => ({ title: label(k), items }))
-      : null;
-  };
-  return (
-    split((p) => p.meta.group ?? "", (k) => k || "Other") ??
-    split((p) => p.meta.surface ?? "", (k) => (k ? SURFACE_LABEL[k as keyof typeof SURFACE_LABEL] : "Other")) ?? [
-      { title: null, items: prototypes },
-    ]
-  );
-}

@@ -116,11 +116,11 @@ Every prototype has `metadata.json`:
 }
 ```
 - **`folder` (required)** puts the card in a home-page folder: `design-system`, `pine-one` (web), `pine-one-app`, `pine-omni` (Osmosis web), `pine-omni-app`, `onboarding`. The home page shows only folders; people open one to see its prototypes. A new folder needs an entry in `lib/folders.ts` and in `FOLDERS` in `scripts/registry.mjs`.
-- `"surface": "web" | "mobile"` and `"group": "<name>"` split a folder into sections: by group when it has several groups (e.g. "Osmosis" / "Osmosis agents"), otherwise into Web / Mobile app when it mixes both. Titles shouldn't repeat the folder or surface ("Payments", not "Osmosis web: Payments"); the prototype page shows the group as a label.
+- `"surface": "web" | "mobile"` and `"group": "<name>"` are labels (shown on the prototype page); folders list their cards in one grid, newest first, with no sub-headings. Titles shouldn't repeat the folder or surface ("Payments", not "Osmosis web: Payments").
 - Optional `"variantOf": "<slug>"` marks a version or experiment of another prototype (see "Making a version or experiment").
 - Tags are search-only (there are no filter chips). Add one only when it's a word people would search for that isn't already in the title or description.
 - Bump `updatedAt` (full ISO timestamp) on **every** edit, so the gallery stays sorted and thumbnail caches refresh.
-- Optional `"external": { "url": "...", "embed": "phone" | "none" }` is for prototypes that are separately deployed apps (see `pine-one-mobile`, `pine-one-web`). With `"embed": "none"` the thumbnail script captures the external URL directly.
+- Optional `"external": { "url": "...", "embed": "phone" | "none" }` is for prototypes that are separately deployed apps (see `pine-one-mobile`, `pine-one-web`). With `"embed": "none"` the card opens the URL in a new tab directly (↗ icon), so put anything people need to know (e.g. how to sign in) in the description; the thumbnail script captures the external URL directly. `phone` entries open their playground page with the app in a phone frame.
 
 ### Privacy
 - Every prototype is **private by default** (`"public": false`).

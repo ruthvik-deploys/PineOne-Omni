@@ -3,7 +3,15 @@
 import { X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { fitCount } from "./tag-fit";
 
@@ -15,8 +23,8 @@ type Group = { label: string; tags: readonly string[] };
 
 /**
  * Tags on one line. Selected tags come first (with ✕ to remove), then as many others as fit,
- * then More, which opens a drawer with the rest. Picking a tag in the drawer moves it into the row;
- * removing it sends it back to the drawer.
+ * then More, a menu with the rest. Picking a tag in the menu moves it into the row;
+ * removing it sends it back to the menu.
  */
 export function TagBar({ groups, selected, onToggle }: { groups: readonly Group[]; selected: string[]; onToggle: (tag: string) => void }) {
   const all = groups.flatMap((g) => g.tags);
@@ -24,7 +32,6 @@ export function TagBar({ groups, selected, onToggle }: { groups: readonly Group[
   const rowRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(ordered.length);
-  const [open, setOpen] = useState(false);
   const key = ordered.join("|");
 
   useLayoutEffect(() => {
@@ -44,8 +51,8 @@ export function TagBar({ groups, selected, onToggle }: { groups: readonly Group[
   }, [key, selected]);
 
   const inRow = ordered.slice(0, fit);
-  const inDrawer = ordered.slice(fit);
-  const hiddenSelected = inDrawer.filter((t) => selected.includes(t)).length;
+  const inMenu = ordered.slice(fit);
+  const hiddenSelected = inMenu.filter((t) => selected.includes(t)).length;
 
   return (
     <>
@@ -59,10 +66,37 @@ export function TagBar({ groups, selected, onToggle }: { groups: readonly Group[
             </Button>
           );
         })}
-        {inDrawer.length > 0 && (
-          <Button variant="ghost" className={cn(CHIP, "text-muted-foreground")} onClick={() => setOpen(true)}>
-            More{hiddenSelected > 0 ? ` · ${hiddenSelected} on` : ""}
-          </Button>
+        {inMenu.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className={cn(CHIP, "text-muted-foreground")}>
+                More{hiddenSelected > 0 ? ` · ${hiddenSelected} on` : ""}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-48">
+              {groups.map((g, i) => {
+                const tags = g.tags.filter((t) => inMenu.includes(t));
+                if (!tags.length) return null;
+                return (
+                  <DropdownMenuGroup key={g.label}>
+                    {i > 0 && groups.slice(0, i).some((p) => p.tags.some((t) => inMenu.includes(t))) && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel>{g.label}</DropdownMenuLabel>
+                    {tags.map((t) => (
+                      <DropdownMenuCheckboxItem
+                        key={t}
+                        className="min-h-11 sm:min-h-8"
+                        checked={selected.includes(t)}
+                        // Picking moves the tag into the row; the menu closes so you see where it went.
+                        onCheckedChange={() => onToggle(t)}
+                      >
+                        {t}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuGroup>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Off-screen copies, only to measure chip widths. */}
@@ -78,43 +112,6 @@ export function TagBar({ groups, selected, onToggle }: { groups: readonly Group[
         </div>
       </div>
 
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent>
-          <div className="mx-auto w-full max-w-2xl">
-            <DrawerHeader className="text-left">
-              <DrawerTitle>More tags</DrawerTitle>
-            </DrawerHeader>
-            <div className="flex flex-col gap-5 px-4 pb-2">
-              {groups.map((g) => {
-                const tags = g.tags.filter((t) => inDrawer.includes(t));
-                if (!tags.length) return null;
-                return (
-                  <section key={g.label} className="flex flex-col gap-2">
-                    <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{g.label}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((t) => {
-                        const on = selected.includes(t);
-                        return (
-                          <Button key={t} variant={on ? "secondary" : "outline"} className={CHIP} aria-pressed={on} onClick={() => onToggle(t)}>
-                            {t}
-                            {on && <X aria-hidden className="size-3.5 text-muted-foreground" />}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
-              {inDrawer.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">All tags are on the list.</p>}
-            </div>
-            <DrawerFooter className="pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <Button className="h-11" onClick={() => setOpen(false)}>
-                Done
-              </Button>
-            </DrawerFooter>
-          </div>
-        </DrawerContent>
-      </Drawer>
     </>
   );
 }
