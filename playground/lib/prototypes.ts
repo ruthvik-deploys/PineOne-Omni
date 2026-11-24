@@ -1,19 +1,22 @@
 import type { ComponentType } from "react";
+import type { PrototypeFolderId } from "./folders";
 import { registry } from "./prototype-registry.generated";
 
 export type PrototypeMeta = {
   title: string;
   description: string;
   tags: string[];
+  /** Home-page folder the prototype lives in (see lib/folders.ts). */
+  folder: PrototypeFolderId;
   createdAt: string;
   updatedAt: string;
   hidden: boolean;
   public: boolean;
-  /** Gallery section. Omit for standalone prototypes (they go under "Prototypes"). */
+  /** Web or mobile. Splits a folder into Web / Mobile app when it holds both. */
   surface?: "web" | "mobile";
   /** Slug of the prototype this is a version or experiment of. The card shows "Variant of …". */
   variantOf?: string;
-  /** Gallery group inside the section, usually the product (e.g. "Pine One", "Pine One onboarding"). */
+  /** Sub-heading inside the folder when the folder holds more than one group (e.g. "Osmosis agents"). */
   group?: string;
   /** Optional: the prototype is a separately deployed app. Thumbnails capture this URL when `embed` is "none". */
   external?: {

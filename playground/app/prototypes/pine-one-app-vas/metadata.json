@@ -1,0 +1,18 @@
+{
+  "title": "Value Added Services",
+  "description": "Enable and track services like EMI, Same-Day and On-Demand settlement, with request status on each card.",
+  "tags": [
+    "pine-one"
+  ],
+  "folder": "pine-one-app",
+  "surface": "mobile",
+  "group": "Pine One",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T10:21:58.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-app.vercel.app/value-added-services",
+    "embed": "phone"
+  }
+}

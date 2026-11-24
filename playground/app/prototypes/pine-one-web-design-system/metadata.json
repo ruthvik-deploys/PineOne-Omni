@@ -1,15 +1,16 @@
 {
   "title": "Design system docs",
-  "description": "Foundations (colour tokens for light and dark), component previews and a standard desktop page shell for Pine One.",
+  "description": "Foundations and tokens page in the web portal. Its component previews are placeholders; use Storybook for components.",
   "tags": [
     "pine-one",
     "design-system"
   ],
+  "folder": "design-system",
   "surface": "web",
   "group": "Pine One",
   "createdAt": "2026-11-19",
-  "updatedAt": "2026-11-19T09:39:00.000Z",
-  "hidden": false,
+  "updatedAt": "2026-11-19T10:41:43.000Z",
+  "hidden": true,
   "public": false,
   "external": {
     "url": "https://pine-one-user-journey-v2.vercel.app/component-docs",

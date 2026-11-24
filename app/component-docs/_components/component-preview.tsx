@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils"
 
 type PreviewMode = "card" | "page"
 
+const STORYBOOK_URL = "https://pine-one-storybook.vercel.app"
+
 export function ComponentPreviewHeader({
   title,
   description,
@@ -40,7 +42,15 @@ export function ComponentPreview({
     <div className={cn(frameClass)} style={previewStyle}>
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">{slug}</p>
-        <p className="text-xs text-muted-foreground">Preview available after component docs rebuild.</p>
+        {/* Live previews live in Storybook (pnpm storybook / pine-one-storybook.vercel.app), not in this page. */}
+        <a
+          href={STORYBOOK_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        >
+          See it live in Storybook
+        </a>
       </div>
     </div>
   )

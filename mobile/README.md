@@ -15,6 +15,6 @@ npx expo start       # w = browser, scan QR = Expo Go, i/a = simulators
 
 Checks before a PR: `npm run lint` and `npx tsc --noEmit`.
 
-Deployed as a static web build (`npx expo export -p web`, see `vercel.json`) to the Vercel project `pineone-mobile`.
+Deployed as a static web build (`npx expo export -p web`, see `vercel.json`) to the Vercel project `pine-one-app` (https://pine-one-app.vercel.app). The deploy command is in `playground/app/prototypes/pine-one-mobile/HOW_IT_WORKS.md`.
 
 Don't run `npm run reset-project`. It's leftover Expo starter tooling and moves the whole app into `app-example/`.
