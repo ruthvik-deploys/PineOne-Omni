@@ -257,3 +257,5 @@ Every prototype has `HOW_IT_WORKS.md`, kept current on every change, with these 
 
 - **Static import lint scope.** Ignore `public/embeds/**` in ESLint: Vite snapshots contain generated/minified bundles. Validate their standalone source before copying the build.
 - **Capture fallback.** If the capture script has no Chromium and the official browser download fails, capture and inspect the static snapshot through an available browser; document the fallback and keep the normal light/dark thumbnail filenames.
+
+- **Syncing older prototypes.** When merging a prototype from a branch that predates the folder-based gallery, assign it a valid `folder` in `metadata.json` and run the registry to verify the card appears.
