@@ -8,7 +8,9 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const prototypesDir = path.join(root, "app/prototypes");
 const outFile = path.join(root, "lib/prototype-registry.generated.ts");
-const REQUIRED = ["title", "description", "tags", "createdAt", "updatedAt", "hidden", "public"];
+const REQUIRED = ["title", "description", "tags", "folder", "createdAt", "updatedAt", "hidden", "public"];
+// Keep in sync with lib/folders.ts (minus "docs", which holds documents, not prototypes).
+const FOLDERS = ["design-system", "pine-one", "pine-one-app", "pine-omni", "pine-omni-app", "agents", "onboarding"];
 
 function exists(rel) {
   return fs.existsSync(path.join(root, "public", rel));
@@ -41,6 +43,8 @@ function readPrototypes() {
     if (!Array.isArray(meta.tags)) errors.push(`${slug}: tags must be an array`);
     if (meta.external && !["phone", "none"].includes(meta.external.embed))
       errors.push(`${slug}: external.embed must be "phone" or "none"`);
+    if ("folder" in meta && !FOLDERS.includes(meta.folder))
+      errors.push(`${slug}: folder must be one of ${FOLDERS.join(", ")}`);
     if ("surface" in meta && !["web", "mobile"].includes(meta.surface))
       errors.push(`${slug}: surface must be "web" or "mobile"`);
     if ("group" in meta && (typeof meta.group !== "string" || !meta.group.trim()))

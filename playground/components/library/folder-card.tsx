@@ -1,0 +1,60 @@
+import Link from "next/link";
+import type { DocSummary } from "@/lib/docs";
+import type { Folder } from "@/lib/folders";
+import type { Prototype } from "@/lib/prototypes";
+import { FolderIcon } from "./folder-icon";
+import { plural } from "./format";
+
+/**
+ * A folder on the home page, Finder icon-view style: the folder (with the newest few things inside
+ * peeking out: screenshots for prototype folders, pages for Docs), its name, and how many items.
+ */
+export function FolderCard({ folder, prototypes, docs }: { folder: Folder; prototypes: Prototype[]; docs: DocSummary[] }) {
+  const isDocs = folder.id === "docs";
+  const count = isDocs ? plural(docs.length, "doc") : plural(prototypes.length, "item");
+  const sheets = isDocs
+    ? docs.slice(0, 3).map((d) => <FileSheet key={d.slug} title={d.meta.title} />)
+    : prototypes
+        .filter((p) => p.assets.thumbnails)
+        .slice(0, 3)
+        .map((p) => <ShotSheet key={p.slug} prototype={p} />);
+  return (
+    <Link
+      href={`/folders/${folder.id}`}
+      className="group flex flex-col items-center gap-2 rounded-xl p-2 text-center transition-colors duration-150 ease-out hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:bg-muted"
+    >
+      <div className="w-full max-w-36 transition-transform duration-200 ease-out group-hover:-translate-y-0.5 motion-reduce:transition-none">
+        <FolderIcon sheets={sheets} />
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-sm leading-tight font-medium">{folder.title}</h3>
+        <p className="text-xs text-muted-foreground">{count}</p>
+      </div>
+    </Link>
+  );
+}
+
+function ShotSheet({ prototype }: { prototype: Prototype }) {
+  const v = Date.parse(prototype.meta.updatedAt);
+  const src = (mode: string) => `/thumbnails/${prototype.slug}-${mode}.png?v=${v}`;
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src("light")} alt="" loading="lazy" decoding="async" className="size-full object-cover object-top dark:hidden" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src("dark")} alt="" loading="lazy" decoding="async" className="hidden size-full object-cover object-top dark:block" />
+    </>
+  );
+}
+
+function FileSheet({ title }: { title: string }) {
+  return (
+    <div className="flex flex-col gap-[3px] p-[8%]">
+      <span className="truncate text-[6px] leading-tight font-semibold">{title}</span>
+      {[100, 85, 95, 70, 90].map((w) => (
+        <span key={w} className="h-px rounded-full bg-muted-foreground/40" style={{ width: `${w}%` }} />
+      ))}
+    </div>
+  );
+}
+

@@ -1,0 +1,18 @@
+{
+  "title": "Login",
+  "description": "Sign in to the merchant app.",
+  "tags": [
+    "pine-one"
+  ],
+  "folder": "pine-one-app",
+  "surface": "mobile",
+  "group": "Pine One",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T10:22:01.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-app.vercel.app/login",
+    "embed": "phone"
+  }
+}

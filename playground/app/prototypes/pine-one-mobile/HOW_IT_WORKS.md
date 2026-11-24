@@ -1,11 +1,11 @@
 # Pine One app
 
 ## What It Does
-Shows the Pine One merchant app (Expo / React Native) inside the playground. Its source lives in `/mobile` at the repo root and is deployed on its own to `pineone-mobile.vercel.app`. This prototype embeds that live build.
+Shows the Pine One merchant app (Expo / React Native) inside the playground. Its source lives in `/mobile` at the repo root and is deployed on its own to `pine-one-app.vercel.app`. This prototype embeds that live build.
 
 ## Architecture
 ```
-/mobile (Expo Router) ──expo export -p web──► Vercel project "pineone-mobile"
+/mobile (Expo Router) ──expo export -p web──► Vercel project "pine-one-app"
                                                    │
 playground /prototypes/pine-one-mobile ──iframe────┘  (PhoneFrame: full screen on phones, 390×844 frame from sm)
 ```
@@ -38,3 +38,12 @@ pine-one-mobile/
 
 ## Updating
 Changes to the app are made in `/mobile` and deployed from there. The playground picks them up automatically. Regenerate this prototype's thumbnails after visible changes to the app's first screen.
+
+## Deployments
+The playground uses `pine-one-app` (Vercel team tirthtrivedi17-gmailcom's projects), deployed from `mobile/` on Nov 19, 2026. The older `pineone-mobile` project belongs to another Vercel team and still serves the October build. Redeploy with:
+
+```
+cd mobile && VERCEL_ORG_ID=team_sioXMAvOYHLCBQhiP6GAo4L2 VERCEL_PROJECT_ID=prj_DmoVXHj0kwle5Z8czc7DmnTV9liu npx vercel@latest deploy --prod --yes
+```
+
+The env vars keep `mobile/.vercel` pointing at the old project untouched.

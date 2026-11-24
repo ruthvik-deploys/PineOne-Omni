@@ -12,7 +12,7 @@ playground /prototypes/pine-one-web-signup-mobile ──link─┘
 
 ## Frontend
 - A static page: title, description, optional note and an Open button (44px). The app opens in its own tab.
-- Route `app/onboarding-demo/[[...path]]`: phone → verify-phone → set-password → home and product setup. The product-first setup pages (`setup/start-catalog`) exist locally but aren't in the live deployment yet.
+- Route `app/onboarding-demo/[[...path]]`: phone → verify-phone → set-password → home and product setup. The product-first step is its own entry, "Choose your products".
 
 ## Key Dependencies
 - `@/components/embeds/external-app`
