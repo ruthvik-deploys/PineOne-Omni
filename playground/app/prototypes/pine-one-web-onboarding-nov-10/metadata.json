@@ -1,0 +1,20 @@
+{
+  "title": "Progressive onboarding, Nov 10 version",
+  "description": "The first cut of progressive web onboarding with a shared product setup layout, before the product-first step was added.",
+  "tags": [
+    "pine-one",
+    "onboarding"
+  ],
+  "folder": "onboarding",
+  "surface": "web",
+  "group": "Pine One onboarding",
+  "variantOf": "pine-one-web-choose-products",
+  "createdAt": "2026-11-19",
+  "updatedAt": "2026-11-19T11:47:25.000Z",
+  "hidden": false,
+  "public": false,
+  "external": {
+    "url": "https://pine-one-user-journey-v2-byg0wt42v-tirths-projects-7c07a569.vercel.app/onboarding-demo",
+    "embed": "none"
+  }
+}

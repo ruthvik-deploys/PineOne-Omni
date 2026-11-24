@@ -1,11 +1,12 @@
 {
-  "title": "Market Agent",
+  "title": "Market Agent in the app",
   "description": "Phone-first agent marketplace page and setup for Google Ads campaigns: what the agent does, stats, Start setup and View campaigns.",
   "tags": [
     "osmosis",
     "pine-ai",
     "agents"
   ],
+  "folder": "agents",
   "surface": "mobile",
   "group": "Osmosis",
   "createdAt": "2026-11-19",

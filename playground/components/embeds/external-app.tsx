@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 
 type ExternalMeta = {
@@ -18,7 +19,7 @@ export function ExternalApp({ meta }: { meta: ExternalMeta }) {
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-10 pb-16">
       <div className="flex flex-col gap-1">
         {eyebrow && <p className="text-sm text-muted-foreground">{eyebrow}</p>}
-        <h1 className="text-2xl font-semibold">{meta.title}</h1>
+        <PageTitle>{meta.title}</PageTitle>
       </div>
       <p className="text-muted-foreground">{meta.description}</p>
       {meta.external.note && <p className="text-sm text-muted-foreground">{meta.external.note}</p>}
